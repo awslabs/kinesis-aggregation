@@ -34,6 +34,7 @@ With the Streams API approach, you provide a `Stream<KinesisEventRecord>` item, 
 			});
 ```
 
+For this interface, the Lambda handler will be specified as `com.amazonaws.KinesisLambdaReceiver`.
 
 ### Lists
 
@@ -62,6 +63,8 @@ deaggregator.processRecords(event.getRecords(),
 						}
 					});
 ```
+
+For this interface, the Lambda handler will be specified as `com.amazonaws.KinesisLambdaReceiver::handleRequestsWithLists`.
 
 ## Build & Deploy
 
