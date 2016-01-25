@@ -21,7 +21,7 @@ When using deaggregation, you provide a Kinesis Record as an argument, and get b
 }
 ```
 
-To get started, take your existing Node.js based Kinesis consumer, and include the node-kpl-deagg module from npm:
+To get started, take your existing Node.js based Kinesis consumer, and include the node-kpl-deagg module from [npm](https://www.npmjs.com/package/aws-kpl-deagg):
 
 ```var deagg = require('aws-kpl-deagg');```
 
