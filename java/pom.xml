@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.amazonaws.services.lambda</groupId>
+	<artifactId>kpl-lambda-java</artifactId>
+	<version>1.0</version>
+	<packaging>pom</packaging>
+	<properties>
+		<aws-java-sdk.version>1.10.47</aws-java-sdk.version>
+		<aws-lambda-sdk.version>1.1.0</aws-lambda-sdk.version>
+		<aws-kinesis-client.version>1.6.1</aws-kinesis-client.version>
+	</properties>
+	<modules>
+		<module>KinesisLambdaTestConsumer</module>
+		<module>KinesisTestProducers</module>
+	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.mycila</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>2.3</version>
+				<configuration>
+					<header>${basedir}/license/asl/header.txt</header>
+					<includes>
+						<include>**/*.java</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

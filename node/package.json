@@ -1,0 +1,43 @@
+{
+    "name": "kpl-deagg",
+    "description": "Node.js module to simplify processing of Kinesis Records which have been created with the Kinesis Producer Library",
+    "version": "2.1.0",
+    "homepage": "http://github.com/awslabs/kinesis-deaggregation",
+    "bugs": {
+        "url": "http://github.com/awslabs/kinesis-deaggregation",
+        "email": "meyersi@amazon.com"
+    },
+    "dependencies": {
+        "async": "1.5.2",
+        "protobufjs": "4.1.3",
+        "kpl-deagg": "2.1.0"
+    },
+    "keywords": [
+        "amazon",
+        "kinesis",
+        "lambda",
+        "aggregation"
+    ],
+    "author": {
+        "name": "Ian Meyers",
+        "email": "meyersi@amazon.com"
+    },
+    "main": "./kpl-deagg.js",
+    "files": [
+        "index.js",
+        "kpl-deagg.js",
+        "common.js",
+        "test.js",
+        "kpl.proto",
+        "build.sh",
+        "README.md",
+        "LICENSE"
+    ],
+    "license" : "SEE LICENSE IN LICENSE.txt",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/awslabs/kinesis-deaggregation"
+    }
+}
+        
+        
