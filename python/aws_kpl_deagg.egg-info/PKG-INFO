@@ -1,8 +1,8 @@
 Metadata-Version: 1.1
 Name: aws-kpl-deagg
-Version: 1.0.8
+Version: 1.0.9
 Summary: Python module to simplify processing of Amazon Kinesis Records which have been created with the Kinesis Producer Library.
-Home-page: http://github.com/awslabs/kpl-deagg
+Home-page: http://github.com/awslabs/kinesis-deaggregation
 Author: Brent Nash
 Author-email: brenash@amazon.com
 License: SEE LICENSE IN LICENSE.TXT

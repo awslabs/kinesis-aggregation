@@ -15,6 +15,7 @@ from __future__ import print_function
 
 import base64
 import collections
+import google.protobuf.message
 import kpl_pb2
 import md5
 import StringIO

@@ -9,7 +9,7 @@ def read_file(filename):
 setup(
   name = 'aws_kpl_deagg',
   packages = ['aws_kpl_deagg'],
-  version = '1.0.8',
+  version = '1.0.9',
   description = 'Python module to simplify processing of Amazon Kinesis Records which have been created with the Kinesis Producer Library.',
   long_description=read_file('README.rst'),
   author = 'Brent Nash',
