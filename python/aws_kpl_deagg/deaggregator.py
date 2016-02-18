@@ -37,7 +37,7 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     return value - A Kinesis user record created from a message record in the protobuf message'''
     
     explicit_hash_key = None                            
-    if ehks[mr.explicit_hash_key_index] is not None:
+    if ehks and ehks[mr.explicit_hash_key_index] is not None:
         explicit_hash_key = ehks[mr.explicit_hash_key_index]
     partition_key = pks[mr.partition_key_index]
     
@@ -85,7 +85,7 @@ def _get_error_string(r, message_data, ehks, pks, ar):
         error_buffer.write('%s\n' % (ehk))
     for mr in ar.records:
         error_buffer.write('Record: [hasEhk=%s, ehkIdex=%d, pkIdx=%d, dataLen=%d]\n' %
-                        (ehks[mr.explicit_hash_key_index] is not None,
+                        (ehks and ehks[mr.explicit_hash_key_index] is not None,
                         mr.explicit_hash_key_index,
                         mr.partition_key_index,
                         len(mr.data)))
