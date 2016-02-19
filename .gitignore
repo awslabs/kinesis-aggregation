@@ -1,0 +1,16 @@
+
+java/.classpath
+
+java/.project
+
+java/KinesisLambdaTestConsumer/.classpath
+
+java/KinesisTestProducers/.classpath
+
+java/KinesisTestProducers/.project
+
+node/.project
+
+python/.project
+
+python/.pydevproject
