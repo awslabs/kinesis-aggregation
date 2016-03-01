@@ -14,8 +14,9 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws;
+package com.amazonaws.kinesis.deagg;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,7 +27,10 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
 
 /**
- * Kinesis Producer Library Deaggregator convenience class
+ * Kinesis Producer Library Deaggregator convenience class.
+ * 
+ * NOTE: Any non-aggregated records passed to any deaggregation methods will be
+ * returned unchanged.
  *
  */
 public class KplDeaggregator {
@@ -63,7 +67,7 @@ public class KplDeaggregator {
 	 *
 	 */
 	public interface KinesisUserRecordProcessor {
-		public Void process(List<UserRecord> userRecords) throws Exception;
+		public Void process(List<UserRecord> userRecords);
 	}
 
 	/**
@@ -77,7 +81,7 @@ public class KplDeaggregator {
 	 * @return Void
 	 */
 	public Void processRecords(List<KinesisEventRecord> inputRecords,
-			KinesisUserRecordProcessor processor) throws Exception {
+			KinesisUserRecordProcessor processor) {
 		// extract raw Kinesis Records from input event records
 		List<Record> rawRecords = new LinkedList<>();
 		for (KinesisEventRecord rec : inputRecords) {
@@ -86,5 +90,37 @@ public class KplDeaggregator {
 
 		// invoke provided processor
 		return processor.process(UserRecord.deaggregate(rawRecords));
+	}
+
+	/**
+	 * Method to bulk deaggregate a set of Kinesis User Records from a list of
+	 * Kinesis Event Records.
+	 * 
+	 * @param inputRecords
+	 *            The Kinesis Event Records provided by AWS Lambda
+	 * 
+	 * @return A list of Kinesis UserRecord objects obtained by deaggregating
+	 *         the input list of KinesisEventRecords
+	 */
+	public List<UserRecord> deaggregate(List<KinesisEventRecord> inputRecords) {
+		List<UserRecord> outputRecords = new LinkedList<>();
+		for (KinesisEventRecord inputRecord : inputRecords) {
+			outputRecords.addAll(deaggregate(inputRecord));
+		}
+		return outputRecords;
+	}
+
+	/**
+	 * Method to deaggregate a single Kinesis record into one or more
+	 * KinesisUserRecords.
+	 * 
+	 * @param inputRecord
+	 *            The single KinesisEventRecord to deaggregate
+	 * 
+	 * @return A list of Kinesis UserRecord objects obtained by deaggregating
+	 *         the input KinesisEventRecord
+	 */
+	public List<UserRecord> deaggregate(KinesisEventRecord inputRecord) {
+		return UserRecord.deaggregate(Arrays.asList(inputRecord.getKinesis()));
 	}
 }
