@@ -89,7 +89,7 @@ public class KplBatchAggregator extends KplAggregator
 	}
 	
     @Override
-	public List<PutRecordRequest> extractPutRecordRequests()
+	public List<PutRecordRequest> drainPutRecordRequests()
 	{
 		List<PutRecordRequest> requests = new LinkedList<>();
 		
@@ -115,7 +115,7 @@ public class KplBatchAggregator extends KplAggregator
 	}
 	
     @Override
-	public List<PutRecordsRequest> extractPutRecordsRequests()
+	public List<PutRecordsRequest> drainPutRecordsRequests()
 	{
 		int currentRecords = 0;
 		int currentBytes = 0;
@@ -152,7 +152,7 @@ public class KplBatchAggregator extends KplAggregator
 	}
 	
     @Override
-	public List<ByteBuffer> extractBytes()
+	public List<ByteBuffer> drainBytes()
 	{
 		List<ByteBuffer> aggRecords = new LinkedList<>();
 		

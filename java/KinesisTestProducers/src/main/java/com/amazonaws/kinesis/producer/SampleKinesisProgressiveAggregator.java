@@ -51,7 +51,7 @@ public class SampleKinesisProgressiveAggregator
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 		}
 
-		List<PutRecordRequest> requests = aggregator.extractPutRecordRequests();
+		List<PutRecordRequest> requests = aggregator.drainPutRecordRequests();
 		
 		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for(PutRecordRequest request : requests)

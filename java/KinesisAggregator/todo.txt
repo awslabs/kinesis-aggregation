@@ -5,6 +5,8 @@ Test Cases
 - Test that listener fires properly
 - Verify we can add a listener with a lambda
 
+How do we tell a user their record failed? (is that even possible?)
+
 Write README
 
 Write Python deaggregator

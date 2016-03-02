@@ -52,7 +52,7 @@ public class KplProgressiveAggregator extends KplAggregator
     	}
     }
 	
-	public List<PutRecordRequest> extractPutRecordRequests()
+	public List<PutRecordRequest> drainPutRecordRequests()
 	{
 		PutRecordRequest request =  new PutRecordRequest()
 									 .withData(ByteBuffer.wrap(this.currentRecord.toRecordBytes()))
@@ -65,7 +65,7 @@ public class KplProgressiveAggregator extends KplAggregator
 		return Arrays.asList(request);
 	}
 	
-	public List<PutRecordsRequest> extractPutRecordsRequests()
+	public List<PutRecordsRequest> drainPutRecordsRequests()
 	{
 		PutRecordsRequestEntry entry = new PutRecordsRequestEntry()
 										   .withData(ByteBuffer.wrap(this.currentRecord.toRecordBytes()))
@@ -81,7 +81,7 @@ public class KplProgressiveAggregator extends KplAggregator
 		return Arrays.asList(request);
 	}
 	
-	public List<ByteBuffer> extractBytes()
+	public List<ByteBuffer> drainBytes()
 	{
 		byte[] recordBytes = this.currentRecord.toRecordBytes();
 		

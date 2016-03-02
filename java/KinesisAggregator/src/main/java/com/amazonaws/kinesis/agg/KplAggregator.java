@@ -65,11 +65,11 @@ public abstract class KplAggregator
 		this.currentRecord = new KinesisAggRecord();
 	}
 	
-	public abstract List<PutRecordRequest> extractPutRecordRequests();
+	public abstract List<PutRecordRequest> drainPutRecordRequests();
 	
-	public abstract List<PutRecordsRequest> extractPutRecordsRequests();
+	public abstract List<PutRecordsRequest> drainPutRecordsRequests();
 
-	public abstract List<ByteBuffer> extractBytes();
+	public abstract List<ByteBuffer> drainBytes();
 	
 	public void addUserRecord(String partitionKey, byte[] data)
 	{
