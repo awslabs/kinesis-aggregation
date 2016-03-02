@@ -14,12 +14,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws.kinesis.agg;
+package com.amazonaws.kinesis.deagg;
 
-import java.nio.ByteBuffer;
+import java.util.List;
 
-public interface KplAggregatorListener 
+import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
+
+/**
+ * Interface used by a calling method to call the process function
+ *
+ */
+public interface KinesisUserRecordProcessor 
 {
-	public abstract void recordComplete(String streamName, String paritionKey, 
-										 String explicitHashKey, ByteBuffer data);
+	public Void process(List<UserRecord> userRecords);
 }
