@@ -4,5 +4,6 @@ import java.nio.ByteBuffer;
 
 public interface KplAggregatorListener 
 {
-	public abstract void recordAvailable(final ByteBuffer recordBytes);
+	public abstract void recordComplete(String streamName, String paritionKey, 
+										 String explicitHashKey, ByteBuffer data);
 }

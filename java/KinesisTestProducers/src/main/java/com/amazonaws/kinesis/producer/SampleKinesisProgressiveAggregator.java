@@ -2,12 +2,13 @@ package com.amazonaws.kinesis.producer;
 
 import java.util.List;
 
-import com.amazonaws.kinesis.agg.KplAggregator;
+import com.amazonaws.kinesis.agg.KplProgressiveAggregator;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 
-public class SampleKinesisAggregator
+public class SampleKinesisProgressiveAggregator
 {
+	//Sample implementation using lambda function callback
 	public static void main(String[] args)
 	{
 		if (args.length != 2) 
@@ -20,7 +21,11 @@ public class SampleKinesisAggregator
 		String regionName = args[1];
 		
 		AmazonKinesis producer = ProducerUtils.getKinesisProducer(regionName);
-		KplAggregator aggregator = new KplAggregator(streamName);
+		KplProgressiveAggregator aggregator = new KplProgressiveAggregator(streamName);
+		aggregator.addKplAggregatorListener((stream, partitionKey, explicitHashKey, data) -> 
+		{ 
+			//TODO: Use an executor service to kick off a submit?
+		});
 		
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
@@ -30,7 +35,7 @@ public class SampleKinesisAggregator
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 		}
 
-		List<PutRecordRequest> requests = aggregator.generatePutRecordRequests();
+		List<PutRecordRequest> requests = aggregator.extractPutRecordRequests();
 		
 		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for(PutRecordRequest request : requests)

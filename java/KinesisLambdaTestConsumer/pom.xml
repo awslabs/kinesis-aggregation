@@ -48,12 +48,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- Stuff for running on AWS Lambda -->
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-lambda-java-core</artifactId>
-			<version>${aws-lambda-sdk.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-lambda-java-events</artifactId>

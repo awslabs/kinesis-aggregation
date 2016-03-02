@@ -1,14 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-	     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  	<modelVersion>4.0.0</modelVersion>
-  	<artifactId>KinesisAggregator</artifactId>
-  	<packaging>jar</packaging>
-	<parent>
-		<groupId>com.amazonaws.services.lambda</groupId>
-		<artifactId>kpl-lambda-java</artifactId>
-		<version>1.0</version>
-	</parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>KinesisTestConsumers</artifactId>
+  <version>1.1.0</version>
+  <packaging>jar</packaging>
+  <parent>
+    <groupId>com.amazonaws.services.lambda</groupId>
+    <artifactId>kpl-lambda-java</artifactId>
+    <version>1.0</version>
+  </parent>
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -36,8 +35,6 @@
 		</plugins>
 	</build>
 	<dependencies>
-		<!-- Even though we're a producer, not a consumer, this dependency gives us access to the
-		generated protocol buffer classes. -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-client</artifactId>
@@ -50,6 +47,16 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- Stuff for running on AWS Lambda -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-core</artifactId>
+			<version>${aws-lambda-sdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-events</artifactId>
+			<version>${aws-lambda-sdk.version}</version>
+		</dependency>
 	</dependencies>
-	<version>1.1.0</version>
 </project>

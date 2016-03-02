@@ -14,10 +14,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws.kinesis.deagg;
+package com.amazonaws.kinesis.consumer;
 
 import java.util.List;
 
+import com.amazonaws.kinesis.deagg.KinesisUserRecordProcessor;
+import com.amazonaws.kinesis.deagg.KplDeaggregator;
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
@@ -32,11 +34,8 @@ public class KinesisLambdaReceiver implements
 		logger.log("Received " + event.getRecords().size()
 				+ " raw Event Records.");
 
-		// create a KPL Deaggregator object to do the deaggregation for us
-		KplDeaggregator deaggregator = new KplDeaggregator();
-
-		// Stream the User Records from the Lambda Event
-		deaggregator.stream(event.getRecords().stream(), userRecord -> {
+		 // Stream the User Records from the Lambda Event
+		 KplDeaggregator.stream(event.getRecords().stream(), userRecord -> {
 			// Your User Record Processing Code Here!
 				logger.log(String.format("Processing UserRecord %s (%s:%s)",
 						userRecord.getPartitionKey(),
@@ -53,14 +52,11 @@ public class KinesisLambdaReceiver implements
 		logger.log("Received " + event.getRecords().size()
 				+ " raw Event Records.");
 
-		// create a KPL Deaggregator object to do the deaggregation for us
-		KplDeaggregator deaggregator = new KplDeaggregator();
-
 		try {
 			// process the user records with an anonymous record processor
 			// instance
-			deaggregator.processRecords(event.getRecords(),
-					new KplDeaggregator.KinesisUserRecordProcessor() {
+			KplDeaggregator.processRecords(event.getRecords(),
+					new KinesisUserRecordProcessor() {
 						public Void process(List<UserRecord> userRecords) {
 							for (UserRecord userRecord : userRecords) {
 								// Your User Record Processing Code Here!
