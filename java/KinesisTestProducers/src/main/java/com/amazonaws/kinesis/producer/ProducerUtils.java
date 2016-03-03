@@ -59,7 +59,7 @@ public class ProducerUtils
 	public static AmazonKinesis getKinesisProducer(String region) 
 	{
 		ClientConfiguration config = new ClientConfiguration();
-		config.setMaxConnections(1);
+		config.setMaxConnections(25);
 		config.setConnectionTimeout(60000);
 		config.setSocketTimeout(60000);
 

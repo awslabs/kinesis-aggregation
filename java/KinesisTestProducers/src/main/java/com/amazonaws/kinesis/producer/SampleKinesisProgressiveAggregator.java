@@ -17,6 +17,9 @@
 package com.amazonaws.kinesis.producer;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.kinesis.agg.KplProgressiveAggregator;
 import com.amazonaws.services.kinesis.AmazonKinesis;
@@ -24,23 +27,34 @@ import com.amazonaws.services.kinesis.model.PutRecordRequest;
 
 public class SampleKinesisProgressiveAggregator
 {
-	//Sample implementation using lambda function callback
+	private static final ExecutorService executor = Executors.newFixedThreadPool(5);
+	
 	public static void main(String[] args)
 	{
 		if (args.length != 2) 
 		{
-			System.err.println("Usage SampleKinesisAggregator <stream name> <region>");
+			System.err.println("Usage SampleKinesisProgressiveAggregator <stream name> <region>");
 			System.exit(1);
 		} 
 		
 		String streamName = args[0];
 		String regionName = args[1];
 		
-		AmazonKinesis producer = ProducerUtils.getKinesisProducer(regionName);
-		KplProgressiveAggregator aggregator = new KplProgressiveAggregator(streamName);
+		final AmazonKinesis producer = ProducerUtils.getKinesisProducer(regionName);
+		
+		final KplProgressiveAggregator aggregator = new KplProgressiveAggregator(streamName);
 		aggregator.addKplAggregatorListener((stream, partitionKey, explicitHashKey, data) -> 
 		{ 
-			//TODO: Use an executor service to kick off a submit?
+			executor.submit(() ->
+			{
+				System.out.println("Submitting record EHK=" + explicitHashKey);
+				producer.putRecord(new PutRecordRequest()
+									.withStreamName(stream)
+									.withPartitionKey(partitionKey)
+									.withExplicitHashKey(explicitHashKey)
+									.withData(data));
+				System.out.println("Completed record EHK=" + explicitHashKey);
+			});
 		});
 		
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
@@ -53,11 +67,22 @@ public class SampleKinesisProgressiveAggregator
 
 		List<PutRecordRequest> requests = aggregator.drainPutRecordRequests();
 		
-		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
+		System.out.println("Draining remaining requests...");
 		for(PutRecordRequest request : requests)
 		{
+			System.out.println("Submitting record EHK=" + request.getExplicitHashKey());
 			producer.putRecord(request);
+			System.out.println("Completed record EHK=" + request.getExplicitHashKey());
 		}
-		System.out.println("Complete.");
+		
+		System.out.println("Waiting 120 seconds for all transmissions to complete...");
+		try {
+			executor.shutdown();
+			executor.awaitTermination(120, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			//ignore
+			e.printStackTrace();
+		}
+		System.out.println("Transmissions complete.");
 	}
 }

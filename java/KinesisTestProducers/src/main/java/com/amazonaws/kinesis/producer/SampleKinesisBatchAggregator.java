@@ -28,7 +28,7 @@ public class SampleKinesisBatchAggregator
 	{
 		if (args.length != 2) 
 		{
-			System.err.println("Usage SampleKinesisAggregator <stream name> <region>");
+			System.err.println("Usage SampleKinesisBatchAggregator <stream name> <region>");
 			System.exit(1);
 		} 
 		
@@ -47,12 +47,15 @@ public class SampleKinesisBatchAggregator
 		}
 
 		List<PutRecordRequest> requests = aggregator.drainPutRecordRequests();
+		System.out.println("Generated " + requests.size() + " PutRecordRequest objects.");
 		
 		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for(PutRecordRequest request : requests)
 		{
+			System.out.println("Submitting record EHK=" + request.getExplicitHashKey());
 			producer.putRecord(request);
+			System.out.println("Completed record EHK=" + request.getExplicitHashKey());
 		}
-		System.out.println("Complete.");
+		System.out.println("All transmissions complete.");
 	}
 }
