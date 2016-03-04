@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -16,33 +16,25 @@
  */
 package com.amazonaws.kinesis.agg;
 
-import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import com.amazonaws.annotation.NotThreadSafe;
-import com.amazonaws.services.kinesis.model.PutRecordRequest;
-import com.amazonaws.services.kinesis.model.PutRecordsRequest;
+import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
 @NotThreadSafe
-public abstract class KplAggregator
+public class KplAggregator
 {
-	//Kinesis Limits
-	//https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html
-	public static final long KINESIS_MAX_RECORDS_PER_PUT_RECORDS = 500;
-	public static final long KINESIS_MAX_BYTES_PER_PUT_RECORDS = 5 * 1048576L; //5 MB
+	private KinesisAggRecord currentRecord;
+	private final List<KplAggregatorListener> listeners;
 	
-	protected KinesisAggRecord currentRecord;
-	protected final String streamName;
-
-	public KplAggregator(String streamName) 
+    public KplAggregator()
 	{
-		this.streamName = streamName;
+    	this.listeners = new LinkedList<>();
 		this.currentRecord = new KinesisAggRecord();
-	}
-
-	public String getStreamName()
-	{
-		return this.streamName;
 	}
 
 	public int getNumUserRecords()
@@ -55,26 +47,72 @@ public abstract class KplAggregator
 		return this.currentRecord.getSizeBytes();
 	}
 	
-	public int getNumKinesisRecords()
-	{
-		return 1;
-	}
-	
 	public void clear()
 	{
 		this.currentRecord = new KinesisAggRecord();
 	}
+    
+    public void addKplAggregatorListener(final KplAggregatorListener listener)
+    {
+    	if(!this.listeners.contains(listener))
+    	{
+    		this.listeners.add(listener);
+    	}
+    }
+    
+    public void removeKplAggregatorListener(final KplAggregatorListener listener)
+    {
+    	if(this.listeners.contains(listener))
+    	{
+    		this.listeners.remove(listener);
+    	}
+    }
 	
-	public abstract List<PutRecordRequest> drainPutRecordRequests();
-	
-	public abstract List<PutRecordsRequest> drainPutRecordsRequests();
-
-	public abstract List<ByteBuffer> drainBytes();
-	
-	public void addUserRecord(String partitionKey, byte[] data)
+	public KinesisAggRecord addUserRecord(String partitionKey, byte[] data)
 	{
-	    addUserRecord(partitionKey, null, data);
+	    return addUserRecord(partitionKey, null, data);
 	}
+    
+    public KinesisAggRecord clearAndGet()
+	{
+    	if(getNumUserRecords() == 0)
+    	{
+    		return null;
+    	}
+    	
+		KinesisAggRecord out = this.currentRecord;
+		this.currentRecord = new KinesisAggRecord();
+		return out;
+	}
+	
+	public KinesisAggRecord addUserRecord(String partitionKey, String explicitHashKey, byte[] data)
+	{
+		boolean success = this.currentRecord.addUserRecord(partitionKey, explicitHashKey, data);
+		if (success) 
+		{
+			// we were able to add the current data to the in-flight record
+			return null;
+		}
+		
+		for(KplAggregatorListener listener : this.listeners)
+		{
+			listener.recordComplete(this.currentRecord);
+		}
+		
+		return clearAndGet();
+	}
+	
+	public Void streamingAddUserRecord(Stream<PutRecordsRequestEntry> records, Consumer<KinesisAggRecord> consumer)
+	{
+		records.forEachOrdered(rec ->
+		{
+			final KinesisAggRecord o = addUserRecord(rec.getPartitionKey(), rec.getExplicitHashKey(), rec.getData().array());
+			if (o != null)
+			{
+				Arrays.asList(o).stream().forEachOrdered(consumer);
+			}
+		});
 
-	public abstract void addUserRecord(String partitionKey, String explicitHashKey, byte[] data);
+		return null;
+	}
 }

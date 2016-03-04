@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
