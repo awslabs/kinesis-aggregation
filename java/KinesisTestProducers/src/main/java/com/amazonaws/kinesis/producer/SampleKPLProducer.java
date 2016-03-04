@@ -134,7 +134,7 @@ public class SampleKPLProducer
 			@Override
 			public void run() 
 			{
-				byte[] data = ProducerUtils.generateData(sequenceNumber.get(), ProducerConfig.RECORD_SIZE);
+				byte[] data = ProducerUtils.generateData(sequenceNumber.get(), ProducerConfig.RECORD_SIZE_BYTES);
 				ListenableFuture<UserRecordResult> f = producer.addUserRecord(
 						streamName, ProducerConfig.RECORD_TIMESTAMP, 
 						ProducerUtils.randomExplicitHashKey(), 

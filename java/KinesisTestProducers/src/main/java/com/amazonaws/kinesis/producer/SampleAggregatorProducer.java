@@ -57,7 +57,7 @@ public class SampleAggregatorProducer
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
 		{
-			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE);
+			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE_BYTES);
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 		}
 
@@ -79,7 +79,7 @@ public class SampleAggregatorProducer
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
 		{
-			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE);
+			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE_BYTES);
 			KinesisAggRecord aggRecord = aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 			if(aggRecord != null)
 			{
@@ -98,7 +98,7 @@ public class SampleAggregatorProducer
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
 		{
-			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE);
+			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE_BYTES);
 			toTransmit.add(new PutRecordsRequestEntry()
 							.withPartitionKey(ProducerConfig.RECORD_TIMESTAMP)
 							.withExplicitHashKey(ProducerUtils.randomExplicitHashKey())
