@@ -112,6 +112,9 @@ public class SampleAggregatorProducer
 				sendRecord(producer, streamName, aggRecord);
 			}
 		});
+		
+		sendRecord(producer, streamName, aggregator.clearAndGet());
+		System.out.println("Transmissions complete.");
 	}
 	
 	public static void main(String[] args)

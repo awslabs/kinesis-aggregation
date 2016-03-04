@@ -213,6 +213,7 @@ public class KinesisAggRecord
      * @return The new size of this existing record in bytes if a new user record with the specified
      * parameters was added.
      */
+    //TODO: This is broken.
     private int calculateNewProtobufSize(String partitionKey, String explicitHashKey, byte[] data)
     {
     	int newSize = 0;
@@ -256,8 +257,8 @@ public class KinesisAggRecord
         validateData(data);       
         
         //Validate new record size won't overflow
-        int estimatedSizeOfNewRecord = calculateNewProtobufSize(partitionKey, explicitHashKey, data);
-        if(getSizeBytes() + estimatedSizeOfNewRecord > KinesisLimits.MAX_BYTES_PER_RECORD)
+        int sizeOfNewRecord = calculateNewProtobufSize(partitionKey, explicitHashKey, data);
+        if(getSizeBytes() + sizeOfNewRecord > KinesisLimits.MAX_BYTES_PER_RECORD)
 		{
         	return false;									
 		}
@@ -279,7 +280,7 @@ public class KinesisAggRecord
     	}
     	newRecord.setExplicitHashKeyIndex(ehkAddResult.getSecond());
         
-        this.protobufSizeBytes += estimatedSizeOfNewRecord;
+        this.protobufSizeBytes += sizeOfNewRecord;
         this.aggregatedRecordBuilder.addRecords(newRecord.build());
         
         if(this.aggregatedRecordBuilder.getRecordsCount() == 1)
