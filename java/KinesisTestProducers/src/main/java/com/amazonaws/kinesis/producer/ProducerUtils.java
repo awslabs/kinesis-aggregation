@@ -47,7 +47,7 @@ public class ProducerUtils
 		sb.append("RECORD ");
 		sb.append(Long.toString(sequenceNumber));
 		sb.append(" ");
-		while (sb.length() < totalLen)
+		while (sb.length() < totalLen-1)
 		{
 			sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
 		}

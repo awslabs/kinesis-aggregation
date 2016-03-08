@@ -33,6 +33,25 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<mainClass>com.amazonaws.kinesis.producer.SampleAggregatorProducer</mainClass>
+					<arguments>
+						<argument>AgsVaultRelay</argument>
+						<argument>us-east-1</argument>
+					</arguments>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -45,6 +64,11 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-producer</artifactId>
 			<version>0.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.services.lambda</groupId>
+			<artifactId>KinesisAggregator</artifactId>
+			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
 </project>

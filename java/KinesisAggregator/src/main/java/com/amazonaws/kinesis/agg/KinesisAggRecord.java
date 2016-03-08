@@ -50,7 +50,7 @@ import com.google.protobuf.ByteString;
 public class KinesisAggRecord
 {
 	//Serialization protocol constants from https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-	private static final byte[] KPL_AGGREGATED_RECORD_MAGIC = new byte[] {-13, -119, -102, -62 };
+	private static final byte[] KPL_AGGREGATED_RECORD_MAGIC = new byte[] {(byte)0xf3, (byte)0x89, (byte)0x9a, (byte)0xc2 };
 	private static final String KPL_MESSAGE_DIGEST_NAME = "MD5";
 	private static final BigInteger UINT_128_MAX = new BigInteger(StringUtils.repeat("FF", 16), 16);
 	
@@ -213,26 +213,89 @@ public class KinesisAggRecord
      * @return The new size of this existing record in bytes if a new user record with the specified
      * parameters was added.
      */
-    //TODO: This is broken.
     private int calculateNewProtobufSize(String partitionKey, String explicitHashKey, byte[] data)
     {
-    	int newSize = 0;
-    	
-    	newSize += data.length + 3;
+    	int messageSize = 0;
     	
     	if(!this.partitionKeys.contains(partitionKey))
-        {
-        	newSize += partitionKey.length() + 3;
-        }
-        newSize += 2;
-        
-        if(!this.explicitHashKeys.contains(explicitHashKey))
+		{
+    		int pkLength = partitionKey.length();
+    		messageSize += 1; //(message index + wire type for PK table)
+    		messageSize += calculateVarintSize(pkLength);
+			messageSize += pkLength;
+		}
+    	
+    	if(!this.explicitHashKeys.contains(explicitHashKey))
     	{
-    		newSize += explicitHashKey.length() + 3;
+    		int ehkLength = explicitHashKey.length();
+    		messageSize += 1; //(message index + wire type for EHK table)
+    		messageSize += calculateVarintSize(ehkLength);
+			messageSize += ehkLength;
     	}
-    	newSize += 2;
-        
-        return newSize;
+    	
+    	long innerRecordSize = 0;
+    	
+    	if(partitionKey != null)
+		{
+    		innerRecordSize += 1; //(message index + wire type for PK index)
+    		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey));
+		}
+			
+		if(explicitHashKey != null)
+		{
+			innerRecordSize += 1; //(message index + wire type for EHK index)
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey));
+		}
+			
+		if(data != null)
+		{
+			innerRecordSize += 1; //(message index + wire type for record data)
+			innerRecordSize += calculateVarintSize(data.length);
+			innerRecordSize += data.length;
+		}
+		
+		messageSize += 1; //(message index + wire type for record)
+		messageSize += calculateVarintSize(innerRecordSize);
+		messageSize += innerRecordSize;
+		
+        return messageSize;
+    }
+    
+    /**
+     * 
+     * @param value
+     * @return
+     * 
+     * @see https://developers.google.com/protocol-buffers/docs/encoding#varints
+     */
+    private int calculateVarintSize(long value)
+    {
+    	if(value < 0)
+    	{
+    		throw new IllegalArgumentException("Size values should not be negative.");
+    	}
+    	
+    	int numBitsNeeded = 0;
+    	if(value == 0)
+    	{
+    		numBitsNeeded = 1;
+    	}
+    	else
+    	{
+    		while (value > 0)
+	    	{
+	    	    numBitsNeeded++;
+	    	    value = value >> 1;
+	    	}
+    	}
+    	
+    	int numVarintBytes = numBitsNeeded / 7;
+    	if(numBitsNeeded % 7 > 0)
+    	{
+    		numVarintBytes += 1;
+    	}
+    	
+    	return numVarintBytes;
     }
 	
     /**
@@ -248,7 +311,7 @@ public class KinesisAggRecord
 	 */
     public boolean addUserRecord(String partitionKey, String explicitHashKey, byte[] data)
 	{
-		validatePartitionKey(partitionKey);
+    	validatePartitionKey(partitionKey);
 		partitionKey = partitionKey.trim();
         
         explicitHashKey = explicitHashKey != null ? explicitHashKey.trim() : createExplicitHashKey(partitionKey);
@@ -294,11 +357,13 @@ public class KinesisAggRecord
     
     public PutRecordRequest toPutRecordRequest(String streamName)
     {
+    	byte[] recordBytes = toRecordBytes();
+    	ByteBuffer bb = ByteBuffer.wrap(recordBytes);
     	return new PutRecordRequest()
     			.withStreamName(streamName)
     			.withExplicitHashKey(getExplicitHashKey())
     			.withPartitionKey(getPartitionKey())
-    			.withData(ByteBuffer.wrap(toRecordBytes()));
+    			.withData(bb);
     }
     
     public PutRecordsRequestEntry toPutRecordsRequestEntry()
@@ -402,6 +467,17 @@ public class KinesisAggRecord
 			  this.counts = new TreeMap<>();
 		  }
 		  
+		  public Long getPotentialIndex(String s)
+		  {
+			  Long it = this.lookup.get(s);
+			  if(it != null)
+			  {
+				  return it; 
+			  }
+			  
+			  return Long.valueOf(this.keys.size());
+		  }
+		  
 		  public ImmutablePair<Boolean, Long> add(String s)
 		  {
 			  Long it = this.lookup.get(s);
@@ -427,7 +503,7 @@ public class KinesisAggRecord
 		  
 		  public boolean contains(String s)
 		  {
-			  return this.lookup.containsKey(s);
+			  return s != null && this.lookup.containsKey(s);
 		  }
 		  
 		  public void clear()

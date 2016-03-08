@@ -39,9 +39,10 @@ public class SampleAggregatorProducer
 			return;
 		}
 		
-		System.out.println("Submitting record EHK=" + aggRecord.getExplicitHashKey());
+		System.out.println("Submitting record EHK=" + aggRecord.getExplicitHashKey() + " DataSize=" + aggRecord.getSizeBytes());
 		producer.putRecord(aggRecord.toPutRecordRequest(streamName));
 		System.out.println("Completed record EHK=" + aggRecord.getExplicitHashKey());
+		System.out.flush();
 	}
 	
 	private static void sendViaCallback(AmazonKinesis producer, String streamName, KplAggregator aggregator)
@@ -50,7 +51,14 @@ public class SampleAggregatorProducer
 		{ 
 			executor.submit(() ->
 			{
-				sendRecord(producer, streamName, aggRecord);
+				try
+				{
+					sendRecord(producer, streamName, aggRecord);
+				}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
 			});
 		});
 		
@@ -61,7 +69,17 @@ public class SampleAggregatorProducer
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 		}
 
-		sendRecord(producer, streamName, aggregator.clearAndGet());
+		executor.submit(() ->
+		{
+			try
+			{
+				sendRecord(producer, streamName, aggregator.clearAndGet());
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		});
 		
 		System.out.println("Waiting 120 seconds for all transmissions to complete...");
 		try {
