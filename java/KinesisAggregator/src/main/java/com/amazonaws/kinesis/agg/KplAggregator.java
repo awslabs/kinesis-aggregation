@@ -16,27 +16,28 @@
  */
 package com.amazonaws.kinesis.agg;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 import com.amazonaws.annotation.NotThreadSafe;
-import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
 @NotThreadSafe
 public class KplAggregator
 {
+	public interface RecordCompleteListener 
+	{
+		public abstract void recordComplete(KinesisAggRecord aggRecord);
+	}
+	
 	private KinesisAggRecord currentRecord;
-	private List<Function<KinesisAggRecord,Void>> functionCallbacks;
+	private List<ListenerExecutorPair> listeners;
 	
     public KplAggregator()
 	{
 		this.currentRecord = new KinesisAggRecord();
-		this.functionCallbacks = new LinkedList<>();
+		this.listeners = new LinkedList<>();
 	}
 
 	public int getNumUserRecords()
@@ -49,17 +50,24 @@ public class KplAggregator
 		return this.currentRecord.getSizeBytes();
 	}
 	
-	public void clear()
+	public void clearRecord()
 	{
 		this.currentRecord = new KinesisAggRecord();
 	}
 	
-	public void onRecordComplete(Function<KinesisAggRecord,Void> callback)
+	public void clearListeners()
 	{
-		if(!this.functionCallbacks.contains(callback))
-		{
-			this.functionCallbacks.add(callback);
-		}
+		this.listeners.clear();
+	}
+	
+	public void onRecordComplete(RecordCompleteListener listener)
+	{
+		onRecordComplete(listener, ForkJoinPool.commonPool());
+	}
+	
+	public void onRecordComplete(RecordCompleteListener listener, Executor executor)
+	{
+		this.listeners.add(new ListenerExecutorPair(listener, executor));
 	}
 	
 	public KinesisAggRecord addUserRecord(String partitionKey, byte[] data)
@@ -89,25 +97,33 @@ public class KplAggregator
 		}
 		
 		final KinesisAggRecord completeRecord = this.currentRecord;
-		for(Function<KinesisAggRecord,Void> callback : this.functionCallbacks)
+		for(ListenerExecutorPair pair : this.listeners)
 		{
-			CompletableFuture.runAsync(() -> { callback.apply(completeRecord); });
+			pair.getExecutor().execute(() -> { pair.getListener().recordComplete(completeRecord); });
 		}
 		
 		return clearAndGet();
 	}
 	
-	public Void streamingAddUserRecord(Stream<PutRecordsRequestEntry> records, Consumer<KinesisAggRecord> consumer)
+	private class ListenerExecutorPair
 	{
-		records.forEachOrdered(rec ->
+		private RecordCompleteListener listener;
+		private Executor executor;
+		
+		public ListenerExecutorPair(RecordCompleteListener listener, Executor executor)
 		{
-			final KinesisAggRecord o = addUserRecord(rec.getPartitionKey(), rec.getExplicitHashKey(), rec.getData().array());
-			if (o != null)
-			{
-				Arrays.asList(o).stream().forEachOrdered(consumer);
-			}
-		});
-
-		return null;
+			this.listener = listener;
+			this.executor = executor;
+		}
+		
+		public RecordCompleteListener getListener()
+		{
+			return this.listener;
+		}
+		
+		public Executor getExecutor()
+		{
+			return this.executor;
+		}
 	}
 }

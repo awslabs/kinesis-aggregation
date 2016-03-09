@@ -16,17 +16,9 @@
  */
 package com.amazonaws.kinesis.producer;
 
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import com.amazonaws.kinesis.agg.KinesisAggRecord;
 import com.amazonaws.kinesis.agg.KplAggregator;
 import com.amazonaws.services.kinesis.AmazonKinesis;
-import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
 public class SampleAggregatorProducer
 {
@@ -40,7 +32,6 @@ public class SampleAggregatorProducer
 		System.out.println("Submitting record EHK=" + aggRecord.getExplicitHashKey() + " DataSize=" + aggRecord.getSizeBytes());
 		producer.putRecord(aggRecord.toPutRecordRequest(streamName));
 		System.out.println("Completed record EHK=" + aggRecord.getExplicitHashKey());
-		System.out.flush();
 	}
 	
 	private static void sendViaCallback(AmazonKinesis producer, String streamName, KplAggregator aggregator)
@@ -64,24 +55,12 @@ public class SampleAggregatorProducer
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP, ProducerUtils.randomExplicitHashKey(), data);
 		}
 
-		executor.submit(() ->
+		try
 		{
-			try
-			{
-				sendRecord(producer, streamName, aggregator.clearAndGet());
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-		});
-		
-		System.out.println("Waiting 120 seconds for all transmissions to complete...");
-		try {
-			executor.shutdown();
-			executor.awaitTermination(120, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			//ignore
+			sendRecord(producer, streamName, aggregator.clearAndGet());
+		}
+		catch(Exception e)
+		{
 			e.printStackTrace();
 		}
 		System.out.println("Transmissions complete.");
@@ -104,32 +83,6 @@ public class SampleAggregatorProducer
 		System.out.println("Transmissions complete.");
 	}
 	
-	private static void sendViaStream(AmazonKinesis producer, String streamName, KplAggregator aggregator)
-	{
-		List<PutRecordsRequestEntry> toTransmit = new LinkedList<>();
-		
-		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
-		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
-		{
-			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE_BYTES);
-			toTransmit.add(new PutRecordsRequestEntry()
-							.withPartitionKey(ProducerConfig.RECORD_TIMESTAMP)
-							.withExplicitHashKey(ProducerUtils.randomExplicitHashKey())
-							.withData(ByteBuffer.wrap(data)));
-		}
-
-		aggregator.streamingAddUserRecord(toTransmit.stream(), (aggRecord) ->
-		{
-			if(aggRecord != null)
-			{
-				sendRecord(producer, streamName, aggRecord);
-			}
-		});
-		
-		sendRecord(producer, streamName, aggregator.clearAndGet());
-		System.out.println("Transmissions complete.");
-	}
-	
 	public static void main(String[] args)
 	{
 		if (args.length != 2) 
@@ -144,7 +97,6 @@ public class SampleAggregatorProducer
 		final KplAggregator aggregator = new KplAggregator();
 		
 		sendViaCallback(producer, streamName, aggregator);
-		//sendViaBatch(producer, streamName, aggregator);
-		//sendViaStream(producer, streamName, aggregator);
+		sendViaBatch(producer, streamName, aggregator);
 	}
 }
