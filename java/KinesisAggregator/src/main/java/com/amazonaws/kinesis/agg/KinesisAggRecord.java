@@ -49,21 +49,21 @@ import com.google.protobuf.ByteString;
  */
 @NotThreadSafe
 public class KinesisAggRecord {
+
 	// Kinesis Limits
-	// https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html
-	// https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html
-	private static final long MAX_RECORDS_PER_PUT_RECORDS = 500;
-	private static final long MAX_BYTES_PER_PUT_RECORDS = 5242880L; // 5 MB (5 * 1024 * 1024)
-	private static final long MAX_BYTES_PER_RECORD = 1048576L; // 1 MB (1024 * 1024)
+	// (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
+	private static final long MAX_BYTES_PER_RECORD = 1048576L; // 1 MB (1024 *
+																// 1024)
 	private static final int PARTITION_KEY_MIN_LENGTH = 1;
 	private static final int PARTITION_KEY_MAX_LENGTH = 256;
 
 	// Serialization protocol constants from
 	// https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-	private static final byte[] KPL_AGGREGATED_RECORD_MAGIC = new byte[] { (byte) 0xf3, (byte) 0x89, (byte) 0x9a,
-			(byte) 0xc2 };
+	private static final byte[] KPL_AGGREGATED_RECORD_MAGIC = new byte[] {
+			(byte) 0xf3, (byte) 0x89, (byte) 0x9a, (byte) 0xc2 };
 	private static final String KPL_MESSAGE_DIGEST_NAME = "MD5";
-	private static final BigInteger UINT_128_MAX = new BigInteger(StringUtils.repeat("FF", 16), 16);
+	private static final BigInteger UINT_128_MAX = new BigInteger(
+			StringUtils.repeat("FF", 16), 16);
 
 	/** The current size of the aggregated protobuf message. */
 	private long aggregatedMessageSizeBytes;
@@ -100,7 +100,8 @@ public class KinesisAggRecord {
 		try {
 			this.md5 = MessageDigest.getInstance(KPL_MESSAGE_DIGEST_NAME);
 		} catch (NoSuchAlgorithmException e) {
-			throw new IllegalStateException("Could not create an MD5 message digest.", e);
+			throw new IllegalStateException(
+					"Could not create an MD5 message digest.", e);
 		}
 	}
 
@@ -125,7 +126,8 @@ public class KinesisAggRecord {
 			return 0;
 		}
 
-		return KPL_AGGREGATED_RECORD_MAGIC.length + this.aggregatedMessageSizeBytes + this.md5.getDigestLength();
+		return KPL_AGGREGATED_RECORD_MAGIC.length
+				+ this.aggregatedMessageSizeBytes + this.md5.getDigestLength();
 	}
 
 	/**
@@ -150,8 +152,10 @@ public class KinesisAggRecord {
 		// a ByteArrayOutputStream, but write(byte[],int,int) doesn't
 		// so that's why we're using the long version of "write" here
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(
-				KPL_AGGREGATED_RECORD_MAGIC.length + messageBody.length + this.md5.getDigestLength());
-		baos.write(KPL_AGGREGATED_RECORD_MAGIC, 0, KPL_AGGREGATED_RECORD_MAGIC.length);
+				KPL_AGGREGATED_RECORD_MAGIC.length + messageBody.length
+						+ this.md5.getDigestLength());
+		baos.write(KPL_AGGREGATED_RECORD_MAGIC, 0,
+				KPL_AGGREGATED_RECORD_MAGIC.length);
 		baos.write(messageBody, 0, messageBody.length);
 		baos.write(messageDigest, 0, messageDigest.length);
 
@@ -179,7 +183,8 @@ public class KinesisAggRecord {
 	 */
 	public String getPartitionKey() {
 		if (getNumUserRecords() == 0) {
-			throw new IllegalStateException("Cannot compute partitionKey for empty container");
+			throw new IllegalStateException(
+					"Cannot compute partitionKey for empty container");
 		} else if (getNumUserRecords() == 1) {
 			return this.aggPartitionKey;
 		}
@@ -201,7 +206,8 @@ public class KinesisAggRecord {
 	 */
 	public String getExplicitHashKey() {
 		if (getNumUserRecords() == 0) {
-			throw new IllegalStateException("Cannot compute explicitHashKey for empty container");
+			throw new IllegalStateException(
+					"Cannot compute explicitHashKey for empty container");
 		}
 
 		return this.aggExplicitHashKey;
@@ -223,7 +229,8 @@ public class KinesisAggRecord {
 	 * @return The new size of this existing record in bytes if a new user
 	 *         record with the specified parameters was added.
 	 */
-	private int calculateRecordSize(String partitionKey, String explicitHashKey, byte[] data) {
+	private int calculateRecordSize(String partitionKey,
+			String explicitHashKey, byte[] data) {
 		int messageSize = 0;
 
 		// has the partition key been added to the table of known PKs yet?
@@ -251,20 +258,22 @@ public class KinesisAggRecord {
 
 		// partition key field
 		innerRecordSize += 1; // (message index + wire type for PK index)
-		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size
-																									// of
-																									// pk
-																									// index
-																									// value
+		innerRecordSize += calculateVarintSize(this.partitionKeys
+				.getPotentialIndex(partitionKey)); // size
+													// of
+													// pk
+													// index
+													// value
 
 		// explicit hash key field (this is optional)
 		if (explicitHashKey != null) {
 			innerRecordSize += 1; // (message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size
-																												// of
-																												// ehk
-																												// index
-																												// value
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys
+					.getPotentialIndex(explicitHashKey)); // size
+															// of
+															// ehk
+															// index
+															// value
 		}
 
 		// data field
@@ -296,7 +305,8 @@ public class KinesisAggRecord {
 	 */
 	private int calculateVarintSize(long value) {
 		if (value < 0) {
-			throw new IllegalArgumentException("Size values should not be negative.");
+			throw new IllegalArgumentException(
+					"Size values should not be negative.");
 		}
 
 		int numBitsNeeded = 0;
@@ -339,23 +349,26 @@ public class KinesisAggRecord {
 	 * @return True if the new user record was successfully added to this
 	 *         aggregated record or false if this aggregated record is too full.
 	 */
-	public boolean addUserRecord(String partitionKey, String explicitHashKey, byte[] data) {
+	public boolean addUserRecord(String partitionKey, String explicitHashKey,
+			byte[] data) {
 		validatePartitionKey(partitionKey);
 		partitionKey = partitionKey.trim();
 
-		explicitHashKey = explicitHashKey != null ? explicitHashKey.trim() : createExplicitHashKey(partitionKey);
+		explicitHashKey = explicitHashKey != null ? explicitHashKey.trim()
+				: createExplicitHashKey(partitionKey);
 		validateExplicitHashKey(explicitHashKey);
 
 		validateData(data);
 
 		// Validate new record size won't overflow
-		int sizeOfNewRecord = calculateRecordSize(partitionKey, explicitHashKey, data);
+		int sizeOfNewRecord = calculateRecordSize(partitionKey,
+				explicitHashKey, data);
 		if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
 			return false;
 		}
 
-		Record.Builder newRecord = Record.newBuilder()
-				.setData(data != null ? ByteString.copyFrom(data) : ByteString.EMPTY);
+		Record.Builder newRecord = Record.newBuilder().setData(
+				data != null ? ByteString.copyFrom(data) : ByteString.EMPTY);
 
 		ExistenceIndexPair pkAddResult = this.partitionKeys.add(partitionKey);
 		if (pkAddResult.getFirst().booleanValue()) {
@@ -363,9 +376,11 @@ public class KinesisAggRecord {
 		}
 		newRecord.setPartitionKeyIndex(pkAddResult.getSecond());
 
-		ExistenceIndexPair ehkAddResult = this.explicitHashKeys.add(explicitHashKey);
+		ExistenceIndexPair ehkAddResult = this.explicitHashKeys
+				.add(explicitHashKey);
 		if (ehkAddResult.getFirst().booleanValue()) {
-			this.aggregatedRecordBuilder.addExplicitHashKeyTable(explicitHashKey);
+			this.aggregatedRecordBuilder
+					.addExplicitHashKeyTable(explicitHashKey);
 		}
 		newRecord.setExplicitHashKeyIndex(ehkAddResult.getSecond());
 
@@ -394,7 +409,8 @@ public class KinesisAggRecord {
 	public PutRecordRequest toPutRecordRequest(String streamName) {
 		byte[] recordBytes = toRecordBytes();
 		ByteBuffer bb = ByteBuffer.wrap(recordBytes);
-		return new PutRecordRequest().withStreamName(streamName).withExplicitHashKey(getExplicitHashKey())
+		return new PutRecordRequest().withStreamName(streamName)
+				.withExplicitHashKey(getExplicitHashKey())
 				.withPartitionKey(getPartitionKey()).withData(bb);
 	}
 
@@ -411,8 +427,10 @@ public class KinesisAggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		return new PutRecordsRequestEntry().withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey()).withData(ByteBuffer.wrap(toRecordBytes()));
+		return new PutRecordsRequestEntry()
+				.withExplicitHashKey(getExplicitHashKey())
+				.withPartitionKey(getPartitionKey())
+				.withData(ByteBuffer.wrap(toRecordBytes()));
 	}
 
 	/**
@@ -423,8 +441,10 @@ public class KinesisAggRecord {
 	 */
 	private void validateData(final byte[] data) {
 		if (data != null && data.length > MAX_BYTES_PER_RECORD) {
-			throw new IllegalArgumentException("Data must be less than or equal to " + +MAX_BYTES_PER_RECORD
-					+ " bytes in size, got " + data.length + " bytes");
+			throw new IllegalArgumentException(
+					"Data must be less than or equal to "
+							+ +MAX_BYTES_PER_RECORD + " bytes in size, got "
+							+ data.length + " bytes");
 		}
 	}
 
@@ -439,16 +459,20 @@ public class KinesisAggRecord {
 			throw new IllegalArgumentException("Partition key cannot be null");
 		}
 
-		if (partitionKey.length() < PARTITION_KEY_MIN_LENGTH || partitionKey.length() > PARTITION_KEY_MAX_LENGTH) {
+		if (partitionKey.length() < PARTITION_KEY_MIN_LENGTH
+				|| partitionKey.length() > PARTITION_KEY_MAX_LENGTH) {
 			throw new IllegalArgumentException(
-					"Invalid parition key. Length must be at least " + PARTITION_KEY_MIN_LENGTH + " and at most "
-							+ PARTITION_KEY_MAX_LENGTH + ", got " + partitionKey.length());
+					"Invalid parition key. Length must be at least "
+							+ PARTITION_KEY_MIN_LENGTH + " and at most "
+							+ PARTITION_KEY_MAX_LENGTH + ", got "
+							+ partitionKey.length());
 		}
 
 		try {
 			partitionKey.getBytes(StandardCharsets.UTF_8);
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Partition key must be valid " + StandardCharsets.UTF_8.displayName());
+			throw new IllegalArgumentException("Partition key must be valid "
+					+ StandardCharsets.UTF_8.displayName());
 		}
 	}
 
@@ -467,11 +491,14 @@ public class KinesisAggRecord {
 		try {
 			b = new BigInteger(explicitHashKey);
 		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Invalid explicitHashKey, must be an integer, got " + explicitHashKey);
+			throw new IllegalArgumentException(
+					"Invalid explicitHashKey, must be an integer, got "
+							+ explicitHashKey);
 		}
 
 		if (b != null) {
-			if (b.compareTo(UINT_128_MAX) > 0 || b.compareTo(BigInteger.ZERO) < 0) {
+			if (b.compareTo(UINT_128_MAX) > 0
+					|| b.compareTo(BigInteger.ZERO) < 0) {
 				throw new IllegalArgumentException(
 						"Invalid explicitHashKey, must be greater or equal to zero and less than or equal to (2^128 - 1), got "
 								+ explicitHashKey);
@@ -495,7 +522,8 @@ public class KinesisAggRecord {
 		BigInteger hashKey = BigInteger.ZERO;
 
 		this.md5.reset();
-		byte[] pkDigest = this.md5.digest(partitionKey.getBytes(StandardCharsets.UTF_8));
+		byte[] pkDigest = this.md5.digest(partitionKey
+				.getBytes(StandardCharsets.UTF_8));
 
 		for (int i = 0; i < this.md5.getDigestLength(); i++) {
 			BigInteger p = new BigInteger(Byte.toString(pkDigest[i]));
@@ -530,13 +558,14 @@ public class KinesisAggRecord {
 		}
 
 		/**
-		 * If the input String were to be added to this Keyset,
-		 * what would its resulting index be.
+		 * If the input String were to be added to this Keyset, what would its
+		 * resulting index be.
 		 * 
-		 * @param s The input string to potentially add to the KeySet
+		 * @param s
+		 *            The input string to potentially add to the KeySet
 		 * 
 		 * @return The table index that this string would occupy if it were
-		 * added to this KeySet.
+		 *         added to this KeySet.
 		 */
 		public Long getPotentialIndex(String s) {
 			Long it = this.lookup.get(s);
@@ -548,14 +577,15 @@ public class KinesisAggRecord {
 		}
 
 		/**
-		 * Add a new key to this keyset.
-		 * (Logic coiped from KPL C++ implementation)
+		 * Add a new key to this keyset. (Logic coiped from KPL C++
+		 * implementation)
 		 * 
-		 * @param s The key to add to the keyset.
+		 * @param s
+		 *            The key to add to the keyset.
 		 * 
-		 * @return A pair of <boolean,long>. The boolean is true if this
-		 * key is not already in this keyset, false otherwise. The long
-		 * indicates the index of the key.
+		 * @return A pair of <boolean,long>. The boolean is true if this key is
+		 *         not already in this keyset, false otherwise. The long
+		 *         indicates the index of the key.
 		 */
 		public ExistenceIndexPair add(String s) {
 			Long it = this.lookup.get(s);
@@ -573,7 +603,8 @@ public class KinesisAggRecord {
 			}
 
 			this.keys.add(s);
-			return new ExistenceIndexPair(true, Long.valueOf(this.keys.size() - 1));
+			return new ExistenceIndexPair(true,
+					Long.valueOf(this.keys.size() - 1));
 		}
 
 		/**
@@ -594,9 +625,8 @@ public class KinesisAggRecord {
 	};
 
 	/**
-	 * A helper class for use with the KeySet that indicates
-	 * whether or not a key exists in the KeySet and what its saved index
-	 * would be.
+	 * A helper class for use with the KeySet that indicates whether or not a
+	 * key exists in the KeySet and what its saved index would be.
 	 */
 	private class ExistenceIndexPair {
 		private Boolean first;

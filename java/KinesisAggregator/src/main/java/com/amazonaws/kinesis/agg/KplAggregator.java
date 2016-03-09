@@ -24,206 +24,202 @@ import java.util.concurrent.ForkJoinPool;
 import com.amazonaws.annotation.NotThreadSafe;
 
 /**
- * A class for taking multiple Kinesis user records and aggregating
- * them into more efficiently-packed records using the Kinesis Producer
- * Library protocol.
+ * A class for taking multiple Kinesis user records and aggregating them into
+ * more efficiently-packed records using the Kinesis Producer Library protocol.
  * 
- * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
+ * @see https
+ *      ://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation
+ *      -format.md
  */
 @NotThreadSafe
-public class KplAggregator
-{
+public class KplAggregator {
 	/**
-	 * A listener interface for receiving notifications when this
-	 * aggregated record has reached its maximum allowable size.
+	 * A listener interface for receiving notifications when this aggregated
+	 * record has reached its maximum allowable size.
 	 */
-	public interface RecordCompleteListener 
-	{
+	public interface RecordCompleteListener {
 		/**
 		 * Called when an aggregated record is full and ready to be transmitted
 		 * to Kinesis.
 		 * 
-		 * @param aggRecord A complete aggregated record ready to transmit to Kinesis.
+		 * @param aggRecord
+		 *            A complete aggregated record ready to transmit to Kinesis.
 		 */
 		public abstract void recordComplete(KinesisAggRecord aggRecord);
 	}
-	
+
 	/** The current aggregated record being constructed. */
 	private KinesisAggRecord currentRecord;
 	/** The list of listeners to notify when a record is complete. */
 	private List<ListenerExecutorPair> listeners;
-	
+
 	/**
 	 * Construct a new empty KPL aggregator instance.
 	 */
-    public KplAggregator()
-	{
+	public KplAggregator() {
 		this.currentRecord = new KinesisAggRecord();
 		this.listeners = new LinkedList<>();
 	}
 
-    /**
-     * @return The number of user records currently contained in this
-     * aggregated record.
-     */
-	public int getNumUserRecords()
-	{
+	/**
+	 * @return The number of user records currently contained in this aggregated
+	 *         record.
+	 */
+	public int getNumUserRecords() {
 		return this.currentRecord.getNumUserRecords();
 	}
-	
+
 	/**
 	 * @return The size of this aggregated record in bytes.
 	 */
-	public long getSizeBytes()
-	{
+	public long getSizeBytes() {
 		return this.currentRecord.getSizeBytes();
 	}
-	
+
 	/**
-	 * Clear all the user records from this aggregated record and reset
-	 * it to an empty state.
+	 * Clear all the user records from this aggregated record and reset it to an
+	 * empty state.
 	 */
-	public void clearRecord()
-	{
+	public void clearRecord() {
 		this.currentRecord = new KinesisAggRecord();
 	}
-	
+
 	/**
-	 * Clear all the listeners from this object that were registered
-	 * with the onRecordComplete method.
+	 * Clear all the listeners from this object that were registered with the
+	 * onRecordComplete method.
 	 */
-	public void clearListeners()
-	{
+	public void clearListeners() {
 		this.listeners.clear();
 	}
-	
+
 	/**
-	 * Register a callback method to be notified when there is a
-	 * full aggregated record available. Callbacks are executed on a thread
-	 * from the shared ForkJoin pool.
+	 * Register a callback method to be notified when there is a full aggregated
+	 * record available. Callbacks are executed on a thread from the shared
+	 * ForkJoin pool.
 	 * 
-	 * @param listener The listener to receive a callback when there
-	 * is a complete aggregated record available (can be a lambda function).
+	 * @param listener
+	 *            The listener to receive a callback when there is a complete
+	 *            aggregated record available (can be a lambda function).
 	 */
-	public void onRecordComplete(RecordCompleteListener listener)
-	{
+	public void onRecordComplete(RecordCompleteListener listener) {
 		onRecordComplete(listener, ForkJoinPool.commonPool());
 	}
-	
+
 	/**
-	 * Register a callback method to be notified when there is a
-	 * full aggregated record available.
+	 * Register a callback method to be notified when there is a full aggregated
+	 * record available.
 	 * 
-	 * @param listener The listener to receive a callback when there
-	 * is a complete aggregated record available (can be a lambda function).
+	 * @param listener
+	 *            The listener to receive a callback when there is a complete
+	 *            aggregated record available (can be a lambda function).
 	 * 
-	 * @param executor The executor to use to execute the callback.
+	 * @param executor
+	 *            The executor to use to execute the callback.
 	 */
-	public void onRecordComplete(RecordCompleteListener listener, Executor executor)
-	{
+	public void onRecordComplete(RecordCompleteListener listener,
+			Executor executor) {
 		this.listeners.add(new ListenerExecutorPair(listener, executor));
 	}
-	
+
 	/**
-	 * Get the current contents of this aggregated record
-	 * (whether full or not) as a single record and then clear
-	 * the contents of this object so it can be re-used.  This method is
-	 * useful for flushing the aggregated record when you need to transmit it
-	 * before it is full.
+	 * Get the current contents of this aggregated record (whether full or not)
+	 * as a single record and then clear the contents of this object so it can
+	 * be re-used. This method is useful for flushing the aggregated record when
+	 * you need to transmit it before it is full.
 	 * 
 	 * @return This current object as an aggregated record or null if this
-	 * object is currently empty.
+	 *         object is currently empty.
 	 */
-	public KinesisAggRecord clearAndGet()
-	{
-    	if(getNumUserRecords() == 0)
-    	{
-    		return null;
-    	}
-    	
+	public KinesisAggRecord clearAndGet() {
+		if (getNumUserRecords() == 0) {
+			return null;
+		}
+
 		KinesisAggRecord out = this.currentRecord;
 		this.currentRecord = new KinesisAggRecord();
 		return out;
 	}
-	
+
 	/**
 	 * Add a new user record to this aggregated record (Will trigger a callback
 	 * via onRecordComplete if aggregated record is full).
 	 * 
-	 * @param partitionKey The partition key of the record to add
-	 * @param data The record data of the record to add
+	 * @param partitionKey
+	 *            The partition key of the record to add
+	 * @param data
+	 *            The record data of the record to add
 	 * 
 	 * @return A KinesisAggRecord if this aggregated record is full and ready to
-	 * be transmitted or null otherwise.
+	 *         be transmitted or null otherwise.
 	 */
-	public KinesisAggRecord addUserRecord(String partitionKey, byte[] data)
-	{
-	    return addUserRecord(partitionKey, null, data);
+	public KinesisAggRecord addUserRecord(String partitionKey, byte[] data) {
+		return addUserRecord(partitionKey, null, data);
 	}
-    
-    /**
+
+	/**
 	 * Add a new user record to this aggregated record (Will trigger a callback
 	 * via onRecordComplete if aggregated record is full).
 	 * 
-	 * @param partitionKey The partition key of the record to add
-	 * @param explicitHashKey The explicit hash key of the record to add
-	 * @param data The record data of the record to add
+	 * @param partitionKey
+	 *            The partition key of the record to add
+	 * @param explicitHashKey
+	 *            The explicit hash key of the record to add
+	 * @param data
+	 *            The record data of the record to add
 	 * 
 	 * @return A KinesisAggRecord if this aggregated record is full and ready to
-	 * be transmitted or null otherwise.
+	 *         be transmitted or null otherwise.
 	 */
-	public KinesisAggRecord addUserRecord(String partitionKey, String explicitHashKey, byte[] data)
-	{
-		boolean success = this.currentRecord.addUserRecord(partitionKey, explicitHashKey, data);
-		if (success) 
-		{
+	public KinesisAggRecord addUserRecord(String partitionKey,
+			String explicitHashKey, byte[] data) {
+		boolean success = this.currentRecord.addUserRecord(partitionKey,
+				explicitHashKey, data);
+		if (success) {
 			// we were able to add the current data to the in-flight record
 			return null;
 		}
-		
-		//this record is full, let all the listeners know
+
+		// this record is full, let all the listeners know
 		final KinesisAggRecord completeRecord = this.currentRecord;
-		for(ListenerExecutorPair pair : this.listeners)
-		{
-			pair.getExecutor().execute(() -> { pair.getListener().recordComplete(completeRecord); });
+		for (ListenerExecutorPair pair : this.listeners) {
+			pair.getExecutor().execute(() -> {
+				pair.getListener().recordComplete(completeRecord);
+			});
 		}
-		
+
 		return clearAndGet();
 	}
-	
+
 	/**
-	 * A helper class for tracking callbacks that contains a listener for callbacks and
-	 * the executor to execute the callback with.
+	 * A helper class for tracking callbacks that contains a listener for
+	 * callbacks and the executor to execute the callback with.
 	 */
-	private class ListenerExecutorPair
-	{
+	private class ListenerExecutorPair {
 		/** The listener to use for making a callback. */
 		private RecordCompleteListener listener;
 		/** The executor to execute the listener callback on. */
 		private Executor executor;
-		
+
 		/**
 		 * Create a new listener/executor pair.
 		 */
-		public ListenerExecutorPair(RecordCompleteListener listener, Executor executor)
-		{
+		public ListenerExecutorPair(RecordCompleteListener listener,
+				Executor executor) {
 			this.listener = listener;
 			this.executor = executor;
 		}
-		
+
 		/**
 		 * @return Get the listener object.
 		 */
-		public RecordCompleteListener getListener()
-		{
+		public RecordCompleteListener getListener() {
 			return this.listener;
 		}
-		
+
 		/**
 		 * @return Get the executor associated with the listener.
 		 */
-		public Executor getExecutor()
-		{
+		public Executor getExecutor() {
 			return this.executor;
 		}
 	}

@@ -27,53 +27,48 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 
 /**
- * A sample AWS Lambda function to process records that were aggregated via
- * the Kinesis Producer Library of the KinesisAggregator project.
+ * A sample AWS Lambda function to process records that were aggregated via the
+ * Kinesis Producer Library of the KinesisAggregator project.
  */
-public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void> 
-{
+public class KinesisLambdaReceiver implements
+		RequestHandler<KinesisEvent, Void> {
 	/**
 	 * Handle a Kinesis request and process it using a stream-oriented
 	 * processing method.
 	 */
-	public Void handleRequest(KinesisEvent event, Context context) 
-	{
+	public Void handleRequest(KinesisEvent event, Context context) {
 		LambdaLogger logger = context.getLogger();
-		logger.log("Received " + event.getRecords().size() + " raw Event Records.");
+		logger.log("Received " + event.getRecords().size()
+				+ " raw Event Records.");
 
 		// Stream the User Records from the Lambda Event
-		KplDeaggregator.stream(event.getRecords().stream(), userRecord -> 
-		{
+		KplDeaggregator.stream(event.getRecords().stream(), userRecord -> {
 			// Your User Record Processing Code Here!
-			logger.log(String.format("Processing UserRecord %s (%s:%s)",
+				logger.log(String.format("Processing UserRecord %s (%s:%s)",
 						userRecord.getPartitionKey(),
 						userRecord.getSequenceNumber(),
 						userRecord.getSubSequenceNumber()));
-		});
+			});
 
 		return null;
 	}
 
 	/**
-	 * Handle a Kinesis request and process it using a batch-oriented
-	 * processing method.
+	 * Handle a Kinesis request and process it using a batch-oriented processing
+	 * method.
 	 */
-	public Void handleRequestWithLists(KinesisEvent event, Context context) 
-	{
+	public Void handleRequestWithLists(KinesisEvent event, Context context) {
 		LambdaLogger logger = context.getLogger();
-		logger.log("Received " + event.getRecords().size() + " raw Event Records.");
+		logger.log("Received " + event.getRecords().size()
+				+ " raw Event Records.");
 
-		try 
-		{
+		try {
 			// process the user records with an anonymous record processor
 			// instance
 			KplDeaggregator.processRecords(event.getRecords(),
-					new KinesisUserRecordProcessor() 
-			{
-						public Void process(List<UserRecord> userRecords) 
-						{
-							for (UserRecord userRecord : userRecords) 
-							{
+					new KinesisUserRecordProcessor() {
+						public Void process(List<UserRecord> userRecords) {
+							for (UserRecord userRecord : userRecords) {
 								// Your User Record Processing Code Here!
 								logger.log(String.format(
 										"Processing UserRecord %s (%s:%s)",
@@ -84,40 +79,33 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 
 							return null;
 						}
-			});
-		}
-		catch (Exception e)
-		{
+					});
+		} catch (Exception e) {
 			logger.log(e.getMessage());
 		}
 
 		return null;
 	}
-	
-	/**
-	 * Handle a Kinesis request and process it using a bulk
-	 * processing method.
-	 */
-	public void handleRequestBulkList(KinesisEvent event, Context context)
-	{
-		LambdaLogger logger = context.getLogger();
-		logger.log("Received " + event.getRecords().size() + " raw Event Records.");
 
-		try
-		{
-			List<UserRecord> userRecords = KplDeaggregator.deaggregate(event.getRecords());
-			for (UserRecord userRecord : userRecords) 
-			{
+	/**
+	 * Handle a Kinesis request and process it using a bulk processing method.
+	 */
+	public void handleRequestBulkList(KinesisEvent event, Context context) {
+		LambdaLogger logger = context.getLogger();
+		logger.log("Received " + event.getRecords().size()
+				+ " raw Event Records.");
+
+		try {
+			List<UserRecord> userRecords = KplDeaggregator.deaggregate(event
+					.getRecords());
+			for (UserRecord userRecord : userRecords) {
 				// Your User Record Processing Code Here!
-				logger.log(String.format(
-						"Processing UserRecord %s (%s:%s)",
+				logger.log(String.format("Processing UserRecord %s (%s:%s)",
 						userRecord.getPartitionKey(),
 						userRecord.getSequenceNumber(),
 						userRecord.getSubSequenceNumber()));
 			}
-		}
-		catch(Exception e)
-		{
+		} catch (Exception e) {
 			logger.log(e.getMessage());
 		}
 	}

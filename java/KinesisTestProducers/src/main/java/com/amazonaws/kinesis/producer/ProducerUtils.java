@@ -28,43 +28,41 @@ import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 
 /**
- * A set of utility functions for use by the sample
- * Kinesis producer functions.
+ * A set of utility functions for use by the sample Kinesis producer functions.
  *
  */
-public class ProducerUtils
-{
-	//Use this is you want to send the same records every time (useful for testing)
-	//private static final Random RANDOM = new Random(0); 
-	//Use this to send random records
+public class ProducerUtils {
+	// Use this is you want to send the same records every time (useful for
+	// testing)
+	// private static final Random RANDOM = new Random(0);
+	// Use this to send random records
 	private static final Random RANDOM = new Random();
-	
+
 	private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-	
+
 	/**
 	 * @return A randomly generated explicit hash key.
 	 */
-	public static String randomExplicitHashKey() 
-	{
+	public static String randomExplicitHashKey() {
 		return new BigInteger(128, RANDOM).toString(10);
 	}
 
 	/**
 	 * Generate a new semi-random Kinesis record data byte array.
 	 * 
-	 * @param sequenceNumber The sequence number of hte record in the overall
-	 * stream of records.
-	 * @param desiredLength The desired length of the record.
+	 * @param sequenceNumber
+	 *            The sequence number of hte record in the overall stream of
+	 *            records.
+	 * @param desiredLength
+	 *            The desired length of the record.
 	 * @return Kinesis record data with random alphanumeric characters.
 	 */
-	public static byte[] generateData(long sequenceNumber, int desiredLength) 
-	{
+	public static byte[] generateData(long sequenceNumber, int desiredLength) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("RECORD ");
 		sb.append(Long.toString(sequenceNumber));
 		sb.append(" ");
-		while (sb.length() < desiredLength-1)
-		{
+		while (sb.length() < desiredLength - 1) {
 			sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
 		}
 		sb.append("\n");
@@ -75,18 +73,19 @@ public class ProducerUtils
 	/**
 	 * Create a new Kinesis producer for publishing to Kinesis.
 	 * 
-	 * @param region The region of the Kinesis stream to publish to.
+	 * @param region
+	 *            The region of the Kinesis stream to publish to.
 	 * 
 	 * @return An Amazon Kinesis producer for publishing to a Kinesis stream.
 	 */
-	public static AmazonKinesis getKinesisProducer(String region) 
-	{
+	public static AmazonKinesis getKinesisProducer(String region) {
 		ClientConfiguration config = new ClientConfiguration();
 		config.setMaxConnections(25);
 		config.setConnectionTimeout(60000);
 		config.setSocketTimeout(60000);
 
-		AmazonKinesis producer = new AmazonKinesisClient(new DefaultAWSCredentialsProviderChain(), config);
+		AmazonKinesis producer = new AmazonKinesisClient(
+				new DefaultAWSCredentialsProviderChain(), config);
 		producer.setRegion(Region.getRegion(Regions.fromName(region)));
 
 		return producer;

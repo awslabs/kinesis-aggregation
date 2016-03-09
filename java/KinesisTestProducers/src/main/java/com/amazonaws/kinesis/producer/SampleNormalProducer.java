@@ -25,29 +25,28 @@ import com.amazonaws.services.kinesis.model.PutRecordsRequest;
 import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
 /**
- * A sample of how to use the normal Amazon Kinesis client from the AWS SDK
- * to transmit records to Kinesis.
+ * A sample of how to use the normal Amazon Kinesis client from the AWS SDK to
+ * transmit records to Kinesis.
  */
-public class SampleNormalProducer
-{
-	public static void main(String[] args) throws Exception
-	{
-		if (args.length != 2) 
-		{
-			System.err.println("Usage SampleNormalProducer <stream name> <region>");
+public class SampleNormalProducer {
+	public static void main(String[] args) throws Exception {
+		if (args.length != 2) {
+			System.err
+					.println("Usage SampleNormalProducer <stream name> <region>");
 			System.exit(1);
-		} 
-		
+		}
+
 		String streamName = args[0];
 		String regionName = args[1];
-		
+
 		AmazonKinesis producer = ProducerUtils.getKinesisProducer(regionName);
-		
-		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
+
+		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT
+				+ " records...");
 		List<PutRecordsRequestEntry> entries = new LinkedList<>();
-		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++)
-		{
-			byte[] data = ProducerUtils.generateData(i, ProducerConfig.RECORD_SIZE_BYTES);
+		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++) {
+			byte[] data = ProducerUtils.generateData(i,
+					ProducerConfig.RECORD_SIZE_BYTES);
 			entries.add(new PutRecordsRequestEntry()
 					.withPartitionKey(ProducerConfig.RECORD_TIMESTAMP)
 					.withExplicitHashKey(ProducerUtils.randomExplicitHashKey())
@@ -55,10 +54,10 @@ public class SampleNormalProducer
 		}
 
 		PutRecordsRequest request = new PutRecordsRequest()
-										.withRecords(entries)
-										.withStreamName(streamName);
+				.withRecords(entries).withStreamName(streamName);
 
-		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
+		System.out.println("Sending " + ProducerConfig.RECORDS_TO_TRANSMIT
+				+ " records...");
 		producer.putRecords(request);
 		System.out.println("Complete.");
 	}
