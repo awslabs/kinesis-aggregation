@@ -20,8 +20,15 @@ import com.amazonaws.kinesis.agg.KinesisAggRecord;
 import com.amazonaws.kinesis.agg.KplAggregator;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 
+/**
+ * A sample of how to use the KplAggregator to transmit records
+ * to Kinesis.
+ */
 public class SampleAggregatorProducer
 {
+	/**
+	 * Send an aggregated record to Kinesis using the specified producer and stream name.
+	 */
 	private static void sendRecord(AmazonKinesis producer, String streamName, KinesisAggRecord aggRecord)
 	{
 		if(aggRecord == null || aggRecord.getNumUserRecords() == 0)
@@ -34,6 +41,9 @@ public class SampleAggregatorProducer
 		System.out.println("Completed record EHK=" + aggRecord.getExplicitHashKey());
 	}
 	
+	/**
+	 * Use the callback mechanism and a lambda function to send aggregated records to Kinesis.
+	 */
 	private static void sendViaCallback(AmazonKinesis producer, String streamName, KplAggregator aggregator)
 	{
 		aggregator.onRecordComplete((aggRecord) -> 
@@ -66,6 +76,9 @@ public class SampleAggregatorProducer
 		System.out.println("Transmissions complete.");
 	}
 	
+	/**
+	 * Use the synchronous batch mechanism to send aggregated records to Kinesis.
+	 */
 	private static void sendViaBatch(AmazonKinesis producer, String streamName, KplAggregator aggregator)
 	{
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");

@@ -32,6 +32,10 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+/**
+ * A sample of how to use the Kinesis Producer Library to transmit records
+ * to Kinesis.
+ */
 public class SampleKPLProducer
 {
 	private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(1);

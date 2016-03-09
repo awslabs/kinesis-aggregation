@@ -16,6 +16,9 @@
  */
 package com.amazonaws.kinesis.producer;
 
+/**
+ * A helper class for configuring the Kinesis sample producer behavior.
+ */
 public class ProducerConfig 
 {
 	public static final String RECORD_TIMESTAMP = Long.toString(System.currentTimeMillis());

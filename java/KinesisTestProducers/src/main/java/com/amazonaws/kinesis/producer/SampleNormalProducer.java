@@ -24,6 +24,10 @@ import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.model.PutRecordsRequest;
 import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
+/**
+ * A sample of how to use the normal Amazon Kinesis client from the AWS SDK
+ * to transmit records to Kinesis.
+ */
 public class SampleNormalProducer
 {
 	public static void main(String[] args) throws Exception

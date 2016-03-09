@@ -36,6 +36,15 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRec
 public class KplDeaggregator 
 {
 	/**
+	 * Interface used by a calling method to call the process function
+	 *
+	 */
+	public interface KinesisUserRecordProcessor 
+	{
+		public Void process(List<UserRecord> userRecords);
+	}
+	
+	/**
 	 * Method to process a set of Kinesis User Records from a Stream of Kinesis
 	 * Event Records using the Java 8 Streams API
 	 * 

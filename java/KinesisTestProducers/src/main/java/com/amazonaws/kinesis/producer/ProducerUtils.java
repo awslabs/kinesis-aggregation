@@ -27,6 +27,11 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 
+/**
+ * A set of utility functions for use by the sample
+ * Kinesis producer functions.
+ *
+ */
 public class ProducerUtils
 {
 	//Use this is you want to send the same records every time (useful for testing)
@@ -36,18 +41,29 @@ public class ProducerUtils
 	
 	private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 	
+	/**
+	 * @return A randomly generated explicit hash key.
+	 */
 	public static String randomExplicitHashKey() 
 	{
 		return new BigInteger(128, RANDOM).toString(10);
 	}
 
-	public static byte[] generateData(long sequenceNumber, int totalLen) 
+	/**
+	 * Generate a new semi-random Kinesis record data byte array.
+	 * 
+	 * @param sequenceNumber The sequence number of hte record in the overall
+	 * stream of records.
+	 * @param desiredLength The desired length of the record.
+	 * @return Kinesis record data with random alphanumeric characters.
+	 */
+	public static byte[] generateData(long sequenceNumber, int desiredLength) 
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append("RECORD ");
 		sb.append(Long.toString(sequenceNumber));
 		sb.append(" ");
-		while (sb.length() < totalLen-1)
+		while (sb.length() < desiredLength-1)
 		{
 			sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
 		}
@@ -56,6 +72,13 @@ public class ProducerUtils
 		return sb.toString().getBytes(StandardCharsets.UTF_8);
 	}
 
+	/**
+	 * Create a new Kinesis producer for publishing to Kinesis.
+	 * 
+	 * @param region The region of the Kinesis stream to publish to.
+	 * 
+	 * @return An Amazon Kinesis producer for publishing to a Kinesis stream.
+	 */
 	public static AmazonKinesis getKinesisProducer(String region) 
 	{
 		ClientConfiguration config = new ClientConfiguration();

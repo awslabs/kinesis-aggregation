@@ -18,16 +18,24 @@ package com.amazonaws.kinesis.consumer;
 
 import java.util.List;
 
-import com.amazonaws.kinesis.deagg.KinesisUserRecordProcessor;
 import com.amazonaws.kinesis.deagg.KplDeaggregator;
+import com.amazonaws.kinesis.deagg.KplDeaggregator.KinesisUserRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 
+/**
+ * A sample AWS Lambda function to process records that were aggregated via
+ * the Kinesis Producer Library of the KinesisAggregator project.
+ */
 public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void> 
 {
+	/**
+	 * Handle a Kinesis request and process it using a stream-oriented
+	 * processing method.
+	 */
 	public Void handleRequest(KinesisEvent event, Context context) 
 	{
 		LambdaLogger logger = context.getLogger();
@@ -46,6 +54,10 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 		return null;
 	}
 
+	/**
+	 * Handle a Kinesis request and process it using a batch-oriented
+	 * processing method.
+	 */
 	public Void handleRequestWithLists(KinesisEvent event, Context context) 
 	{
 		LambdaLogger logger = context.getLogger();
@@ -82,6 +94,10 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 		return null;
 	}
 	
+	/**
+	 * Handle a Kinesis request and process it using a bulk
+	 * processing method.
+	 */
 	public void handleRequestBulkList(KinesisEvent event, Context context)
 	{
 		LambdaLogger logger = context.getLogger();
