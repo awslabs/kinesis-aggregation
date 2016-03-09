@@ -217,46 +217,47 @@ public class KinesisAggRecord
     {
     	int messageSize = 0;
     	
+    	//has the partition key been added to the table of known PKs yet?
     	if(!this.partitionKeys.contains(partitionKey))
 		{
     		int pkLength = partitionKey.length();
     		messageSize += 1; //(message index + wire type for PK table)
-    		messageSize += calculateVarintSize(pkLength);
-			messageSize += pkLength;
+    		messageSize += calculateVarintSize(pkLength); //size of pk length value
+			messageSize += pkLength; //actual pk length
 		}
     	
+    	//has the explicit hash key been added to the table of known EHKs yet?
     	if(!this.explicitHashKeys.contains(explicitHashKey))
     	{
     		int ehkLength = explicitHashKey.length();
     		messageSize += 1; //(message index + wire type for EHK table)
-    		messageSize += calculateVarintSize(ehkLength);
-			messageSize += ehkLength;
+    		messageSize += calculateVarintSize(ehkLength); //size of ehk length value
+			messageSize += ehkLength; //actual ehk length
     	}
+    	
+    	//the remaining calculation is for adding the new record to the list of records
     	
     	long innerRecordSize = 0;
     	
-    	if(partitionKey != null)
-		{
-    		innerRecordSize += 1; //(message index + wire type for PK index)
-    		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey));
-		}
+    	//partition key field
+    	innerRecordSize += 1; //(message index + wire type for PK index)
+    	innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); //size of pk index value
 			
+    	//explicit hash key field (this is optional)
 		if(explicitHashKey != null)
 		{
 			innerRecordSize += 1; //(message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey));
-		}
-			
-		if(data != null)
-		{
-			innerRecordSize += 1; //(message index + wire type for record data)
-			innerRecordSize += calculateVarintSize(data.length);
-			innerRecordSize += data.length;
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); //size of ehk index value
 		}
 		
+		//data field
+		innerRecordSize += 1; //(message index + wire type for record data)
+		innerRecordSize += calculateVarintSize(data.length); //size of data length value
+		innerRecordSize += data.length; //actual data length
+		
 		messageSize += 1; //(message index + wire type for record)
-		messageSize += calculateVarintSize(innerRecordSize);
-		messageSize += innerRecordSize;
+		messageSize += calculateVarintSize(innerRecordSize); //size of entire record length value
+		messageSize += innerRecordSize; //actual entire record length
 		
         return messageSize;
     }

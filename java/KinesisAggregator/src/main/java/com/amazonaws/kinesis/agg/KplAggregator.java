@@ -19,7 +19,9 @@ package com.amazonaws.kinesis.agg;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.amazonaws.annotation.NotThreadSafe;
@@ -29,12 +31,12 @@ import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 public class KplAggregator
 {
 	private KinesisAggRecord currentRecord;
-	private final List<KplAggregatorListener> listeners;
+	private List<Function<KinesisAggRecord,Void>> functionCallbacks;
 	
     public KplAggregator()
 	{
-    	this.listeners = new LinkedList<>();
 		this.currentRecord = new KinesisAggRecord();
+		this.functionCallbacks = new LinkedList<>();
 	}
 
 	public int getNumUserRecords()
@@ -51,22 +53,14 @@ public class KplAggregator
 	{
 		this.currentRecord = new KinesisAggRecord();
 	}
-    
-    public void addKplAggregatorListener(final KplAggregatorListener listener)
-    {
-    	if(!this.listeners.contains(listener))
-    	{
-    		this.listeners.add(listener);
-    	}
-    }
-    
-    public void removeKplAggregatorListener(final KplAggregatorListener listener)
-    {
-    	if(this.listeners.contains(listener))
-    	{
-    		this.listeners.remove(listener);
-    	}
-    }
+	
+	public void onRecordComplete(Function<KinesisAggRecord,Void> callback)
+	{
+		if(!this.functionCallbacks.contains(callback))
+		{
+			this.functionCallbacks.add(callback);
+		}
+	}
 	
 	public KinesisAggRecord addUserRecord(String partitionKey, byte[] data)
 	{
@@ -94,9 +88,10 @@ public class KplAggregator
 			return null;
 		}
 		
-		for(KplAggregatorListener listener : this.listeners)
+		final KinesisAggRecord completeRecord = this.currentRecord;
+		for(Function<KinesisAggRecord,Void> callback : this.functionCallbacks)
 		{
-			listener.recordComplete(this.currentRecord);
+			CompletableFuture.runAsync(() -> { callback.apply(completeRecord); });
 		}
 		
 		return clearAndGet();

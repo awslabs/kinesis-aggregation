@@ -30,8 +30,6 @@ import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 
 public class SampleAggregatorProducer
 {
-	private static final ExecutorService executor = Executors.newFixedThreadPool(5);
-	
 	private static void sendRecord(AmazonKinesis producer, String streamName, KinesisAggRecord aggRecord)
 	{
 		if(aggRecord == null || aggRecord.getNumUserRecords() == 0)
@@ -47,19 +45,16 @@ public class SampleAggregatorProducer
 	
 	private static void sendViaCallback(AmazonKinesis producer, String streamName, KplAggregator aggregator)
 	{
-		aggregator.addKplAggregatorListener((aggRecord) -> 
+		aggregator.onRecordComplete((aggRecord) -> 
 		{ 
-			executor.submit(() ->
+			try
 			{
-				try
-				{
-					sendRecord(producer, streamName, aggRecord);
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-				}
-			});
+				sendRecord(producer, streamName, aggRecord);
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		});
 		
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT + " records...");
