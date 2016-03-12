@@ -2,6 +2,7 @@ include README.rst
 include LICENSE.txt
 exclude .project
 exclude .pydevproject
+exclude kinesis_publisher.py
 exclude lambda_function.py
 exclude make_lambda_build.py
 exclude README.md
