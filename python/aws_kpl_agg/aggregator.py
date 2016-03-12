@@ -188,9 +188,7 @@ class KinesisAggRecord(object):
     
     def get_contents(self):
         
-        print('Calc Size = %d' % (self._agg_size_bytes + 20))
         agg_bytes = self._serialize_to_bytes()
-        print('Actual Size = %d' % (len(agg_bytes)))
         return (self._agg_partition_key, self._agg_explicit_hash_key, agg_bytes)
     
     

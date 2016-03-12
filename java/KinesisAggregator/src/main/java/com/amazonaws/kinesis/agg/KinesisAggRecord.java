@@ -159,8 +159,6 @@ public class KinesisAggRecord {
 		baos.write(messageBody, 0, messageBody.length);
 		baos.write(messageDigest, 0, messageDigest.length);
 
-		System.out.println("Calc Size = " + getSizeBytes());
-		System.out.println("Actual Size = " + baos.toByteArray().length);
 		return baos.toByteArray();
 	}
 
