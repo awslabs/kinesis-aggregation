@@ -7,8 +7,8 @@ def read_file(filename):
         return source_file.read()
 
 setup(
-  name = 'aws_kpl_deagg',
-  packages = ['aws_kpl_deagg'],
+  name = 'aws_kpl_agg',
+  packages = ['aws_kpl_agg'],
   version = '1.0.10',
   description = 'Python module to simplify processing of Amazon Kinesis Records which have been created with the Kinesis Producer Library.',
   long_description=read_file('README.rst'),

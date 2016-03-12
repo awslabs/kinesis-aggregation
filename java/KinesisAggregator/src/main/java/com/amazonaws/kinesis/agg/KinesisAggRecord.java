@@ -159,6 +159,8 @@ public class KinesisAggRecord {
 		baos.write(messageBody, 0, messageBody.length);
 		baos.write(messageDigest, 0, messageDigest.length);
 
+		System.out.println("Calc Size = " + getSizeBytes());
+		System.out.println("Actual Size = " + baos.toByteArray().length);
 		return baos.toByteArray();
 	}
 
@@ -314,16 +316,12 @@ public class KinesisAggRecord {
 			numBitsNeeded = 1;
 		} else {
 			// shift the value right one bit at a time until
-			// there are no more '1' bits left...this should count
+			// there are no more '1' bits left...this counts
 			// how many bits we need to represent the number
 			while (value > 0) {
 				numBitsNeeded++;
 				value = value >> 1;
 			}
-
-			// varints are 2's complement, so we need to add one at
-			// the end so the value won't start with 1 (and thereby be negative)
-			numBitsNeeded++;
 		}
 
 		// varints only use 7 bits of the byte for the actual value

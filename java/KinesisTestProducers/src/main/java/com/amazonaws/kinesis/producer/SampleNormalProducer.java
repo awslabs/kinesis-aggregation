@@ -45,7 +45,7 @@ public class SampleNormalProducer {
 				+ " records...");
 		List<PutRecordsRequestEntry> entries = new LinkedList<>();
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++) {
-			byte[] data = ProducerUtils.generateData(i,
+			byte[] data = ProducerUtils.randomData(i,
 					ProducerConfig.RECORD_SIZE_BYTES);
 			entries.add(new PutRecordsRequestEntry()
 					.withPartitionKey(ProducerConfig.RECORD_TIMESTAMP)

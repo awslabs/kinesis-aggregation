@@ -57,7 +57,7 @@ public class ProducerUtils {
 	 *            The desired length of the record.
 	 * @return Kinesis record data with random alphanumeric characters.
 	 */
-	public static byte[] generateData(long sequenceNumber, int desiredLength) {
+	public static byte[] randomData(long sequenceNumber, int desiredLength) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("RECORD ");
 		sb.append(Long.toString(sequenceNumber));

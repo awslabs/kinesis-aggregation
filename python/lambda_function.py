@@ -13,7 +13,7 @@
 
 from __future__ import print_function
 
-from aws_kpl_deagg.deaggregator import deaggregate_records, iter_deaggregate_records
+from aws_kpl_agg.deaggregator import deaggregate_records, iter_deaggregate_records
 import base64
 
 def lambda_bulk_handler(event, context):

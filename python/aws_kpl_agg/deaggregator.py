@@ -23,7 +23,7 @@ import sys
 
 #KPL protocol-specific constants
 KPL_MAGIC = '\xf3\x89\x9a\xc2'
-KPL_DIGEST_SIZE = 16
+KPL_DIGEST_SIZE = md5.digest_size
 
 def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     '''Given a protobuf message record, generate a new Kinesis user record

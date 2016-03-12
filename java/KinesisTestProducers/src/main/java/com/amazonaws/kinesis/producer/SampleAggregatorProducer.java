@@ -59,7 +59,7 @@ public class SampleAggregatorProducer {
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT
 				+ " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++) {
-			byte[] data = ProducerUtils.generateData(i,
+			byte[] data = ProducerUtils.randomData(i,
 					ProducerConfig.RECORD_SIZE_BYTES);
 			aggregator.addUserRecord(ProducerConfig.RECORD_TIMESTAMP,
 					ProducerUtils.randomExplicitHashKey(), data);
@@ -82,7 +82,7 @@ public class SampleAggregatorProducer {
 		System.out.println("Creating " + ProducerConfig.RECORDS_TO_TRANSMIT
 				+ " records...");
 		for (int i = 1; i <= ProducerConfig.RECORDS_TO_TRANSMIT; i++) {
-			byte[] data = ProducerUtils.generateData(i,
+			byte[] data = ProducerUtils.randomData(i,
 					ProducerConfig.RECORD_SIZE_BYTES);
 			KinesisAggRecord aggRecord = aggregator.addUserRecord(
 					ProducerConfig.RECORD_TIMESTAMP,
@@ -99,7 +99,7 @@ public class SampleAggregatorProducer {
 	public static void main(String[] args) {
 		if (args.length != 2) {
 			System.err
-					.println("Usage SampleAggregatorProducer <stream name> <region>");
+					.println("USAGE: SampleAggregatorProducer <stream name> <region>");
 			System.exit(1);
 		}
 
