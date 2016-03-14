@@ -9,12 +9,8 @@ java/KinesisTestProducers/.classpath
 
 java/KinesisTestProducers/.project
 
-*.class
-
 node/.project
 
 python/.project
 
 python/.pydevproject
-
-*.pyc

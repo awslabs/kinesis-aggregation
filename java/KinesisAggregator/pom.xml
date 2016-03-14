@@ -5,36 +5,14 @@
   	<artifactId>KinesisAggregator</artifactId>
   	<packaging>jar</packaging>
 	<parent>
-		<groupId>com.amazonaws.services.lambda</groupId>
-		<artifactId>kpl-lambda-java</artifactId>
+		<groupId>com.amazonaws.services.kinesis</groupId>
+		<artifactId>kpl-java</artifactId>
 		<version>1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>dev</shadedClassifierName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
 	</build>
 	<dependencies>
 		<!-- Even though we're a producer, not a consumer, this dependency gives us access to the
@@ -52,5 +30,4 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
-	<version>1.1.0</version>
 </project>

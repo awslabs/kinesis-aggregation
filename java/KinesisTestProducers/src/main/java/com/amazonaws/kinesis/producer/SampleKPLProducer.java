@@ -34,137 +34,143 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * A sample of how to use the Kinesis Producer Library to transmit records to
- * Kinesis.
+ * Kinesis (adapted from samples in https://github.com/awslabs/amazon-kinesis-producer)
  */
-public class SampleKPLProducer {
-	private static final ScheduledExecutorService EXECUTOR = Executors
-			.newScheduledThreadPool(1);
-	private static final int RECORDS_PER_SECOND = 25;
-	private static final int SECONDS_TO_RUN = (int) Math.round(Math
-			.ceil(ProducerConfig.RECORDS_TO_TRANSMIT / RECORDS_PER_SECOND));
+public class SampleKPLProducer
+{
+    private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(1);
+    private static final int RECORDS_PER_SECOND = 25;
+    private static final int SECONDS_TO_RUN = (int) Math.round(Math.ceil(ProducerConfig.RECORDS_TO_TRANSMIT / RECORDS_PER_SECOND));
 
-	private static KinesisProducer getKinesisProducer(String region) {
-		KinesisProducerConfiguration config = new KinesisProducerConfiguration();
-		config.setRegion(region);
-		config.setMaxConnections(1);
-		config.setRequestTimeout(60000);
-		config.setRecordMaxBufferedTime(15000);
-		config.setAggregationEnabled(true);
+    /**
+     * Given an AWS region, generate a configured Kinesis Producer.
+     */
+    private static KinesisProducer getKinesisProducer(String region)
+    {
+        KinesisProducerConfiguration config = new KinesisProducerConfiguration();
+        config.setRegion(region);
+        config.setMaxConnections(1);
+        config.setRequestTimeout(60000);
+        config.setRecordMaxBufferedTime(15000);
+        config.setAggregationEnabled(true);
 
-		return new KinesisProducer(config);
-	}
+        return new KinesisProducer(config);
+    }
 
-	private static void executeAtTargetRate(
-			final ScheduledExecutorService exec, final Runnable task,
-			final AtomicLong counter, final int durationSeconds,
-			final int ratePerSecond) {
-		exec.scheduleWithFixedDelay(new Runnable() {
-			final long startTime = System.nanoTime();
+    /**
+     * Execute the given task the given number of times at the specified rate.
+     */
+    private static void executeAtTargetRate(final ScheduledExecutorService exec, final Runnable task, final AtomicLong counter, 
+                                            final int durationSeconds, final int ratePerSecond)
+    {
+        exec.scheduleWithFixedDelay(new Runnable()
+        {
+            final long startTime = System.nanoTime();
 
-			@Override
-			public void run() {
-				double secondsRun = (System.nanoTime() - startTime) / 1e9;
-				double targetCount = Math.min(durationSeconds, secondsRun)
-						* ratePerSecond;
+            @Override
+            public void run()
+            {
+                double secondsRun = (System.nanoTime() - startTime) / 1e9;
+                double targetCount = Math.min(durationSeconds, secondsRun) * ratePerSecond;
 
-				while (counter.get() < targetCount) {
-					counter.getAndIncrement();
-					try {
-						task.run();
-					} catch (Exception e) {
-						System.err.println("Error running task: "
-								+ e.getMessage());
-						e.printStackTrace();
-						System.exit(1);
-					}
-				}
+                while (counter.get() < targetCount)
+                {
+                    counter.getAndIncrement();
+                    try
+                    {
+                        task.run();
+                    }
+                    catch (Exception e)
+                    {
+                        System.err.println("Error running task: " + e.getMessage());
+                        e.printStackTrace();
+                        System.exit(1);
+                    }
+                }
 
-				if (secondsRun >= durationSeconds) {
-					exec.shutdown();
-				}
-			}
-		}, 0, 1, TimeUnit.MILLISECONDS);
-	}
+                if (secondsRun >= durationSeconds)
+                {
+                    exec.shutdown();
+                }
+            }
+        }, 0, 1, TimeUnit.MILLISECONDS);
+    }
 
-	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.err
-					.println("Usage SampleKPLProducer <stream name> <region>");
-			System.exit(1);
-		}
+    public static void main(String[] args) throws Exception
+    {
+        if (args.length != 2)
+        {
+            System.err.println("Usage SampleKPLProducer <stream name> <region>");
+            System.exit(1);
+        }
 
-		String streamName = args[0];
-		String regionName = args[1];
+        String streamName = args[0];
+        String regionName = args[1];
 
-		final KinesisProducer producer = getKinesisProducer(regionName);
+        final KinesisProducer producer = getKinesisProducer(regionName);
 
-		final AtomicLong sequenceNumber = new AtomicLong(0);
-		final AtomicLong completed = new AtomicLong(0);
+        final AtomicLong sequenceNumber = new AtomicLong(0);
+        final AtomicLong completed = new AtomicLong(0);
 
-		final FutureCallback<UserRecordResult> callback = new FutureCallback<UserRecordResult>() {
-			@Override
-			public void onFailure(Throwable t) {
-				if (t instanceof UserRecordFailedException) {
-					Attempt last = Iterables
-							.getLast(((UserRecordFailedException) t)
-									.getResult().getAttempts());
-					System.err.println(String.format(
-							"Record failed to put - %s : %s",
-							last.getErrorCode(), last.getErrorMessage()));
-				}
-				System.err.println("Exception during put: " + t.getMessage());
-				t.printStackTrace();
-				System.exit(1);
-			}
+        final FutureCallback<UserRecordResult> callback = new FutureCallback<UserRecordResult>()
+        {
+            @Override
+            public void onFailure(Throwable t)
+            {
+                if (t instanceof UserRecordFailedException)
+                {
+                    Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
+                    System.err.println(String.format("Record failed to put - %s : %s", last.getErrorCode(), last.getErrorMessage()));
+                }
+                System.err.println("Exception during put: " + t.getMessage());
+                t.printStackTrace();
+                System.exit(1);
+            }
 
-			@Override
-			public void onSuccess(UserRecordResult result) {
-				completed.getAndIncrement();
-			}
-		};
+            @Override
+            public void onSuccess(UserRecordResult result)
+            {
+                completed.getAndIncrement();
+            }
+        };
 
-		final Runnable putOneRecord = new Runnable() {
-			@Override
-			public void run() {
-				byte[] data = ProducerUtils.randomData(sequenceNumber.get(),
-						ProducerConfig.RECORD_SIZE_BYTES);
-				ListenableFuture<UserRecordResult> f = producer.addUserRecord(
-						streamName, ProducerConfig.RECORD_TIMESTAMP,
-						ProducerUtils.randomExplicitHashKey(),
-						ByteBuffer.wrap(data));
-				Futures.addCallback(f, callback);
-			}
-		};
+        final Runnable putOneRecord = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                byte[] data = ProducerUtils.randomData(sequenceNumber.get(), ProducerConfig.RECORD_SIZE_BYTES);
+                ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, ProducerUtils.randomPartitionKey(),
+                        ProducerUtils.randomExplicitHashKey(), ByteBuffer.wrap(data));
+                Futures.addCallback(f, callback);
+            }
+        };
 
-		EXECUTOR.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				long put = sequenceNumber.get();
-				long total = RECORDS_PER_SECOND * SECONDS_TO_RUN;
-				double putPercent = 100.0 * put / total;
-				long done = completed.get();
-				double donePercent = 100.0 * done / total;
-				System.out.println(String
-						.format("Put %d of %d so far (%.2f %%), %d have completed (%.2f %%)",
-								put, total, putPercent, done, donePercent));
-			}
-		}, 1, 1, TimeUnit.SECONDS);
+        EXECUTOR.scheduleAtFixedRate(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                long put = sequenceNumber.get();
+                long total = RECORDS_PER_SECOND * SECONDS_TO_RUN;
+                double putPercent = 100.0 * put / total;
+                long done = completed.get();
+                double donePercent = 100.0 * done / total;
+                System.out.println(String.format("Put %d of %d so far (%.2f %%), %d have completed (%.2f %%)", put, total, putPercent, done, donePercent));
+            }
+        }, 1, 1, TimeUnit.SECONDS);
 
-		System.out
-				.println(String
-						.format("Starting puts... will run for %d seconds at %d records per second",
-								SECONDS_TO_RUN, RECORDS_PER_SECOND));
+        System.out.println(String.format("Starting puts... will run for %d seconds at %d records per second", SECONDS_TO_RUN, RECORDS_PER_SECOND));
 
-		executeAtTargetRate(EXECUTOR, putOneRecord, sequenceNumber,
-				SECONDS_TO_RUN, RECORDS_PER_SECOND);
+        executeAtTargetRate(EXECUTOR, putOneRecord, sequenceNumber, SECONDS_TO_RUN, RECORDS_PER_SECOND);
 
-		EXECUTOR.awaitTermination(SECONDS_TO_RUN + 1, TimeUnit.SECONDS);
+        EXECUTOR.awaitTermination(SECONDS_TO_RUN + 1, TimeUnit.SECONDS);
 
-		System.out.println("Waiting for remaining puts to finish...");
-		producer.flushSync();
-		System.out.println("All records complete.");
+        System.out.println("Waiting for remaining puts to finish...");
+        producer.flushSync();
+        System.out.println("All records complete.");
 
-		producer.destroy();
-		System.out.println("Finished.");
-	}
+        producer.destroy();
+        System.out.println("Finished.");
+    }
 }
