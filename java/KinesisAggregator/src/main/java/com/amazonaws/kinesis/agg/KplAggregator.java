@@ -81,6 +81,8 @@ public class KplAggregator
     /**
      * Clear all the user records from this aggregated record and reset it to an
      * empty state.
+     * 
+     * NOTE: Will not affect any registered listeners.
      */
     public void clearRecord()
     {
@@ -150,7 +152,7 @@ public class KplAggregator
      * 
      * @param partitionKey The partition key of the record to add
      * @param data The record data of the record to add
-     * @return A KinesisAggRecord if this aggregated record is full and ready to
+     * @return A KplAggRecord if this aggregated record is full and ready to
      *         be transmitted or null otherwise.
      */
     public KplAggRecord addUserRecord(String partitionKey, byte[] data)
@@ -165,7 +167,7 @@ public class KplAggregator
      * @param partitionKey The partition key of the record to add
      * @param explicitHashKey The explicit hash key of the record to add
      * @param data The record data of the record to add
-     * @return A KinesisAggRecord if this aggregated record is full and ready to
+     * @return A KplAggRecord if this aggregated record is full and ready to
      *         be transmitted or null otherwise.
      */
     public KplAggRecord addUserRecord(String partitionKey, String explicitHashKey, byte[] data)

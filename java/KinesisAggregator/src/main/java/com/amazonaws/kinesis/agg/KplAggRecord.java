@@ -154,8 +154,6 @@ public class KplAggRecord
     /**
      * Clears out all records and metadata from this object so that it can be
      * reused just like a fresh instance of this object.
-     * 
-     * NOTE: Will not affect any registered listeners.
      */
     public void clear()
     {
@@ -171,36 +169,30 @@ public class KplAggRecord
     /**
      * Get the overarching partition key for the entire aggregated record.
      * 
-     * @return The partition key to use for the aggregated record.
+     * @return The partition key to use for the aggregated record or null if
+     * this aggregated record is empty.
      */
     public String getPartitionKey()
     {
         if (getNumUserRecords() == 0)
         {
-            throw new IllegalStateException("Cannot compute partitionKey for empty container");
-        }
-        else if (getNumUserRecords() == 1)
-        {
-            return this.aggPartitionKey;
+            return null;
         }
 
-        // We will always set an explicit hash key if we created an aggregated
-        // record. We therefore have no need to set a partition key since the records
-        // within the container have their own parition keys anyway. We will therefore
-        // use a single byte to save space. (comment via original KPL)
-        return "a";
+        return this.aggPartitionKey;
     }
 
     /**
      * Get the overarching explicit hash key for the entire aggregated record.
      * 
-     * @return The explicit hash key to use for the aggregated record.
+     * @return The explicit hash key to use for the aggregated record or null if
+     * this aggregated record is empty.
      */
     public String getExplicitHashKey()
     {
         if (getNumUserRecords() == 0)
         {
-            throw new IllegalStateException("Cannot compute explicitHashKey for empty container");
+            return null;
         }
 
         return this.aggExplicitHashKey;
@@ -274,7 +266,7 @@ public class KplAggRecord
      * For an integral value represented by a varint, calculate how many bytes
      * are necessary to represent the value in a protobuf message.
      * 
-     * @param value The value that will be serialized to the protobuf message
+     * @param value The value whose varint size will be calculated
      * @return The number of bytes necessary to represent the input value as a varint.
      * @see https://developers.google.com/protocol-buffers/docs/encoding#varints
      */
@@ -523,8 +515,8 @@ public class KplAggRecord
         }
 
         /**
-         * If the input String were to be added to this Keyset, what would its
-         * resulting index be.
+         * If the input key were added to this KeySet, determine what
+         * its resulting index would be.
          * 
          * @param s The input string to potentially add to the KeySet
          * 
@@ -543,7 +535,7 @@ public class KplAggRecord
         }
 
         /**
-         * Add a new key to this keyset. (Logic coiped from KPL C++
+         * Add a new key to this keyset. (Logic copied from KPL C++
          * implementation)
          * 
          * @param s The key to add to the keyset.
