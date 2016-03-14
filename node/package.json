@@ -9,8 +9,8 @@
     },
     "dependencies": {
         "async": "1.5.2",
-        "protobufjs": "4.1.3",
-        "kpl-deagg": "2.1.1"
+        "protobufjs": "5.0.1",
+        "aws-kpl-agg": "2.2.0"
     },
     "keywords": [
         "amazon",
@@ -22,13 +22,10 @@
         "name": "Ian Meyers",
         "email": "meyersi@amazon.com"
     },
-    "main": "./kpl-deagg.js",
+    "main": "./index.js",
     "files": [
         "index.js",
-        "kpl-deagg.js",
-        "common.js",
         "test.js",
-        "kpl.proto",
         "build.sh",
         "README.md",
         "LICENSE"

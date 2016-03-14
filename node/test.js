@@ -9,11 +9,9 @@
  */
 
 var lambda = require('./index');
-var crypto = require("crypto");
-var md5 = crypto.createHash('md5');
-var deaggPath = "./node_modules/kpl-deagg/";
-
-require(deaggPath + "constants");
+var libPath = "./node_modules/aws-kpl-agg"
+var agg = require(libPath + '/MessageAggregator');
+require(libPath + "/constants");
 
 // sample kinesis event - record 0 has no data, and will be filled in with
 // dynamic content using protobuf
@@ -52,9 +50,11 @@ var event = {
 };
 
 /** mock context object to simulate AWS Lambda context */
-function context() {}
+function context() {
+}
 context.done = function(status, message) {
-	console.log("Context Closure Message - Status:" + JSON.stringify(status) + " Message:" + JSON.stringify(message));
+	console.log("Context Closure Message - Status:" + JSON.stringify(status)
+			+ " Message:" + JSON.stringify(message));
 
 	if (status && status !== null) {
 		process.exit(-1);
@@ -66,42 +66,23 @@ context.getRemainingTimeInMillis = function() {
 	return 60000;
 };
 
-// create a set of protobuf messages
-var fs = require("fs");
-var ProtoBuf = require('protobufjs');
-
-var aggRecord = {
-	"partition_key_table" : [ 'aaaaaaaaa', 'bbbbbbbb' ],
-	"explicit_hash_key_table" : [ 'ccccccccc' ],
-	records : [ {
-		"partition_key_index" : 0,
-		"explicit_hash_key_index" : 0,
-		data : new Buffer('Testing KPL Aggregated Record 1'),
-		tags : []
-	}, {
-		"partition_key_index" : 1,
-		"explicit_hash_key_index" : 0,
-		data : new Buffer('Testing KPL Aggregated Record 2'),
-		tags : []
-	} ]
-};
+var rawRecords = [ {
+	PartitionKey : 'aaaaaaaaa',
+	ExplicitHashKey : 'ccccccccc',
+	Data : new Buffer('Testing KPL Aggregated Record 1')
+}, {
+	PartitionKey : 'bbbbbbbb',
+	ExplicitHashKey : 'ccccccccc',
+	Data : new Buffer('Testing KPL Aggregated Record 2')
+} ];
 
 try {
-	var builder = ProtoBuf.loadProtoFile(deaggPath + protofile), AggregatedRecord = builder.build(kplConfig[useKplVersion].messageName);
+	agg.aggregate(rawRecords, function(err, encoded) {
+		event.Records[0].kinesis.data = encoded;
 
-	// prepare data for sending a protobuf mocked message
-	var magic = new Buffer(kplConfig[useKplVersion].magicNumber, 'hex');
-	var protoData = AggregatedRecord.encode(aggRecord);
-
-	// record checksum
-	md5.update(protoData.toBuffer());
-
-	var checksum = md5.digest();
-
-	event.Records[0].kinesis.data = Buffer.concat([ magic, protoData.toBuffer(), checksum ]).toString('base64');
-
-	// invoke the function as a lambda invocation
-	lambda.exampleAsync(event, context);
+		// invoke the function as a lambda invocation
+		lambda.exampleAsync(event, context);
+	});
 } catch (e) {
 	console.log(e);
 	console.log(JSON.stringify(e));
