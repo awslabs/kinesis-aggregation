@@ -37,12 +37,21 @@ import uuid
 
 import aws_kpl_agg.aggregator
     
+#Used for generating random record bodies
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
 kinesis_client = None
 stream_name = None
     
 def get_random_record(seq_num=0, desired_len=50):
+    '''Generate a random record to send to Kinesis.
+    
+    Args:
+        seq_num - The sequence number to include in the data body. (int)
+        desired_len - The total size (in bytes) of the desired record body. (int)
+    Returns:
+        A semi-random string of the form "RECORD <seq_num> <random_alphabet_chars>"
+        to use to populate the body of a Kinesis record. (str)'''
     
     global ALPHABET
     
@@ -56,7 +65,14 @@ def get_random_record(seq_num=0, desired_len=50):
     
     return (pk,ehk,data)
 
+
 def init_kinesis_client(region_name):
+    '''Create a boto3 Kinesis client for the given reason.
+    
+    Args:
+        region_name - The name of the AWS region the Kinesis client will be configured for (e.g. us-east-1) (str)
+    Returns:
+        A boto3 Kinesis client object configured for the input region.'''
     
     global kinesis_client
     
@@ -67,7 +83,12 @@ def init_kinesis_client(region_name):
     
     kinesis_client = boto3.client('kinesis', config=config)
 
+
 def send_record(agg_record):
+    '''Send the input aggregated record to Kinesis via the PutRecord API.
+    
+    Args:
+        agg_record - The aggregated record to send to Kinesis. (KplAggRecord)'''
     
     global kinesis_client, stream_name
     
@@ -76,7 +97,7 @@ def send_record(agg_record):
     
     pk, ehk, data = agg_record.get_contents()
     
-    print 'Submitting record with EHK=%s' % (ehk)
+    print 'Submitting record with EHK=%s NumRecords=%d NumBytes=%d' % (ehk,agg_record.get_num_user_records(),agg_record.get_size_bytes())
     try:
         kinesis_client.put_record(StreamName=stream_name,
                                   Data=data,
@@ -87,14 +108,15 @@ def send_record(agg_record):
     else:
         print 'Completed record with EHK=%s' % (ehk)
     
+    
 if __name__ == '__main__':
         
     #For details on how to supply AWS credentials to boto3, see:
     #https://boto3.readthedocs.org/en/latest/guide/configuration.html
     
-    RECORDS_TO_TRANSMIT = 1024
     RECORD_SIZE_BYTES = 1024
-
+    RECORDS_TO_TRANSMIT = 1024
+    
     if len(sys.argv) != 3:
         print>>sys.stderr,"python kinesis_publisher.py <stream name> <region>"
         sys.exit(1)
@@ -103,7 +125,7 @@ if __name__ == '__main__':
     region_name = sys.argv[2]
     
     init_kinesis_client(region_name)
-    kinesis_agg = aws_kpl_agg.aggregator.Aggregator()
+    kinesis_agg = aws_kpl_agg.aggregator.KplAggregator()
     kinesis_agg.on_record_complete(send_record)
     
     print 'Creating %d records...' % (RECORDS_TO_TRANSMIT)
@@ -111,6 +133,8 @@ if __name__ == '__main__':
         
         pk, ehk, data = get_random_record(i, RECORD_SIZE_BYTES)
         kinesis_agg.add_user_record(pk, data, ehk)
-        
+    
+    #Do one final flush & send to get any remaining records that haven't triggered a callback yet
     send_record(kinesis_agg.clear_and_get())
+    
     

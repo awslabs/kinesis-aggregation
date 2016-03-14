@@ -27,6 +27,14 @@ MAX_BYTES_PER_RECORD = 1048576 # 1 MB (1024 * 1024)
 
 
 def _calculate_varint_size(value):
+    '''For an integral value represented by a varint, calculate how many bytes 
+    are necessary to represent the value in a protobuf message.
+    (see https://developers.google.com/protocol-buffers/docs/encoding#varints)
+     
+    Args:
+        value (int) - The value whose varint size will be calculated
+    Returns:
+        The number of bytes necessary to represent the input value as a varint. (int)'''
     
     if value < 0:
         raise ValueError("Size values should not be negative.")
@@ -36,112 +44,198 @@ def _calculate_varint_size(value):
     if value == 0:
         num_bits_needed = 1
     else:
+        #shift the value right one bit at a time until
+        #there are no more '1' bits left...this counts
+        #how many bits we need to represent the number
         while value > 0:
             num_bits_needed += 1
             value = value >> 1
         
+    #varints only use 7 bits of the byte for the actual value
     num_varint_bytes = num_bits_needed / 7
     if num_bits_needed % 7 > 0:
         num_varint_bytes += 1
         
     return num_varint_bytes
     
-    return 0
-    
     
 class KeySet(object):
+    '''A class for tracking unique partition keys or explicit hash keys for an
+    aggregated Kinesis record. Also assists in keeping track of indexes for
+    their locations in the protobuf tables.'''
     
     def __init__(self):
+        '''Create a new, empty KeySet.'''
         
         self.keys = []
         self.lookup = {}
-        self.counts = {}
+        
         
     def get_potential_index(self, key):
+        '''If the input key were added to this KeySet, determine what
+        its resulting index would be.
+        
+        Args:
+            key (str) - The key whose index should be calculated
+        Returns:
+            The integer index that this key would occupy if added to the KeySet. (int)
+        '''
         
         if key in self.lookup:
             return self.lookup[key]
         return len(self.keys)
     
+    
     def add_key(self, key):
+        '''Add a new key to this KeySet.
+        
+        Args:
+            key (str) - The key to add.
+        Returns:
+            A tuple of (bool,int). The bool is true if this key is not 
+            already in the KeySet or false otherwise. The int indicates
+            the index of the key.'''
         
         if key in self.lookup:
-            self.counts[key] = self.counts[key] + 1
             return (False, self.lookup[key])
     
         if not key in self.lookup:
             self.lookup[key] = len(self.keys)
             
-        if not key in self.counts:
-            self.counts[key] = 1
-            
         self.keys.append(key)
         return (True, len(self.keys) - 1)
     
+    
     def contains(self, key):
+        '''Check if this KeySet contains the input key.
+        
+        Args:
+            key (str) - The key whose existence in the KeySet should be checked.
+        Returns:
+            True if the input key exists in this KeySet, False otherwise.'''
+        
         return key is not None and key in self.lookup
     
+    
     def clear(self):
+        '''Clear all existing data from this KeySet and reset it to empty.'''
+        
         del self.keys[:]
         self.lookup.clear()
-        self.counts.clear()
 
 
 #Not thread-safe
-class Aggregator(object):
+class KplAggregator(object):
+    '''An object to ingest Kinesis user records and optimally aggregate
+    them (using the Kinesis Producer Library [KPL] protocol) into
+    aggregated Kinesis records.'''
     
     def __init__(self):
+        '''Create a new empty aggregator.'''
         
-        self.current_record = KinesisAggRecord()
+        self.current_record = KplAggRecord()
         self.callbacks = []
     
+    
     def on_record_complete(self, callback):
+        '''A method to register a callback that will be notified (on
+        a separate thread) when a fully-packed record is available.
+        
+        Args:
+            callback - A function handle or callable object that will be called
+            on a separate thread every time a new aggregated record is available.'''
         
         if not callback in self.callbacks:
             self.callbacks.append(callback)
+    
             
     def get_num_user_records(self):
+        '''Returns:
+            The number of user records currently aggregated in this aggregated record. (int)'''
         
         return self.current_record.get_num_user_records()
     
+    
     def get_size_bytes(self):
+        '''Returns:
+            The total number of bytes in this aggregated record (based on the size of the
+            serialized record. (int)'''
         
         return self.current_record.get_size_bytes()
     
+    
     def clear_record(self):
+        '''Clear all the user records from this aggregated record and reset it to an
+        empty state.'''
         
-        self.current_record = KinesisAggRecord()
+        self.current_record = KplAggRecord()
+    
     
     def clear_callbacks(self):
+        '''Clear all the callbacks from this object that were registered with the
+        on_record_complete method.'''
         
         del self.callbacks[:]
     
+    
     def clear_and_get(self):
+        '''Get the current contents of this aggregated record (whether full or not)
+        as a single record and then clear the contents of this object so it can
+        be re-used.  This method is useful for flushing the aggregated record when
+        you need to transmit it before it is full (e.g. you're shutting down or
+        haven't transmitted in a while).
+        
+        Returns:
+            A partially-filled KplAggRecord or None if the aggregator is empty. (KplAggRecord)'''
         
         if self.get_num_user_records() == 0:
             return None
         
         out_record = self.current_record
-        self.current_record = KinesisAggRecord()
+        self.clear_record()
         return out_record
     
+    
     def add_user_record(self, partition_key, data, explicit_hash_key = None):
+        '''Add a new user record to this aggregated record (will trigger a callback
+        via onRecordComplete if aggregated record is full).
+           
+        Args:
+            partition_key (str) - The partition key of the record to add
+            data (str) - The raw data of the record to add
+            explicit_hash_key (str) - The explicit hash key of the record to add (optional)
+        Returns:
+            A KplAggRecord if this aggregated record is full and ready to
+            be transmitted or null otherwise. (KplAggRecord)'''
         
+        #Attempt to add to the current aggregated record
         success = self.current_record.add_user_record(partition_key, data, explicit_hash_key)
         if success:
             #we were able to add the current data to the in-flight record
             return None
         
+        #If we hit this point, aggregated record is full
+        #Call all the callbacks on a separate thread
         out_record = self.current_record
         for callback in self.callbacks:
             threading.Thread(target=callback, args=(out_record,)).start()
         
-        return self.clear_and_get()
+        #Current record is full so clear it out, make a new empty one and add the user record
+        self.clear_record()
+        self.current_record.add_user_record(partition_key, data, explicit_hash_key)
+        
+        return out_record
     
     
-class KinesisAggRecord(object):
+class KplAggRecord(object):
+    '''Represents a single aggregated Kinesis record. This Kinesis record is built
+    by adding multiple user records and then serializing them to bytes using the
+    Kinesis Producer Library (KPL) serialization protocol. This class lifts
+    heavily from the existing KPL C++ libraries found at
+    https://github.com/awslabs/amazon-kinesis-producer.'''
     
     def __init__(self):
+        '''Create a new empty aggregated record.'''
         
         self.agg_record = kpl_pb2.AggregatedRecord()
         self._agg_partition_key = ''
@@ -152,11 +246,15 @@ class KinesisAggRecord(object):
         
         
     def get_num_user_records(self):
+        '''Returns:
+            The current number of user records added via the "addUserRecord(...)" method. (int)'''
         
         return len(self.agg_record.records)
 
 
     def get_size_bytes(self):
+        '''Returns:
+            The current size in bytes of this message in its serialized form. (int)'''
         
         global KPL_MAGIC, KPL_DIGEST_SIZE
         
@@ -164,6 +262,10 @@ class KinesisAggRecord(object):
     
     
     def _serialize_to_bytes(self):
+        '''Serialize this record to bytes.  Has no side effects (i.e. does not affect the contents of this record object).
+        
+        Returns: 
+            A byte array containing a KPL protocol compatible Kinesis record. (binary str)'''
         
         global KPL_MAGIC
         
@@ -177,6 +279,8 @@ class KinesisAggRecord(object):
     
     
     def clear(self):
+        '''Clears out all records and metadata from this object so that it can be
+        reused just like a fresh instance of this object.'''
         
         self.agg_record = kpl_pb2.AggregatedRecord()
         self._agg_partition_key = ''
@@ -187,22 +291,56 @@ class KinesisAggRecord(object):
     
     
     def get_contents(self):
+        '''Get the contents of this aggregated record as members that can be used
+        to call the Kinesis PutRecord or PutRecords API.  Note that this method does
+        not affect the contents of this object (i.e. it has no side effects).
+        
+        Returns:
+            A tuple of (partition key, explicit hash key, binary data) that represents
+            the contents of this aggregated record. (str,str,binary str)'''
         
         agg_bytes = self._serialize_to_bytes()
         return (self._agg_partition_key, self._agg_explicit_hash_key, agg_bytes)
     
     
     def get_partition_key(self):
+        '''Get the overarching partition key for the entire aggregated record.
+        
+        Returns: 
+            The partition key to use for the aggregated record or None if this record is empty. (str)'''
+        
+        if self.get_num_user_records() == 0:
+            return None
         
         return self._agg_partition_key
     
     
     def get_explicit_hash_key(self):
+        '''Get the overarching explicit hash key for the entire aggregated record.
+        
+        Returns: 
+            The explicit hash key to use for the aggregated record or None if this record is empty. (str)'''
+        
+        if self.get_num_user_records() == 0:
+            return None
         
         return self._agg_explicit_hash_key
     
     
     def _calculate_record_size(self, partition_key, data, explicit_hash_key = None):
+        '''Based on the current size of this aggregated record, calculate what the
+        new size would be if we added another user record with the specified
+        parameters (used to determine when this aggregated record is full and
+        can't accept any more user records).  This calculation is highly dependent
+        on the KPL protocol buffer format.
+     
+    Args:
+        partition_key - The partition key of the new record to simulate adding (str)
+        explicit_hash_key - The explicit hash key of the new record to simulate adding (str) (optional)
+        data - The raw data of the new record to simulate adding (binary str)
+    Returns:
+        The new size of this existing record in bytes if a new user
+        record with the specified parameters was added. (int)'''
         
         message_size = 0
         
@@ -219,6 +357,8 @@ class KinesisAggRecord(object):
             message_size += 1
             message_size += _calculate_varint_size(ehk_length)
             message_size += ehk_length
+            
+        #remaining calculations are for adding the new record to the list of records
             
         inner_record_size = 0
         
@@ -244,12 +384,23 @@ class KinesisAggRecord(object):
     
     
     def add_user_record(self, partition_key, data, explicit_hash_key = None):
+        '''Add a new user record to this existing aggregated record if there is
+        enough space (based on the defined Kinesis limits for a PutRecord call).
+        
+        Args:
+            partition_key - The partition key of the new user record to add (str)
+            explicit_hash_key - The explicit hash key of the new user record to add (str)
+            data - The raw data of the new user record to add (binary str)
+        Returns:
+            True if the new user record was successfully added to this
+            aggregated record or false if this aggregated record is too full.'''
         
         global MAX_BYTES_PER_RECORD
         
-        partition_key = partition_key.strip()
-        explicit_hash_key = explicit_hash_key.strip() if explicit_hash_key is not None else self._create_explicit_hash_key(partition_key)
+        partition_key = str(partition_key).strip()
+        explicit_hash_key = str(explicit_hash_key).strip() if explicit_hash_key is not None else self._create_explicit_hash_key(partition_key)
         
+        #Validate new record size won't overflow max size for a PutRecordRequest
         size_of_new_record = self._calculate_record_size(partition_key, data, explicit_hash_key)
         if self.get_size_bytes() + size_of_new_record > MAX_BYTES_PER_RECORD:
             return False
@@ -269,6 +420,7 @@ class KinesisAggRecord(object):
         
         self._agg_size_bytes += size_of_new_record
         
+        #if this is the first record, we use its partition key and hash key for the entire agg record
         if len(self.agg_record.records) == 1:
             self._agg_partition_key = partition_key
             self._agg_explicit_hash_key = explicit_hash_key
@@ -277,6 +429,14 @@ class KinesisAggRecord(object):
     
     
     def _create_explicit_hash_key(self, partition_key):
+        '''Calculate a new explicit hash key based on the input partition key
+        (following the algorithm from the original KPL).
+    
+        Args:
+            partition_key The partition key to seed the new explicit hash key with
+        Returns:
+            An explicit hash key based on the input partition key generated
+            using an algorithm from the original KPL.'''
         
         global KPL_DIGEST_SIZE
         
