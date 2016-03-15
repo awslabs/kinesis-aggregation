@@ -54,16 +54,26 @@ function sendRecord(kinesisClient, streamName, aggRecord) {
 		'Data' : aggRecord.Data
 	};
 	
-	console.log('Submitting record with EHK=' + params.ExplicitHashKey +
+	var pk = aggRecord.PartitionKey;
+	var ehk = aggRecord.ExplicitHashKey;
+	
+	console.log('Submitting record with PK=' + pk +
+				' EHK=' + ehk +
 				' NumBytes=' + params.Data.length);
-	kinesisClient.putRecord(params, function(err,data) {
-		if(err) {
-			console.log('Transmission FAILED: ' + err);
-			return;
-		}
-		
-		console.log('Completed record with EHK=' + params.ExplicitHashKey);
-	});
+	
+	try {
+		kinesisClient.putRecord(params, function(err,data) {
+			if(err) {
+				console.log('Transmission FAILED: ' + err);
+				return;
+			}
+			
+			console.log('Completed record with PK=' + pk + ' EHK=' + ehk);
+		});
+	} 
+	catch (err) {
+		console.log('Transmission FAILED: ' + err);
+	}
 }
 
 /*************************************************
@@ -94,7 +104,7 @@ for(i=1; i <= RECORDS_TO_TRANSMIT; i++) {
 
 //aggregate all the records
 var aggregator = new MessageAggregator();
-aggregator.aggregateRecords(recordsToSend, false, null, function(err, aggRecord) {
+aggregator.aggregateRecords(recordsToSend, true, null, function(err, aggRecord) {
 	sendRecord(kinesisClient, streamName, aggRecord);
 });
 
