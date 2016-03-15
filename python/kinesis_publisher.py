@@ -118,7 +118,7 @@ if __name__ == '__main__':
     RECORDS_TO_TRANSMIT = 1024
     
     if len(sys.argv) != 3:
-        print>>sys.stderr,"python kinesis_publisher.py <stream name> <region>"
+        print>>sys.stderr,"USAGE: python kinesis_publisher.py <stream name> <region>"
         sys.exit(1)
         
     stream_name = sys.argv[1]

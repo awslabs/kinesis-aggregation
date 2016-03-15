@@ -349,7 +349,7 @@ class KplAggRecord(object):
             pk_length = len(partition_key)
             message_size += 1
             message_size += _calculate_varint_size(pk_length)
-            message_size += len(partition_key)
+            message_size += pk_length
             
         #has the explicit hash key been added to the table of known EHKs yet?
         if explicit_hash_key is not None and not self.explicit_hash_keys.contains(explicit_hash_key):
