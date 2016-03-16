@@ -1,22 +1,74 @@
 
 
-# Python Kinesis Producer Library Deaggregation Module
+# Python Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
 
-The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). When you write to the Producer, you can also elect to turn on Aggregation, which writes multiple producer events to a single Kinesis Record, aggregating lots of smaller events into a 1MB record. When you use Aggregation, the KPL serialises data to the Kinesis stream using [Google Protocol Buffers](https://developers.google.com/protocol-buffers), and consumer applications must be able to deserialise this protobuf message. This module gives you the ability to process KPL serialised data using any Python consumer including [AWS Lambda](https://aws.amazon.com/lambda).
+The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). The KPL is extremely powerful, but is currently only [available](https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-kpl-supported-plats.html) as a Java API that wraps access to a background C++ executable.  Likewise not all Kinesis consumer applications, such as those running on AWS Lambda, are currently capable of deaggregating KPL-aggregated records.
+
+This library provides features that bring the power of KPL aggregation and deaggregation to more producer and consumer applications running in Java, Python and Node JS on any platform, including AWS Lambda.
+
+** Aggregation **
+
+One of the main advantages of the KPL is its ability to use record aggregation to increase payload size and improve throughput.  While it is not a replacement for the full power of the KPL, this library gives you the ability to easily and efficiently aggregate multiple user records into larger aggregated records that make more efficient use of available bandwidth and reduce cost. This library gives you the ability to create KPL compatible records in any Python application.
+
+** Deaggregation **
+
+When you write to a KPL Producer or use the Python KPL aggregation module, you can take advantage of Message Aggregation, which writes multiple producer events to a single aggregated Kinesis Record, aggregating lots of smaller events into a 1MB record. When you use Aggregation, data is serialised to the Kinesis stream using Google Protocol Buffers and consumer applications must be able to deserialise these protobuf-encoded messages. The components in this library allow you to efficiently deaggregate KPL-aggregated records in any Python application.
+
 
 ## Installation
 
-The Python KPL Deaggregation module is available on the Python Package Index (PyPI) as [aws_kpl_deagg](https://pypi.python.org/pypi/aws_kpl_deagg).  You can install it via the `pip` command line tool:
+The Python KPL Aggregation/Deaggregation modules are available on the Python Package Index (PyPI) as [aws_kpl_agg](https://pypi.python.org/pypi/aws_kpl_agg).  You can install it via the `pip` command line tool:
 
 ```
-pip install aws_kpl_deagg
+pip install aws_kpl_agg
 ```
 
-Alternately, you can simply copy the aws_kpl_deagg module from this repository and use it directly with the caveat that the [Google protobuf module](https://pypi.python.org/pypi/protobuf) must also be available (if you install via `pip`, this dependency will be handled for you).
+Alternately, you can simply copy the aws_kpl_agg module from this repository and use it directly with the caveat that the [Google protobuf module](https://pypi.python.org/pypi/protobuf) must also be available (if you install via `pip`, this dependency will be handled for you).
 
-## Usage
+##Python KPL Aggregation Module (aggregator.py)
 
-The Python KPL Deaggregation module provides a simple interface for working with KPL encoded data in a consumer application. The aws_kpl_deagg Python module provides for both bulk and generator-based processing. 
+### Usage
+
+The Python KPL Aggregation module provides a simple interface for creating KPL-encoded data in a producer application. The `aws_kpl_agg` Python module provides methods for efficiently packing individual records into larger aggregated records.
+
+When using aggregation, you create a KplAggregator object and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any record returned from the KplAggregator object will fit within a single put_record request to Kinesis (or they can be used as part of a put_records request as well).
+
+To get started, import the `aws_kpl_agg` module:
+
+`import aws_kpl_agg`
+
+As you produce records in your producer application, you will aggregate them using the aggregation methods available in the `aws_kpl_agg` module.
+
+#### Iterative Aggregation
+
+The iterative aggregation method involves adding records one at a time to the KplAggregator and checking the response to determine when a full aggregated record is available.  The `add_user_record` method returns None when there is room for more records in the existing aggregated record or it returns a KplAggRecord object when a full object is available for transmission.
+
+```
+for rec in records:
+    result = kinesis_aggregator.add_user_record(rec.PartitionKey, rec.Data, rec.ExplicitHashKey)
+    if result:
+        #Send the result to Kinesis    
+```
+
+#### Callback-based Aggregation
+
+To use callback-based aggregation, you must register a callback via the `on_record_complete` method.  As you add individual records to the KplAggregator object, you will receive a callback (on a separate thread by default) whenever a new fully-packed aggregated record is available.
+
+```
+kinesis_aggregator.on_record_complete(my_callback)
+for rec in records:
+    kinesis_aggregator.add_user_record(rec.PartitionKey, rec.Data, rec.ExplicitHashKey)
+```
+
+### Examples
+
+Blah.
+
+##Python KPL Deaggregation Module (deaggregator.py)
+
+### Usage
+
+The Python KPL Deaggregation module provides a simple interface for working with KPL encoded data in a consumer application. The `aws_kpl_agg` Python module provides methods for both bulk and generator-based processing. 
 
 When using deaggregation, you provide a Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is not a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the kpl-deagg looks like:
 
@@ -42,15 +94,15 @@ When using deaggregation, you provide a Kinesis Record, and get back multiple Ki
 }
 ```
 
-To get started, include the `aws_kpl_deagg` module:
+To get started, include the `aws_kpl_agg` module:
 
-`import aws_kpl_deagg`
+`import aws_kpl_agg`
 
-Next, when you receive a Kinesis Record in your consumer application, you will extract the User Records using the deaggregations methods available in the `aws_kpl_deagg` module.
+Next, when you receive a Kinesis Record in your consumer application, you will extract the User Records using the deaggregation methods available in the `aws_kpl_agg` module.
 
-**IMPORTANT**: The deaggregation methods available in the `aws_kpl_deagg` module expect input records in the same dictionary-based format they are normally received from AWS Lambda. See the [Programming Model for Authoring Lambda Functions in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model.html) section of the AWS documentation for more details.
+**IMPORTANT**: The deaggregation methods available in the `aws_kpl_agg` module expect input records in the same dictionary-based format they are normally received from AWS Lambda. See the [Programming Model for Authoring Lambda Functions in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model.html) section of the AWS documentation for more details.
 
-### Bulk Conversion
+#### Bulk Conversion
 
 The bulk conversion method of deaggregation takes in a list of Kinesis Records, extracts all the aggregated User Records and accumulates them into a list.  Any records that are passed in to this method that are not KPL-aggregated records will be returned unchanged.  The method returns a list of Kinesis User Records in the same format as they are normally delivered by Lambda's Kinesis event handler.
 
@@ -58,7 +110,7 @@ The bulk conversion method of deaggregation takes in a list of Kinesis Records, 
 user_records = deaggregate_records(raw_kinesis_records)
 ```
 
-### Generator-based Conversion
+#### Generator-based Conversion
 
 The generator-based conversion method of deaggregation uses a Python [generator function](https://wiki.python.org/moin/Generators) to extract User Records from a raw Kinesis Record one at a time in an iterative fashion.  Any records that are passed in to this method that are not KPL-aggregated records will be returned unchanged.  For example, you could use this code to iterate through each deaggregated record:
 
@@ -69,11 +121,11 @@ for record in iter_deaggregate_records(raw_kinesis_records):
 	pass 
 ```
 
-## Examples
+### Examples
 
 This module includes two example AWS Lambda function in the file [lambda_function.py](src/lambda_function.py), which gives you the ability to easily build new functions to process KPL encoded data.
 
-### Bulk Conversion Example
+#### Bulk Conversion Example
 
 ```
 from __future__ import print_function
@@ -99,7 +151,7 @@ def lambda_bulk_handler(event, context):
     return 'Successfully processed {} records.'.format(len(user_records))
 ```
 
-### Generator-based Conversion Example
+#### Generator-based Conversion Example
 
 ```
 from __future__ import print_function
@@ -125,7 +177,7 @@ def lambda_generator_handler(event, context):
     return 'Successfully processed {} records.'.format(record_count)
 ```
 
-## Build & Deploy a Lambda Function to process Kinesis Records
+### Build & Deploy a Lambda Function to process Kinesis Records
 
 One easy way to get started processing Kinesis data is to use AWS Lambda.  By building on top of the existing [lambda_function.py](lambda_function.py) module in this repository, you can take advantage of KPL deaggregation features without having to write boilerplate code.
 
@@ -145,7 +197,7 @@ python make_lambda_build.py
 
 The build script will create a new folder called `build`, copy all the Python source files, download any necessary dependencies via `pip` and create the file `python_lambda_build.zip` that you can deploy to AWS Lambda.
 
-### Important Build Note for AWS Lambda Users
+#### Important Build Note for AWS Lambda Users
 
 If you choose to make your own Python zip file to deploy to AWS Lambda, be aware that the Google [protobuf](https://pypi.python.org/pypi/protobuf) module normally relies on using a Python `pth` setting to make the root `google` module importable.  If you see an error in your AWS Lambda logs such as:
 

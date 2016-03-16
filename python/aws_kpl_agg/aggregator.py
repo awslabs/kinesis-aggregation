@@ -137,7 +137,7 @@ class KplAggregator(object):
         self.callbacks = []
     
     
-    def on_record_complete(self, callback):
+    def on_record_complete(self, callback, execute_on_new_thread=True):
         '''A method to register a callback that will be notified (on
         a separate thread) when a fully-packed record is available.
         
@@ -146,7 +146,7 @@ class KplAggregator(object):
             on a separate thread every time a new aggregated record is available.'''
         
         if not callback in self.callbacks:
-            self.callbacks.append(callback)
+            self.callbacks.append((callback,execute_on_new_thread))
     
             
     def get_num_user_records(self):
@@ -217,8 +217,11 @@ class KplAggregator(object):
         #If we hit this point, aggregated record is full
         #Call all the callbacks on a separate thread
         out_record = self.current_record
-        for callback in self.callbacks:
-            threading.Thread(target=callback, args=(out_record,)).start()
+        for (callback,execute_on_new_thread) in self.callbacks:
+            if execute_on_new_thread:
+                threading.Thread(target=callback, args=(out_record,)).start()
+            else:
+                callback(out_record)
         
         #Current record is full so clear it out, make a new empty one and add the user record
         self.clear_record()
