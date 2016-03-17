@@ -1,19 +1,16 @@
-
-
 # Python Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
 
-The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). The KPL is extremely powerful, but is currently only [available](https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-kpl-supported-plats.html) as a Java API that wraps access to a background C++ executable.  Likewise not all Kinesis consumer applications, such as those running on AWS Lambda, are currently capable of deaggregating KPL-aggregated records.
+The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). The KPL is extremely powerful, but is currently only [available](https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-kpl-supported-plats.html) as a Java API wrapper around a C++ executable which may not be suitable for all deployment environments.  Similarly, the powerful [Kinesis Client Library (KCL)](https://docs.aws.amazon.com/kinesis/latest/dev/developing-consumers-with-kcl.html) provides automatic deaggregation of KPL aggregated records, but not all Kinesis consumer applications, such as those running on AWS Lambda, are currently capable of leveraging this deaggregation capability.
 
 This library provides features that bring the power of KPL aggregation and deaggregation to more producer and consumer applications running in Java, Python and Node JS on any platform, including AWS Lambda.
 
-** Aggregation **
+**Aggregation**
 
-One of the main advantages of the KPL is its ability to use record aggregation to increase payload size and improve throughput.  While it is not a replacement for the full power of the KPL, this library gives you the ability to easily and efficiently aggregate multiple user records into larger aggregated records that make more efficient use of available bandwidth and reduce cost. This library gives you the ability to create KPL compatible records in any Python application.
+One of the main advantages of the KPL is its ability to use record aggregation to increase payload size and improve throughput.  While it is not a replacement for the full power of the KPL, this library gives you the ability to easily and efficiently aggregate multiple user records into larger aggregated records that make more efficient use of available bandwidth and reduce cost. The Python modules described below give you the ability to create KPL aggregated records in any Python application.
 
-** Deaggregation **
+**Deaggregation**
 
 When you write to a KPL Producer or use the Python KPL aggregation module, you can take advantage of Message Aggregation, which writes multiple producer events to a single aggregated Kinesis Record, aggregating lots of smaller events into a 1MB record. When you use Aggregation, data is serialised to the Kinesis stream using Google Protocol Buffers and consumer applications must be able to deserialise these protobuf-encoded messages. The components in this library allow you to efficiently deaggregate KPL-aggregated records in any Python application.
-
 
 ## Installation
 
@@ -25,17 +22,19 @@ pip install aws_kpl_agg
 
 Alternately, you can simply copy the aws_kpl_agg module from this repository and use it directly with the caveat that the [Google protobuf module](https://pypi.python.org/pypi/protobuf) must also be available (if you install via `pip`, this dependency will be handled for you).
 
-##Python KPL Aggregation Module (aggregator.py)
+## Python KPL Aggregation Module (aggregator.py)
 
 ### Usage
 
 The Python KPL Aggregation module provides a simple interface for creating KPL-encoded data in a producer application. The `aws_kpl_agg` Python module provides methods for efficiently packing individual records into larger aggregated records.
 
-When using aggregation, you create a KplAggregator object and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any record returned from the KplAggregator object will fit within a single put_record request to Kinesis (or they can be used as part of a put_records request as well).
+When using aggregation, you create a KplAggregator object and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any aggregated record returned from the KplAggregator object will fit within a single PutRecord request to Kinesis.
 
 To get started, import the `aws_kpl_agg` module:
 
-`import aws_kpl_agg`
+```
+import aws_kpl_agg
+```
 
 As you produce records in your producer application, you will aggregate them using the aggregation methods available in the `aws_kpl_agg` module.
 
@@ -52,9 +51,14 @@ for rec in records:
 
 #### Callback-based Aggregation
 
-To use callback-based aggregation, you must register a callback via the `on_record_complete` method.  As you add individual records to the KplAggregator object, you will receive a callback (on a separate thread by default) whenever a new fully-packed aggregated record is available.
+To use callback-based aggregation, you must register a callback via the `on_record_complete` method.  As you add individual records to the KplAggregator object, you will receive a callback (on a separate thread) whenever a new fully-packed aggregated record is available.
 
 ```
+def my_callback(agg_record):
+    #Send the record to Kinesis
+   
+...
+
 kinesis_aggregator.on_record_complete(my_callback)
 for rec in records:
     kinesis_aggregator.add_user_record(rec.PartitionKey, rec.Data, rec.ExplicitHashKey)
@@ -62,7 +66,42 @@ for rec in records:
 
 ### Examples
 
-Blah.
+This repository includes an example Python script that uses the Python KPL Aggregation module to aggregate records and transmit them to Amazon Kinesis using callback-based aggregation. You can find this example functionality in the file [kinesis_publisher.py](src/kinesis_publisher.py), which you can use as a template for your own functions to to easily build and transmit KPL encoded data.
+
+#### Callback-based Aggregation and Transmission Example
+
+The example below assumes you are running Python version 2.7.x and this example also requires you to install and configure the `boto3` module.  You can install `boto3` via `pip install boto3` or any other normal Python install mechanism.  To configure the example to be able to publish to your Kinesis stream, make sure you follow the instructions in the [Boto3 Configuration Guide](https://boto3.readthedocs.org/en/latest/guide/configuration.html).  The example below has been stripped down for brevity, but you can still find the full working version at [kinesis_publisher.py](src/kinesis_publisher.py). The abridged example is:
+
+```
+import boto3
+import aws_kpl_agg.aggregator
+    
+kinesis_client = None
+    
+def send_record(agg_record):
+    
+    global kinesis_client
+    pk, ehk, data = agg_record.get_contents()
+    kinesis_client.put_record(StreamName='MyKinesisStreamName',
+                                  Data=data,
+                                  PartitionKey=pk,
+                                  ExplicitHashKey=ehk)
+    
+if __name__ == '__main__':
+        
+    kinesis_client = boto3.client('kinesis', region_name='us-west-2')
+     
+    kinesis_agg = aws_kpl_agg.aggregator.KplAggregator()
+    kinesis_agg.on_record_complete(send_record)
+    
+    for i in range(0,1024):
+        pk, ehk, data = get_record(...)
+        kinesis_agg.add_user_record(pk, data, ehk)
+    
+    #Clear out any remaining records that didn't trigger a callback yet
+    send_record(kinesis_agg.clear_and_get()) 
+```
+
 
 ##Python KPL Deaggregation Module (deaggregator.py)
 
@@ -70,7 +109,7 @@ Blah.
 
 The Python KPL Deaggregation module provides a simple interface for working with KPL encoded data in a consumer application. The `aws_kpl_agg` Python module provides methods for both bulk and generator-based processing. 
 
-When using deaggregation, you provide a Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is not a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the kpl-deagg looks like:
+When using deaggregation, you provide a Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is not a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from deaggregation looks like:
 
 ```
 {
@@ -79,12 +118,12 @@ When using deaggregation, you provide a Kinesis Record, and get back multiple Ki
     'kinesis' :
     {
         'partitionKey' : String - The Partition Key provided when the record was submitted
-		'explicitHashKey' : String - The hash value used to explicitly determine the shard the data record is assigned to by overriding the partition key hash (or None if absent) 
+        'explicitHashKey' : String - The hash value used to explicitly determine the shard the data record is assigned to by overriding the partition key hash (or None if absent) 
         'data' : String - The original data transmitted by the producer (base64 encoded)
         'kinesisSchemaVersion' : String - The version number of the Kinesis message schema used,
         'sequenceNumber' : BigInt - The sequence number assigned to the record on submission to Kinesis
-		'subSequenceNumber' : Int - The sub-sequence number for the User Record in the aggregated record, if aggregation was in use by the producer
-		'aggregated' : Boolean - Always True for a user record extracted from a KPL aggregated record
+        'subSequenceNumber' : Int - The sub-sequence number for the User Record in the aggregated record, if aggregation was in use by the producer
+        'aggregated' : Boolean - Always True for a user record extracted from a KPL aggregated record
     },
     'invokeIdentityArn' : String - The ARN of the IAM user used to invoke this Lambda function
     'eventName' : String - Always "aws:kinesis:record" for a Kinesis record
@@ -94,13 +133,13 @@ When using deaggregation, you provide a Kinesis Record, and get back multiple Ki
 }
 ```
 
-To get started, include the `aws_kpl_agg` module:
+To get started, import the `aws_kpl_agg` module:
 
 `import aws_kpl_agg`
 
 Next, when you receive a Kinesis Record in your consumer application, you will extract the User Records using the deaggregation methods available in the `aws_kpl_agg` module.
 
-**IMPORTANT**: The deaggregation methods available in the `aws_kpl_agg` module expect input records in the same dictionary-based format they are normally received from AWS Lambda. See the [Programming Model for Authoring Lambda Functions in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model.html) section of the AWS documentation for more details.
+**IMPORTANT**: The deaggregation methods available in the `aws_kpl_agg` module expect input records in the same dictionary-based format that they are normally received in from AWS Lambda. See the [Programming Model for Authoring Lambda Functions in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model.html) section of the AWS documentation for more details.
 
 #### Bulk Conversion
 
@@ -117,8 +156,8 @@ The generator-based conversion method of deaggregation uses a Python [generator 
 ```
 for record in iter_deaggregate_records(raw_kinesis_records):        
         
-	#Process each record
-	pass 
+    #Process each record
+    pass 
 ```
 
 ### Examples
@@ -130,7 +169,7 @@ This module includes two example AWS Lambda function in the file [lambda_functio
 ```
 from __future__ import print_function
 
-from aws_kpl_deagg.deaggregator import deaggregate_records
+from aws_kpl_agg.deaggregator import deaggregate_records
 import base64
 
 def lambda_bulk_handler(event, context):
@@ -156,7 +195,7 @@ def lambda_bulk_handler(event, context):
 ```
 from __future__ import print_function
 
-from aws_kpl_deagg.deaggregator import iter_deaggregate_records
+from aws_kpl_agg.deaggregator import iter_deaggregate_records
 import base64
 
 def lambda_generator_handler(event, context):
@@ -187,7 +226,7 @@ When you're ready to make a build and upload to AWS Lambda, you have two choices
 
 OR 
 
-* At the root of this Python project, you can find a sample build file called [make_lambda_build.py](make_lambda_build.py).  This file is platform-agnostic build script that will take the existing Python project in this demo and package it in a single build file called `python_lambda_build.zip` that you can upload directly to AWS Lambda.
+* At the root of this Python project, you can find a sample build file called [make_lambda_build.py](make_lambda_build.py).  This file is a platform-agnostic build script that will take the existing Python project in this demo and package it in a single build file called `python_lambda_build.zip` that you can upload directly to AWS Lambda.
 
 In order to use the build script, make sure that the python `pip` tool is available on your command line.  If you have other `pip` dependencies, make sure to add them to the `PIP_DEPENDENCIES` list at the top of the [make_lambda_build.py](make_lambda_build.py).  Then run this command:
 
@@ -215,6 +254,6 @@ Copyright 2014-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 Licensed under the Amazon Software License (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
 
-	http://aws.amazon.com/asl/
+    http://aws.amazon.com/asl/
 
 or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
