@@ -1,11 +1,53 @@
-# Node.js Kinesis Producer Library Deaggregation Module
-
-The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). When you write to the Producer, you can also elect to turn on Aggregation, which writes multiple producer events to a single Kinesis Record, aggregating lots of smaller events into a 1MB record. When you use Aggregation, the KPL serialises data to the Kinesis stream using [Google Protocol Buffers](https://developers.google.com/protocol-buffers), and consumer applications must be able to deserialise this protobuf message. This module gives you the ability to process KPL serialised data using any Node.js consumer, including [AWS Lambda](https://aws.amazon.com/lambda), the [Node.js KCL](https://github.com/awslabs/amazon-kinesis-client-nodejs), a [multi-lang KCL application using Node.js](https://github.com/awslabs/amazon-kinesis-client/blob/master/src/main/java/com/amazonaws/services/kinesis/multilang/package-info.java) or even an [Express.js application running in Elastic Beanstalk](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_nodejs_express.html). The [Java KCL](https://github.com/awslabs/amazon-kinesis-client) also provides the ability to automatically deaggregate and process KPL encoded data.
+# Node.js Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
 
 
-## Usage
+The Node KPL Aggregation and Deaggregation modules provides a simple interface for working with KPL encoded data in any type of application. You can easily integrate into existing applications that do not yet support KPL Aggregation, and the programming model provides for both synchronous and asyncronous processing. 
 
-The Node KPL Deaggregation module provides a simple interface for working with KPL encoded data in a consumer application. You can easily integrate it into existing applications that do not yet support KPL Aggregation, and the programming model provides for both synchronous and asyncronous processing. 
+## Aggregation
+
+Applications implemented in AWS Lambda often emit events based on the events that were recieved in the function. They may be doing enrichment, parsing, or filtering, and the ability to take advantage of Protocol Buffers based aggregation will result in more efficient systems.
+
+To use Aggregation, you simply constuct a MessageAggregator function:
+
+```var aggregator = new MessageAggregator();```
+
+You can then aggregate batches of messages by using the `aggregate` function:
+
+```aggregator.aggregate(rawRecords, function(err, encoded));```
+
+where ```encoded``` is of type Buffer. With the aggregate function, the supplied callback will be invoked when the number of records supplied exceeds the Kinesis maximum record size (1MB as of March 2016). You can also retreive the records being aggregated by calling the ```flushBufferedRecords``` function:
+
+```
+agg.flushBufferedRecords(function(err,encoded));
+```
+
+An example data flow in a AWS Lambda function that was does per-record processing, and then wanting to send those records to Kinesis, would be something similar to the following (pseudo code):
+
+```
+// create a message aggregator
+var aggregator = new MessageAggregator();
+
+// create the function which sends data to Kinesis with a random partition key
+var onReady = function(err,encoded) {
+  myKinesisConnection.putRecord(Math.random(), encoded.toString('base64'));
+};
+
+// process each provided Record in the event
+async.map(event.Records, function(record, asyncCallback) {
+  // do your per record processing here
+  var recordAfterProcessing = doSomething(record.kinesis);
+  
+  asyncCallback(null, recordAfterProcessing);
+}, function(err, mapResults) {
+  // aggregate the records and call the onReady function for each block of prepared messages which are 1MB in size
+  aggregator.aggregate(mapResults,onReady);
+  
+  // flush any final messages that were under the emission threshold
+  aggregator.flushBufferedRecords(onReady);
+});
+```
+
+## Deaggregation
 
 When using deaggregation, you provide a Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the kpl-deagg looks like:
 
@@ -52,11 +94,11 @@ If any errors are encountered during processing of the ```perRecordCallback```, 
 }
 ```
 
-## Examples
+### Examples
 
 This module includes an example AWS Lambda function in the index.js file (link), which gives you easy ability to build new functions to process KPL encoded data. Both examples use async.js (link) to process the received Kinesis Records.
 
-### Syncronous Example
+#### Syncronous Example
 
 ```
 /**
@@ -107,7 +149,7 @@ exports.exampleSync = function(event, context) {
 };
 ```
 
-### Asyncronous Example
+#### Asyncronous Example
 
 This example accumulates User Records into an enclosing array, in a similar way to how the syncronous interface works:
 

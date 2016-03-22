@@ -1,18 +1,5 @@
 # Python Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
 
-The [Amazon Kinesis Producer Library (KPL)](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can [improve performance](http://docs.aws.amazon.com/kinesis/latest/dev/developing-producers-with-kpl.html#d0e4909). The KPL is extremely powerful, but is currently only [available](https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-kpl-supported-plats.html) as a Java API wrapper around a C++ executable which may not be suitable for all deployment environments.  Similarly, the powerful [Kinesis Client Library (KCL)](https://docs.aws.amazon.com/kinesis/latest/dev/developing-consumers-with-kcl.html) provides automatic deaggregation of KPL aggregated records, but not all Kinesis consumer applications, such as those running on AWS Lambda, are currently capable of leveraging this deaggregation capability.
-
-This library provides features that bring the power of KPL aggregation and deaggregation to more producer and consumer applications running in Java, Python and Node JS on any platform, including AWS Lambda.
-
-**Aggregation**
-
-One of the main advantages of the KPL is its ability to use record aggregation to increase payload size and improve throughput.  While it is not a replacement for the full power of the KPL, this library gives you the ability to easily and efficiently aggregate multiple user records into larger aggregated records that make more efficient use of available bandwidth and reduce cost. The Python modules described below give you the ability to create KPL aggregated records in any Python application.
-
-**Deaggregation**
-
-When you write to a KPL Producer or use the Python KPL aggregation module, you can take advantage of Message Aggregation, which writes multiple producer events to a single aggregated Kinesis Record, aggregating lots of smaller events into a 1MB record. When you use Aggregation, data is serialised to the Kinesis stream using Google Protocol Buffers and consumer applications must be able to deserialise these protobuf-encoded messages. The components in this library allow you to efficiently deaggregate KPL-aggregated records in any Python application.
-
-## Installation
 
 The Python KPL Aggregation/Deaggregation modules are available on the Python Package Index (PyPI) as [aws_kpl_agg](https://pypi.python.org/pypi/aws_kpl_agg).  You can install it via the `pip` command line tool:
 
