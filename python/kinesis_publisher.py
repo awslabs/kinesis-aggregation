@@ -125,7 +125,7 @@ if __name__ == '__main__':
     region_name = sys.argv[2]
     
     init_kinesis_client(region_name)
-    kinesis_agg = aws_kpl_agg.aggregator.KplAggregator()
+    kinesis_agg = aws_kpl_agg.aggregator.RecordAggregator()
     kinesis_agg.on_record_complete(send_record)
     
     print 'Creating %d records...' % (RECORDS_TO_TRANSMIT)

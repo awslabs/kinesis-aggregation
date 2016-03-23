@@ -1,7 +1,7 @@
-# Python Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
+# Python Record Aggregation & Deaggregation Modules
 
 
-The Python KPL Aggregation/Deaggregation modules are available on the Python Package Index (PyPI) as [aws_kpl_agg](https://pypi.python.org/pypi/aws_kpl_agg).  You can install it via the `pip` command line tool:
+The Python Record Aggregation/Deaggregation modules are available on the Python Package Index (PyPI) as [aws_kpl_agg](https://pypi.python.org/pypi/aws_kpl_agg).  You can install it via the `pip` command line tool:
 
 ```
 pip install aws_kpl_agg
@@ -9,13 +9,13 @@ pip install aws_kpl_agg
 
 Alternately, you can simply copy the aws_kpl_agg module from this repository and use it directly with the caveat that the [Google protobuf module](https://pypi.python.org/pypi/protobuf) must also be available (if you install via `pip`, this dependency will be handled for you).
 
-## Python KPL Aggregation Module (aggregator.py)
+## Record Aggregation Module (aggregator.py)
 
 ### Usage
 
-The Python KPL Aggregation module provides a simple interface for creating KPL-encoded data in a producer application. The `aws_kpl_agg` Python module provides methods for efficiently packing individual records into larger aggregated records.
+The Record Aggregation module provides a simple interface for creating protocol buffers encoded data in a producer application. The `aws_kpl_agg` module provides methods for efficiently packing individual records into larger aggregated records.
 
-When using aggregation, you create a KplAggregator object and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any aggregated record returned from the KplAggregator object will fit within a single PutRecord request to Kinesis.
+When using aggregation, you create a RecordAggregator object and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any aggregated record returned from the RecordAggregator object will fit within a single PutRecord request to Kinesis.
 
 To get started, import the `aws_kpl_agg` module:
 
@@ -27,7 +27,7 @@ As you produce records in your producer application, you will aggregate them usi
 
 #### Iterative Aggregation
 
-The iterative aggregation method involves adding records one at a time to the KplAggregator and checking the response to determine when a full aggregated record is available.  The `add_user_record` method returns None when there is room for more records in the existing aggregated record or it returns a KplAggRecord object when a full object is available for transmission.
+The iterative aggregation method involves adding records one at a time to the RecordAggregator and checking the response to determine when a full aggregated record is available.  The `add_user_record` method returns None when there is room for more records in the existing aggregated record or it returns a AggRecord object when a full object is available for transmission.
 
 ```
 for rec in records:
@@ -38,7 +38,7 @@ for rec in records:
 
 #### Callback-based Aggregation
 
-To use callback-based aggregation, you must register a callback via the `on_record_complete` method.  As you add individual records to the KplAggregator object, you will receive a callback (on a separate thread) whenever a new fully-packed aggregated record is available.
+To use callback-based aggregation, you must register a callback via the `on_record_complete` method.  As you add individual records to the RecordAggregator object, you will receive a callback (on a separate thread) whenever a new fully-packed aggregated record is available.
 
 ```
 def my_callback(agg_record):
@@ -53,7 +53,7 @@ for rec in records:
 
 ### Examples
 
-This repository includes an example Python script that uses the Python KPL Aggregation module to aggregate records and transmit them to Amazon Kinesis using callback-based aggregation. You can find this example functionality in the file [kinesis_publisher.py](src/kinesis_publisher.py), which you can use as a template for your own functions to to easily build and transmit KPL encoded data.
+This repository includes an example script that uses the record Aggregation module to aggregate records and transmit them to Amazon Kinesis using callback-based aggregation. You can find this example functionality in the file [kinesis_publisher.py](src/kinesis_publisher.py), which you can use as a template for your own functions to to easily build and transmit encoded data.
 
 #### Callback-based Aggregation and Transmission Example
 
@@ -66,7 +66,6 @@ import aws_kpl_agg.aggregator
 kinesis_client = None
     
 def send_record(agg_record):
-    
     global kinesis_client
     pk, ehk, data = agg_record.get_contents()
     kinesis_client.put_record(StreamName='MyKinesisStreamName',
@@ -75,10 +74,9 @@ def send_record(agg_record):
                                   ExplicitHashKey=ehk)
     
 if __name__ == '__main__':
-        
     kinesis_client = boto3.client('kinesis', region_name='us-west-2')
      
-    kinesis_agg = aws_kpl_agg.aggregator.KplAggregator()
+    kinesis_agg = aws_kpl_agg.aggregator.RecordAggregator()
     kinesis_agg.on_record_complete(send_record)
     
     for i in range(0,1024):
@@ -90,11 +88,11 @@ if __name__ == '__main__':
 ```
 
 
-##Python KPL Deaggregation Module (deaggregator.py)
+##Record Deaggregation Module (deaggregator.py)
 
 ### Usage
 
-The Python KPL Deaggregation module provides a simple interface for working with KPL encoded data in a consumer application. The `aws_kpl_agg` Python module provides methods for both bulk and generator-based processing. 
+The Record Deaggregation module provides a simple interface for working with protocol buffers encoded data in a consumer application. The `aws_kpl_agg` module provides methods for both bulk and generator-based processing. 
 
 When using deaggregation, you provide a Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is not a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from deaggregation looks like:
 

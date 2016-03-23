@@ -1,4 +1,4 @@
-# Kinesis Producer Library Aggregation & Deaggregation Modules for AWS Lambda
+# Kinesis Record Aggregation & Deaggregation Modules for AWS Lambda
 
 The Amazon Kinesis Producer Library (KPL) gives you the ability to write data to Amazon Kinesis with a highly efficient, asyncronous delivery model that can improve performance. The KPL is extremely powerful, but is currently only available as a Java API wrapper around a C++ executable which may not be suitable for all deployment environments. Similarly, the powerful Kinesis Client Library (KCL) provides automatic deaggregation of KPL aggregated records, but not all Kinesis consumer applications, such as those running on AWS Lambda, are currently capable of leveraging this deaggregation capability.
 

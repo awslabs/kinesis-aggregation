@@ -125,7 +125,7 @@ class KeySet(object):
 
 
 #Not thread-safe
-class KplAggregator(object):
+class RecordAggregator(object):
     '''An object to ingest Kinesis user records and optimally aggregate
     them (using the Kinesis Producer Library [KPL] protocol) into
     aggregated Kinesis records.'''
