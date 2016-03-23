@@ -46,11 +46,7 @@ Using Lists rather than Java Streams, this same funcitonality can be provided by
         }
 ```
 
-## Batch Deaggregation
-
-For those whole prefer simple method call and response mechanisms, the `KplDeaggregator` also provides two static `deaggregate` methods that either take in a single aggregated Kinesis record or a list of aggregated Kinesis records and deaggregate them synchronously in bulk.
-
-For example:
+For those whole prefer simple method call and response mechanisms, the `KplDeaggregator` also provides two static `deaggregate` methods that either take in a single aggregated Kinesis record or a list of aggregated Kinesis records and deaggregate them synchronously in bulk. For example:
 
 ```
 try
@@ -68,52 +64,6 @@ try
 catch (Exception e)
 {
     logger.log(e.getMessage());
-}
-```
-
-## Instructions for Use
-
-1. Run Maven->Install to build the project
-2. Create a new Lambda function in your AWS account
-3. Skip blueprint selection
-4. Choose Java 8 as the runtime
-5. Choose the built file (from step #2) KinesisLambdaTestConsumer-1.0-dev.jar as the code for the function (NOT the KinesisLambdaTestConsumer-0.0.1.jar file).
-6. Choose com.amazonaws.KinesisLambdaReceiver as the Handler
-7. Set the default batch size as required for your Stream throughput
-8. Set the Role, Memory and Timeout appropriately.
-9. Connect your new Lambda function to the Kinesis stream you'll be publishing to
-
-## IAM Role
-
-This is a sample IAM policy for the Lambda execution role:
-
-```
- {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "lambda:InvokeFunction"
-      ],
-      "Resource": [
-        "*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "kinesis:GetRecords",
-        "kinesis:GetShardIterator",
-        "kinesis:DescribeStream",
-        "kinesis:ListStreams",
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
 }
 ```
 
