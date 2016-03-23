@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <parent>
     <groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>kpl-java</artifactId>
+	<artifactId>kinesis-aggregation-java</artifactId>
     <version>1.0</version>
     <relativePath>..</relativePath>
   </parent>
