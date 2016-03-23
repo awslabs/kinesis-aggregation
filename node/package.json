@@ -22,7 +22,7 @@
         "name": "Ian Meyers",
         "email": "meyersi@amazon.com"
     },
-    "main": "./index.js",
+    "main": "./sample.js",
     "files": [
         "index.js",
         "test.js",

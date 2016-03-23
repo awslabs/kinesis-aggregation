@@ -8,9 +8,9 @@
     or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License. 
  */
 
-var lambda = require('./index');
+var deaggregator = require('./sample-deaggregation');
 var libPath = "./node_modules/aws-kpl-agg"
-var agg = require(libPath + '/MessageAggregator');
+var aggregator = require(libPath + '/RecordAggregator');
 require(libPath + "/constants");
 
 // sample kinesis event - record 0 has no data, and will be filled in with
@@ -77,11 +77,13 @@ var rawRecords = [ {
 } ];
 
 try {
-	agg.aggregate(rawRecords, function(err, encoded) {
+	// use the message aggregator to generated an encoded value
+	aggregator.aggregate(rawRecords, function(err, encoded) {
+		// bind the encoded value into the existing kinesis record set
 		event.Records[0].kinesis.data = encoded;
 
-		// invoke the function as a lambda invocation
-		lambda.exampleAsync(event, context);
+		// use the deaggregator to extract the data
+		deaggregator.exampleAsync(event, context);
 	});
 } catch (e) {
 	console.log(e);

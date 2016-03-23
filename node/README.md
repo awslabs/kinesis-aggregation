@@ -1,15 +1,15 @@
-# Node.js Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
+# Node.js Record Aggregation & Deaggregation Modules
 
 
-The Node KPL Aggregation and Deaggregation modules provides a simple interface for working with KPL encoded data in any type of application. You can easily integrate into existing applications that do not yet support KPL Aggregation, and the programming model provides for both synchronous and asyncronous processing. 
+These Aggregation and Deaggregation modules provide a simple interface for creating and working with Protocol Buffers encoded data in Amazon Kinesis from any type of application. If you are generating Kinesis records using the Kinesis Producer Library, you can easily deaggregate and process that data from node.js. Alternatively, if you want to create Kinesis records that are tightly packed to reach the maximum record size, then this is straightforward to achieve.
 
 ## Aggregation
 
-Applications implemented in AWS Lambda often emit events based on the events that were recieved in the function. They may be doing enrichment, parsing, or filtering, and the ability to take advantage of Protocol Buffers based aggregation will result in more efficient systems.
+Applications implemented in AWS Lambda often emit new events based on the events that were recieved in the function. They may be doing enrichment, parsing, or filtering, and the ability to take advantage of Protocol Buffers based aggregation will result in more efficient systems.
 
-To use Aggregation, you simply constuct a MessageAggregator function:
+To use Aggregation, you simply construct a RecordAggregator function:
 
-```var aggregator = new MessageAggregator();```
+```var aggregator = new RecordAggregator();```
 
 You can then aggregate batches of messages by using the `aggregate` function:
 
@@ -25,7 +25,7 @@ An example data flow in a AWS Lambda function that was does per-record processin
 
 ```
 // create a message aggregator
-var aggregator = new MessageAggregator();
+var aggregator = new RecordAggregator();
 
 // create the function which sends data to Kinesis with a random partition key
 var onReady = function(err,encoded) {
