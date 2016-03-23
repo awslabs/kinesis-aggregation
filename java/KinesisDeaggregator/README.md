@@ -1,25 +1,21 @@
-# Kinesis Producer Library Compatible Java Lambda Processor
+# Kinesis Producer Library Compatible Java Record Deaggregator
 
-This Lambda function will read events from Kinesis and perform the necessary deaggregation of KPL encoded data. It provides two examples of how to process Kinesis data in Java from AWS Lambda which you can use to build new applications, depending on the style of code you prefer.
-
-## Lambda Function
-
-The code that provides our Lambda function is `KinesisLambdaReceiver.java`, which impelements the `handleRequest` interface twice, once for each style of code. This code works in the same way, but you may find you prefer the Java 8 style using Streams, or alternatively the pre-Java 8 method of using Lists. If you want to use the List style method, then you'll need to change the method `handleRequestWithLists` to `handleRequest`.
+This library provides a set of convenience functions to perform record deaggregatoin that is compatible with the Google Protobuf format used by the Kinesis Producer Library or the KPL Aggregator module.  This module can be used in any Java-based application that receives aggregated Kinesis records, including applications running on AWS Lambda.
 
 ## KPL Deaggregator
 
 The KPL Deaggregator is the class that does the work of extracting KPL encoded UserRecords from our Kinesis Records. In both our functions we create a new instance of the class, and then provide it the code to run on each extracted UserRecord. For example, using Java 8 Streams:
 
 ```
-		deaggregator.stream(
-				event.getRecords().stream(),
-				userRecord -> {
-					// Your User Record Processing Code Here!
-					logger.log(String.format("Processing UserRecord %s (%s:%s)",
-							userRecord.getPartitionKey(),
-							userRecord.getSequenceNumber(),
-							userRecord.getSubSequenceNumber()));
-				});
+        deaggregator.stream(
+                event.getRecords().stream(),
+                userRecord -> {
+                    // Your User Record Processing Code Here!
+                    logger.log(String.format("Processing UserRecord %s (%s:%s)",
+                            userRecord.getPartitionKey(),
+                            userRecord.getSequenceNumber(),
+                            userRecord.getSubSequenceNumber()));
+                });
 ```
 
 In this invocation, we are extracting the Kinesis Records from the Event provided by AWS Lambda, and converting them to a Stream. We then provide a lambda function which iterates over the extracted user records, and you can type in your own logic instead of the `logger.log()` call.
@@ -27,27 +23,52 @@ In this invocation, we are extracting the Kinesis Records from the Event provide
 Using Lists rather than Java Streams, this same funcitonality can be provided by implementing the `KplDeaggregator.KinesisUserRecordProcessor` interface:
 
 ```
-		try {
-			// process the user records with an anonymous record processor
-			// instance
-			deaggregator.processRecords(event.getRecords(),
-					new KplDeaggregator.KinesisUserRecordProcessor() {
-						public Void process(List<UserRecord> userRecords) {
-							for (UserRecord userRecord : userRecords) {
-								// Your User Record Processing Code Here!
-								logger.log(String.format(
-										"Processing UserRecord %s (%s:%s)",
-										userRecord.getPartitionKey(),
-										userRecord.getSequenceNumber(),
-										userRecord.getSubSequenceNumber()));
-							}
+        try {
+            // process the user records with an anonymous record processor
+            // instance
+            deaggregator.processRecords(event.getRecords(),
+                    new KplDeaggregator.KinesisUserRecordProcessor() {
+                        public Void process(List<UserRecord> userRecords) {
+                            for (UserRecord userRecord : userRecords) {
+                                // Your User Record Processing Code Here!
+                                logger.log(String.format(
+                                        "Processing UserRecord %s (%s:%s)",
+                                        userRecord.getPartitionKey(),
+                                        userRecord.getSequenceNumber(),
+                                        userRecord.getSubSequenceNumber()));
+                            }
 
-							return null;
-						}
-					});
-		} catch (Exception e) {
-			logger.log(e.getMessage());
-		}
+                            return null;
+                        }
+                    });
+        } catch (Exception e) {
+            logger.log(e.getMessage());
+        }
+```
+
+## Batch Deaggregation
+
+For those whole prefer simple method call and response mechanisms, the `KplDeaggregator` also provides two static `deaggregate` methods that either take in a single aggregated Kinesis record or a list of aggregated Kinesis records and deaggregate them synchronously in bulk.
+
+For example:
+
+```
+try
+{
+    List<UserRecord> userRecords = KplDeaggregator.deaggregate(event.getRecords());
+    for (UserRecord userRecord : userRecords)
+    {
+        // Your User Record Processing Code Here!
+        logger.log(String.format("Processing UserRecord %s (%s:%s)", 
+                                    userRecord.getPartitionKey(), 
+                                    userRecord.getSequenceNumber(),
+                                    userRecord.getSubSequenceNumber()));
+    }
+}
+catch (Exception e)
+{
+    logger.log(e.getMessage());
+}
 ```
 
 ## Instructions for Use

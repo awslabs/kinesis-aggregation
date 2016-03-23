@@ -1,5 +1,3 @@
-
-
 # Java Kinesis Producer Library Deaggregation Module
 
 This set of examples uses the UserRecord deaggregation capability that is implemented within the [Java KCL](https://github.com/awslabs/amazon-kinesis-client), but as a standalone module that you can run within AWS Lambda. 
