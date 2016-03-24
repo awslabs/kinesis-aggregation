@@ -1,11 +1,14 @@
 # Node.js Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
 
 
+<<<<<<< HEAD
 These Aggregation and Deaggregation modules provide a simple interface for creating and working with Protocol Buffers encoded data in Amazon Kinesis from any type of application. If you are generating Kinesis records using the Kinesis Producer Library, you can easily deaggregate and process that data from node.js. Alternatively, if you want to create Kinesis records that are tightly packed to reach the maximum record size, then this is straightforward to achieve.
 
 To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
 
 ```var agg = require('aws-kpl-agg');```
+=======
+>>>>>>> origin/master
 The Node KPL Aggregation and Deaggregation modules provide a simple interface for working with KPL encoded data in any type of application. You can easily integrate these modules into new or existing applications to achieve the benefits of KPL record aggregation.  The associated NodeJS programming model provides for both synchronous and asyncronous processing. 
 
 To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
@@ -211,15 +214,32 @@ exports.exampleAsync = function(event, context) {
 ```
 
 ## Build & Deploy a Lambda Function to process Kinesis Records
+<<<<<<< HEAD
+=======
 
 One easy way to get started processing Kinesis Data is to use AWS Lambda. By extending the [index.js](index.js) file, you can take advantage of KPL deaggregation features without having to write the boilerplate code. To do this, fork the GitHub codebase to a new project, select whether you want to build on the exampleSync or exampleAsync interfaces, and write your Kinesis processing code as normal. You can use ```node test.js``` to test your code (including both aggregated protobuf formatted data, as well as non-aggregated plain Kinesis records). Give your function a name and version number in [package.json](package.json) and then when you are ready to run from AWS Lambda, use:
 
-```./build.js```
+```
+./build.js
+```
 
-This will build your code, with the required dependencies, as ```package.json.name```-```package.json.version```.zip. You can then configure AWS Lambda as normal with handler name ```index.example(A)Sync``` or with the new name you added in your code. You can continue to modify and test locally, and push new versions directly to AWS Lambda by using:
+This will build your code, with the required dependencies, as ```package.json.name-package.json.version.zip```. You can then configure AWS Lambda as normal with handler name ```index.example(A)Sync``` or with the new name you added in your code. You can continue to modify and test locally, and push new versions directly to AWS Lambda by using:
 
 ```./build.js true```
 
+which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli) and which invokes ```aws lambda upload-function-code``` directly. When you are finally happy with your AWS Lambda module, consider changing ```common.js.debug``` to false to reduce the amount of output messages generated in CloudWatch Logging.
+>>>>>>> origin/master
+
+
+----
+
+Copyright 2014-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+Licensed under the Amazon Software License (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+
+    http://aws.amazon.com/asl/
+
+<<<<<<< HEAD
 which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli) and which invokes ```aws lambda upload-function-code``` directly. When you are finally happy with your AWS Lambda module, consider changing ```common.js.debug``` to false to reduce the amount of output messages generated in CloudWatch Logging.
 
 ----
@@ -231,3 +251,6 @@ Licensed under the Amazon Software License (the "License"). You may not use this
         http://aws.amazon.com/asl/
 
 or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
+=======
+or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
+>>>>>>> origin/master

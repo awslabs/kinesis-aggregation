@@ -98,4 +98,5 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 
 		return null;
 	}
+
 }
