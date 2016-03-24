@@ -23,8 +23,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
-import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
+import com.amazonaws.services.kinesis.model.Record;
 
 /**
  * Kinesis Producer Library Deaggregator convenience class. This class contains

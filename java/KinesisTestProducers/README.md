@@ -1,29 +1,41 @@
 # Example Kinesis Producer Classes for Testing
 
 ## Runnable Classes
-`SampleNormalProducer.java` - Uses a standard Kinesis PutRecords call to send 500 records to the Kinesis stream in a single batch using PutRecords
+`SampleNormalProducer.java` - Uses a standard Kinesis PutRecords call to send records to the Kinesis stream in a single batch using PutRecords.
 
-`SampleKPLProducer.java` - Uses the Kinesis Producer Library to send 500 records to the Kinesis stream as Aggregated Protobuf Encoded messages
+`SampleKPLProducer.java` - Uses the official Kinesis Producer Library to send records to the Kinesis stream as Aggregated Protobuf Encoded messages.
+
+`SampleAggregatorProducer.java` - Uses the KinesisAggregator project from this repository to create KPL-compatible records and send them to Kinesis as Aggregated Protobuf Encoded messages.
 
 ## Run Instructions
 
 1. Build the project with Maven: `mvn install`
-2. The producers rely on DefaultAWSCredentialsProvider to set permissions.  You must supply them with credentials that have Put* access to the Kinesis stream you specify.  The easiest thing to do is pass in the following Java VM arguments with the proper values filled in:
-```
--Daws.accessKeyId=<your_access_key>
--Daws.secretKey=<your_secret_key>
-```
-3.  Run either `java -cp target/KinesisTestProducers-1.0.0-dev.jar com.amazonaws.SampleNormalProducer` or `java -cp target/KinesisTestProducers-1.0.0-dev.jar com.amazonaws.SampleKPLProducer`
+
+2. The producers rely on the Java [DefaultAWSCredentialsProviderChain] (https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) to set permissions.  You must supply them with credentials that have Put* access to the Kinesis stream you specify.  See [Using the Default Credential Provider Chain] (http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#id1) for the various other methods you can use to supply AWS credentials.
+
+3.  The command to run the producers is of the form:
+
+`java -cp target/KinesisTestProducers-1.0.jar com.amazonaws.kinesis.producer.<ProducerClassName> <streamName> <region>` 
+
+E.g.:
+
+`java -cp target/KinesisTestProducers-1.0.jar com.amazonaws.kinesis.producer.SampleNormalProducer myStreamName us-east-1`
+
+
+
+## Configuring Runtime Behavior
+
+The supplied `ProducerConfig.java` class is a simple configuration shared by the various sample producer applications mentioned above.  You can tune the `RECORD SIZE BYTES` variable to control how big each transmitted user record is and you can use the `RECORDS_TO_TRANSMIT` variable to control how many records are sent during each run of the application.
 
 ## Sample Record
 
 The sample records sent by these applications look like this:
 
 ```
-KPL 69 wajbxagglpzpbuxfoeoxznhwlrrxhsnnfjkprznvxedqfxpqucfbwaiudhkgzbzmdamsjkezcfrrredlfndbudldudfipzkariuzfbtkebwdqliankaqafzxs
+RECORD 42 wajbxagglpzpbuxfoeoxznhwlrrxhsnnfjkprznvxedqfxpqucfbwaiudhkgzbzmdamsjkezcfrrredlfndbudldudfipzkar
 ```
 
-The prefix will indicate which producer generated the record.
+The `RECORD_SIZE_BYTES` variable in `ProducerConfig.java` file will control how big the records are (the bigger the record size, the longer the random character string at the end of the record).
 
 ----
 

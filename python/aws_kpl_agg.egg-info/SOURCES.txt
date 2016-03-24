@@ -1,0 +1,14 @@
+LICENSE.txt
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+aws_kpl_agg/__init__.py
+aws_kpl_agg/aggregator.py
+aws_kpl_agg/deaggregator.py
+aws_kpl_agg/kpl_pb2.py
+aws_kpl_agg.egg-info/PKG-INFO
+aws_kpl_agg.egg-info/SOURCES.txt
+aws_kpl_agg.egg-info/dependency_links.txt
+aws_kpl_agg.egg-info/requires.txt
+aws_kpl_agg.egg-info/top_level.txt

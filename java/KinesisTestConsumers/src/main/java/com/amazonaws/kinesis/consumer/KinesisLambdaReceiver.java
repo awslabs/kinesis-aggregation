@@ -81,7 +81,7 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 	/**
 	 * Handle a Kinesis request and process it using a bulk processing method.
 	 */
-	public void handleRequestBulkList(KinesisEvent event, Context context) {
+	public Void handleRequestBulkList(KinesisEvent event, Context context) {
 		LambdaLogger logger = context.getLogger();
 		logger.log("Received " + event.getRecords().size() + " raw Event Records.");
 
@@ -95,5 +95,7 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 		} catch (Exception e) {
 			logger.log(e.getMessage());
 		}
+
+		return null;
 	}
 }
