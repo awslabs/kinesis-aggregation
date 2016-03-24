@@ -52,7 +52,7 @@ async.map(event.Records, function(record, asyncCallback) {
 
 ## Deaggregation
 
-When using deaggregation, you provide a single aggregated Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the `aws-kpl-agg` module looks like:
+When using deaggregation, you provide a single aggregated Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a protocol buffers encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the deaggregation module looks like:
 
 ```
 {
@@ -71,7 +71,7 @@ When you receive a Kinesis Record in your consumer application, you will extract
 The syncronous model of deaggregation extracts all the Kinesis User Records from the received Kinesis Record, and accumulates them into an array. The method then makes a callback with any errors encountered, and the array of User Records that were deaggregated:
 
 ```
-deaggregateSync = function(kinesisRecord, afterRecordCallback(err, UserRecord[]);
+deaggregateSync(kinesisRecord, afterRecordCallback(err, UserRecord[]);
 ```
 
 ### Asyncronous
@@ -79,7 +79,7 @@ deaggregateSync = function(kinesisRecord, afterRecordCallback(err, UserRecord[])
 The asyncronous model of deaggregation allows you to provide a callback which is invoked for each User Record that is extracted from the Kinesis Record. When all  User Records have been extracted from the Kinesis Record, an ```afterRecordCallback``` is invoked which allows you to continue processing additional Kinesis Records that your consumer received:
 
 ```
-deaggregate = function(kinesisRecord, perRecordCallback(err, UserRecord), afterRecordCallback(err, errorKinesisRecord));
+deaggregate(kinesisRecord, perRecordCallback(err, UserRecord), afterRecordCallback(err, errorKinesisRecord));
 ```
 If any errors are encountered during processing of the ```perRecordCallback```, then the ```afterRecordCallback``` is called with the ```err``` plus an error Record which contains the failing subSequenceNumber from the aggregated data, with details about the enclosing Kinesis Record:
 
@@ -210,7 +210,7 @@ One easy way to get started processing Kinesis Data is to use AWS Lambda. By ext
 
 ```./build.js true```
 
-which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli) and which invokes ```aws lambda upload-function-code``` directly. When you are finally happy with your AWS Lambda module, consider changing ```common.js.debug``` to false to reduce the amount of output messages generated in CloudWatch Logging.
+which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli) and which invokes ```aws lambda upload-function-code``` directly. When you are finally happy with your AWS Lambda module, ensure that ```constants.js[debug]``` is false to reduce the amount of output messages generated in CloudWatch Logging.
 
 
 ----
