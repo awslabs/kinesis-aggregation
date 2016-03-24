@@ -27,7 +27,7 @@
 						</goals>
 						<configuration>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>dev</shadedClassifierName>
+							<shadedClassifierName>lambda</shadedClassifierName>
 						</configuration>
 					</execution>
 				</executions>
