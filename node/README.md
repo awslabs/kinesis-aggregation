@@ -3,9 +3,9 @@
 
 The Node KPL Aggregation and Deaggregation modules provide a simple interface for working with KPL encoded data in any type of application. You can easily integrate these modules into new or existing applications to achieve the benefits of KPL record aggregation.  The associated NodeJS programming model provides for both synchronous and asyncronous processing. 
 
-To get started, include the `kpl-agg` module from npm into your new or existing NodeJS application:
+To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
 
-```var agg = require('kpl-agg');```
+```var agg = require('aws-kpl-agg');```
 
 ## Aggregation
 
@@ -53,7 +53,7 @@ async.map(event.Records, function(record, asyncCallback) {
 
 ## Deaggregation
 
-When using deaggregation, you provide a single aggregated Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the kpl-agg looks like:
+When using deaggregation, you provide a single aggregated Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a KPL encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the `aws-kpl-agg` module looks like:
 
 ```
 {
@@ -65,7 +65,7 @@ When using deaggregation, you provide a single aggregated Kinesis Record, and ge
 }
 ```
 
-When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the kpl-agg module:
+When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the `aws-kpl-agg` module:
 
 ### Synchronous
 
@@ -106,7 +106,7 @@ This module includes an example AWS Lambda function in the index.js file (link),
  * interface to process Kinesis Records from the Event Source
  */
 exports.exampleSync = function(event, context) {
-	console.log("Processing KPL Aggregated Messages using kpl-agg(sync)");
+	console.log("Processing KPL Aggregated Messages using aws-kpl-agg(sync)");
 
 	handleNoProcess(event, function() {
 		console.log("Processing " + event.Records.length + " Kinesis Input Records");
@@ -159,7 +159,7 @@ This example accumulates User Records into an enclosing array, in a similar way 
  * interface to process Kinesis Records from the Event Source
  */
 exports.exampleAsync = function(event, context) {
-	console.log("Processing KPL Aggregated Messages using kpl-agg(async)");
+	console.log("Processing KPL Aggregated Messages using aws-kpl-agg(async)");
 
 	handleNoProcess(event, function() {
 		// process all records in parallel
