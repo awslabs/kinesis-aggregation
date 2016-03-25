@@ -9,7 +9,6 @@
  */
 
 var AWS = require('aws-sdk');
-var lambda = require('./index');
 var libPath = "./node_modules/aws-kpl-agg"
 var RecordAggregator = require(libPath + '/RecordAggregator');
 require(libPath + "/constants");
@@ -27,6 +26,7 @@ function getRandomRecord(seqNum, desiredLen) {
 
 	var pk = (1.0 * Math.random()).toString().replace('.', '');
 	var ehk = (1.0 * Math.random()).toString().replace('.', '');
+	
 	while (ehk[0] === '0' && ehk.length > 0) {
 		ehk = ehk.substring(1);
 	}
@@ -62,7 +62,7 @@ function sendRecord(kinesisClient, streamName, aggRecord) {
 	var ehk = aggRecord.ExplicitHashKey;
 
 	console.log('Submitting record with PK=' + pk + ' EHK=' + ehk
-			+ ' NumBytes=' + params.Data.length);
+			+ ' NumBytes=' + Buffer.byteLength(params.Data,'binary'));
 
 	try {
 		kinesisClient.putRecord(params, function(err, data) {
@@ -83,8 +83,8 @@ function sendRecord(kinesisClient, streamName, aggRecord) {
  * https://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html
  ******************************************************************************/
 
-var RECORD_SIZE_BYTES = 1024
-var RECORDS_TO_TRANSMIT = 1024
+var RECORD_SIZE_BYTES = 1024;
+var RECORDS_TO_TRANSMIT = 1024;
 
 if (process.argv.length != 4) {
 	console.log("USAGE: node kinesis_publisher.js <stream name> <region>");
@@ -105,13 +105,15 @@ for (i = 1; i <= RECORDS_TO_TRANSMIT; i++) {
 }
 
 // aggregate all the records
+console.log('Aggregating...');
 var aggregator = new RecordAggregator();
-aggregator.aggregateRecords(recordsToSend, true, null,
+aggregator.aggregateRecords(recordsToSend, false, null,
 		function(err, aggRecord) {
 			sendRecord(kinesisClient, streamName, aggRecord);
 		});
 
 // flush out any remaining records we haven't handled yet
+console.log('Flushing...');
 aggregator.flushBufferedRecords(function(err, aggRecord) {
 	sendRecord(kinesisClient, streamName, aggRecord);
 });
