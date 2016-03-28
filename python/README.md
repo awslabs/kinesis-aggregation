@@ -4,7 +4,7 @@ The Kinesis Aggregation/Deaggregation Modules for Python provide the ability to 
 
 ## Installation
 
-The Python Record Aggregation/Deaggregation modules are available on the Python Package Index (PyPI) as [aws_kinesis_agg](https://pypi.python.org/pypi/aws_kinesis_agg).  You can install it via the `pip` command line tool:
+The Python record aggregation/deaggregation modules are available on the Python Package Index (PyPI) as [aws_kinesis_agg](https://pypi.python.org/pypi/aws_kinesis_agg).  You can install it via the `pip` command line tool:
 
 ```
 pip install aws_kinesis_agg
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 ```
 
 
-##Record Deaggregation Module (deaggregator.py)
+## Record Deaggregation Module (deaggregator.py)
 
 The [deaggregator.py](deaggregator.py) module contains Python classes that allow you to deaggregate records that were transmitted using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), including those transmitted by the Kinesis Producer Library.  This library will allow you to deaggregate aggregated records in any Python environment, including AWS Lambda.
 

@@ -31,7 +31,7 @@ setup(
   author_email = 'brenash@amazon.com',
   license = 'SEE LICENSE IN LICENSE.TXT',
   url = 'http://github.com/awslabs/kinesis-aggregation',
-  keywords = ['aws','kinesis','aggregation'],
+  keywords = ['aws','kinesis','aggregation','deaggregation','kpl'],
   classifiers = ['Development Status :: 5 - Production/Stable',
                 'Intended Audience :: Developers',
                  'License :: Other/Proprietary License',

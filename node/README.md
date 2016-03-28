@@ -1,30 +1,38 @@
-# Node.js Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
+# Node.js Kinesis Aggregation & Deaggregation Modules
 
-These Aggregation and Deaggregation modules provide a simple interface for creating and working with Protocol Buffers encoded data in Amazon Kinesis from any type of application. If you are generating Kinesis records using the Kinesis Producer Library, you can easily deaggregate and process that data from node.js. Alternatively, if you want to create Kinesis records that are tightly packed to reach the maximum record size, then this is straightforward to achieve. 
+These Kinesis Aggregation and Deaggregation modules provide a simple interface for creating and working with data using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) from any type of application. If you are generating Kinesis records using the Kinesis Producer Library (KPL), you can easily deaggregate and process that data from node.js. Alternatively, if you want to create Kinesis records that are tightly packed to reach the maximum record size, then this is straightforward to achieve. Using record aggregation improves throughput and reduces costs when writing applications that publish data to and consume data from Amazon Kinesis.
 
-To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
+## Installation
 
-```var agg = require('aws-kpl-agg');```
+The Node.js record aggregation/deaggregation modules are available on NPM as [aws-kpl-agg](https://www.npmjs.com/package/aws-kpl-agg).  To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
 
-## Aggregation
+```
+var agg = require('aws-kpl-agg');
+```
 
-Applications implemented in AWS Lambda often emit new events based on the events that were recieved in the function. They may be doing enrichment, parsing, or filtering, and the ability to take advantage of Protocol Buffers based aggregation will result in more efficient systems.
+## Record Aggregation
 
-To use Aggregation, you simply construct a RecordAggregator function:
+Applications implemented in AWS Lambda often emit new events based on the events that were received in the function. They may be doing enrichment, parsing, or filtering, and the ability to take advantage of Kinesis record-based aggregation will result in more efficient systems.
 
-```var aggregator = new RecordAggregator();```
+To use Aggregation, you simply construct a `RecordAggregator` function:
+
+```
+var aggregator = new RecordAggregator();
+```
 
 You can then aggregate batches of messages by using the `aggregate` function:
 
-```aggregator.aggregate(rawRecords, function(err, encoded));```
+```
+aggregator.aggregate(rawRecords, function(err, encoded));
+```
 
-where ```encoded``` is of type Buffer. With the aggregate function, the supplied callback will be invoked when the number of records supplied exceeds the Kinesis maximum record size (1MB as of March 2016). You can also retreive the records being aggregated by calling the ```flushBufferedRecords``` function:
+where `encoded` is of type `Buffer`. With the `aggregate` function, the supplied callback will be invoked when the number of records supplied exceeds the Kinesis maximum record size (1MB as of March 2016). You can also retrieve the records being aggregated by calling the `flushBufferedRecords` function:
 
 ```
 aggregator.flushBufferedRecords(function(err,encoded));
 ```
 
-An example data flow in a AWS Lambda function that was does per-record processing, and then wanting to send those records to Kinesis, would be something similar to the following (pseudo code):
+The following example demonstrates an AWS Lambda function that was does per-record processing and then transmits those record to Amazon Kinesis (pseudo code):
 
 ```
 // create a record aggregator
@@ -50,9 +58,9 @@ async.map(event.Records, function(record, asyncCallback) {
 });
 ```
 
-## Deaggregation
+## Record Deaggregation
 
-When using deaggregation, you provide a single aggregated Kinesis Record, and get back multiple Kinesis User Records. If a Kinesis Record that is provided is *not* a protocol buffers encoded message, that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record which is returned from the deaggregation module looks like:
+When using deaggregation, you provide a single aggregated Kinesis Record and get back multiple Kinesis User Records. If a Kinesis record that is provided is *not* using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), that's perfectly fine - you'll just get a single record output from the single record input. A Kinesis User Record that is returned from the deaggregation module looks like:
 
 ```
 {
@@ -64,7 +72,7 @@ When using deaggregation, you provide a single aggregated Kinesis Record, and ge
 }
 ```
 
-When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the `aws-kpl-agg` module:
+When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the `aws-kpl-agg` module.  The `aws-kpl-agg` module provides both syncronous and asyncronous methods of deaggregating records.
 
 ### Synchronous
 
@@ -76,12 +84,12 @@ deaggregateSync(kinesisRecord, afterRecordCallback(err, UserRecord[]);
 
 ### Asyncronous
 
-The asyncronous model of deaggregation allows you to provide a callback which is invoked for each User Record that is extracted from the Kinesis Record. When all  User Records have been extracted from the Kinesis Record, an ```afterRecordCallback``` is invoked which allows you to continue processing additional Kinesis Records that your consumer received:
+The asyncronous model of deaggregation allows you to provide a callback which is invoked for each User Record that is extracted from the Kinesis Record. When all User Records have been extracted from the Kinesis Record, an ```afterRecordCallback``` is invoked which allows you to continue processing additional Kinesis Records that your consumer receives:
 
 ```
 deaggregate(kinesisRecord, perRecordCallback(err, UserRecord), afterRecordCallback(err, errorKinesisRecord));
 ```
-If any errors are encountered during processing of the ```perRecordCallback```, then the ```afterRecordCallback``` is called with the ```err``` plus an error Record which contains the failing subSequenceNumber from the aggregated data, with details about the enclosing Kinesis Record:
+If any errors are encountered during processing of the `perRecordCallback`, then the `afterRecordCallback` is called with the `err` plus an error Record which contains the failed subSequenceNumber from the aggregated data with details about the enclosing Kinesis Record:
 
 ```
 {
@@ -95,7 +103,7 @@ If any errors are encountered during processing of the ```perRecordCallback```, 
 
 ### Examples
 
-This module includes an example AWS Lambda function in the index.js file (link), which gives you easy ability to build new functions to process KPL encoded data. Both examples use async.js (link) to process the received Kinesis Records.
+This module includes an example AWS Lambda function in the [index.js](index.js) file, which gives you easy ability to build new functions to process Kinesis aggregated message data. Both examples use [async.js](async.js) to process the received Kinesis Records.
 
 #### Syncronous Example
 
@@ -127,7 +135,7 @@ exports.exampleSync = function(event, context) {
 
 						console.log("Kinesis Aggregated User Record: " + JSON.stringify(record) + " " + recordData.toString('ascii'));
 						
-						// you can do something else useful with each kinesis user record here
+						// you can do something else useful with each kinesis User Record here
 					});
 
 					asyncCallback(err);
@@ -150,7 +158,7 @@ exports.exampleSync = function(event, context) {
 
 #### Asyncronous Example
 
-This example accumulates User Records into an enclosing array, in a similar way to how the syncronous interface works:
+This example accumulates User Records into an enclosing array in a similar fashion to the syncronous interface:
 
 ```
 /**
@@ -206,11 +214,13 @@ exports.exampleAsync = function(event, context) {
 
 ## Build & Deploy a Lambda Function to process Kinesis Records
 
-One easy way to get started processing Kinesis Data is to use AWS Lambda. By extending the [index.js](index.js) file, you can take advantage of KPL deaggregation features without having to write the boilerplate code. To do this, fork the GitHub codebase to a new project, select whether you want to build on the exampleSync or exampleAsync interfaces, and write your Kinesis processing code as normal. You can use ```node test.js``` to test your code (including both aggregated protobuf formatted data, as well as non-aggregated plain Kinesis records). Give your function a name and version number in [package.json](package.json) and then when you are ready to run from AWS Lambda, use:
+One easy way to get started processing Kinesis data is to use AWS Lambda. By extending the [index.js](index.js) file, you can take advantage of Kinesis message deaggregation features without having to write any boilerplate code. To do this, fork the GitHub codebase to a new project, select whether you want to build on the exampleSync or exampleAsync interfaces, and write your Kinesis processing code as normal. You can run `node test.js` to test your code (including both Kinesis aggregated message data as well as non-aggregated plain Kinesis records). Give your function a name and version number in [package.json](package.json) and then when you are ready to run from AWS Lambda, use:
 
-```./build.js true```
+```
+./build.js true
+```
 
-which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli) and which invokes ```aws lambda upload-function-code``` directly. When you are finally happy with your AWS Lambda module, ensure that ```constants.js[debug]``` is false to reduce the amount of output messages generated in CloudWatch Logging.
+which requires a local install of the [AWS Command Line Interface](https://aws.amazon.com/cli).  This script invokes `aws lambda upload-function-code` directly. When you are finally happy with your AWS Lambda module, ensure that `constants.js[debug]` is set to false to reduce the amount of output messages generated in CloudWatch Logging.
 
 
 ----
