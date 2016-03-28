@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Aggregation/Deaggregation Libraries for Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -27,9 +27,12 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRec
 import com.amazonaws.services.kinesis.model.Record;
 
 /**
- * Kinesis Producer Library Deaggregator convenience class. This class contains
+ * A Kinesis deaggregator convenience class. This class contains
  * a number of static methods that provide different interfaces for
- * deaggregating user records from an existing aggregated Kinesis record.
+ * deaggregating user records from an existing aggregated Kinesis record. This class
+ * is oriented towards deaggregating Kinesis records as provided by AWS Lambda
+ * (for other applications, record deaggregation is handled transparently by the
+ * Kinesis Consumer Library).
  * 
  * NOTE: Any non-aggregated records passed to any deaggregation methods will be
  * returned unchanged.
@@ -45,7 +48,7 @@ public class RecordDeaggregator {
 	}
 
 	/**
-	 * Method to process a set of Kinesis User Records from a Stream of Kinesis
+	 * Method to process a set of Kinesis user records from a Stream of Kinesis
 	 * Event Records using the Java 8 Streams API
 	 * 
 	 * @param inputStream
@@ -70,7 +73,7 @@ public class RecordDeaggregator {
 	}
 
 	/**
-	 * Method to process a set of Kinesis User Records from a list of Kinesis
+	 * Method to process a set of Kinesis user records from a list of Kinesis
 	 * Event Records using pre-Streams style API
 	 * 
 	 * @param inputRecords
@@ -91,7 +94,7 @@ public class RecordDeaggregator {
 	}
 
 	/**
-	 * Method to bulk deaggregate a set of Kinesis User Records from a list of
+	 * Method to bulk deaggregate a set of Kinesis user records from a list of
 	 * Kinesis Event Records.
 	 * 
 	 * @param inputRecords
@@ -109,7 +112,7 @@ public class RecordDeaggregator {
 
 	/**
 	 * Method to deaggregate a single Kinesis record into one or more
-	 * KinesisUserRecords.
+	 * Kinesis user records.
 	 * 
 	 * @param inputRecord
 	 *            The single KinesisEventRecord to deaggregate

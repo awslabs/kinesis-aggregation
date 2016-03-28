@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Aggregation/Deaggregation Libraries for Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -40,26 +40,27 @@ import com.google.protobuf.ByteString;
  * 
  * Represents a single aggregated Kinesis record. This Kinesis record is built
  * by adding multiple user records and then serializing them to bytes using the
- * Kinesis Producer Library (KPL) serialization protocol. This class lifts
+ * Kinesis aggregated record format. This class lifts
  * heavily from the existing KPL C++ libraries found at
  * https://github.com/awslabs/amazon-kinesis-producer.
  *
  * This class is NOT thread-safe.
- *
+ * 
+ * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/
+ *      aggregation-format.md
  */
 @NotThreadSafe
 public class AggRecord {
-	// Serialization protocol constants via the KPL Protobuf specification at
+	// Serialization protocol constants via the specification at
 	// https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-	private static final byte[] KPL_AGGREGATED_RECORD_MAGIC = new byte[] { (byte) 0xf3, (byte) 0x89, (byte) 0x9a,
+	private static final byte[] AGGREGATED_RECORD_MAGIC = new byte[] { (byte) 0xf3, (byte) 0x89, (byte) 0x9a,
 			(byte) 0xc2 };
-	private static final String KPL_MESSAGE_DIGEST_NAME = "MD5";
+	private static final String MESSAGE_DIGEST_NAME = "MD5";
 	private static final BigInteger UINT_128_MAX = new BigInteger(StringUtils.repeat("FF", 16), 16);
 
 	// Kinesis Limits
 	// (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
-	private static final int MAX_BYTES_PER_RECORD = 1048576; // 1 MB (1024 *
-																// 1024)
+	private static final int MAX_BYTES_PER_RECORD = 1024*1024; // 1 MB
 	private static final int PARTITION_KEY_MIN_LENGTH = 1;
 	private static final int PARTITION_KEY_MAX_LENGTH = 256;
 
@@ -96,7 +97,7 @@ public class AggRecord {
 		this.aggPartitionKey = "";
 
 		try {
-			this.md5 = MessageDigest.getInstance(KPL_MESSAGE_DIGEST_NAME);
+			this.md5 = MessageDigest.getInstance(MESSAGE_DIGEST_NAME);
 		} catch (NoSuchAlgorithmException e) {
 			throw new IllegalStateException("Could not create an MD5 message digest.", e);
 		}
@@ -123,14 +124,14 @@ public class AggRecord {
 			return 0;
 		}
 
-		return KPL_AGGREGATED_RECORD_MAGIC.length + this.aggregatedMessageSizeBytes + this.md5.getDigestLength();
+		return AGGREGATED_RECORD_MAGIC.length + this.aggregatedMessageSizeBytes + this.md5.getDigestLength();
 	}
 
 	/**
 	 * Serialize this record to bytes. Has no side effects (i.e. does not affect
 	 * the contents of this record object).
 	 * 
-	 * @return A byte array containing a KPL protocol compatible Kinesis record.
+	 * @return A byte array containing an Kinesis aggregated format-compatible Kinesis record.
 	 */
 	public byte[] toRecordBytes() {
 		if (getNumUserRecords() == 0) {
@@ -147,7 +148,7 @@ public class AggRecord {
 		// write(byte[],int,int) doesn't so that's why we're using the long
 		// version of "write" here
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(getSizeBytes());
-		baos.write(KPL_AGGREGATED_RECORD_MAGIC, 0, KPL_AGGREGATED_RECORD_MAGIC.length);
+		baos.write(AGGREGATED_RECORD_MAGIC, 0, AGGREGATED_RECORD_MAGIC.length);
 		baos.write(messageBody, 0, messageBody.length);
 		baos.write(messageDigest, 0, messageDigest.length);
 
@@ -201,7 +202,7 @@ public class AggRecord {
 	 * new size would be if we added another user record with the specified
 	 * parameters (used to determine when this aggregated record is full and
 	 * can't accept any more user records). This calculation is highly dependent
-	 * on the KPL protocol buffer format.
+	 * on the Kinesis aggregated message format.
 	 * 
 	 * @param partitionKey
 	 *            The partition key of the new record to simulate adding
@@ -211,6 +212,7 @@ public class AggRecord {
 	 *            The raw data of the new record to simulate adding
 	 * @return The new size of this existing record in bytes if a new user
 	 *         record with the specified parameters was added.
+	 * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
 	 */
 	private int calculateRecordSize(String partitionKey, String explicitHashKey, byte[] data) {
 		int messageSize = 0;
@@ -219,8 +221,7 @@ public class AggRecord {
 		if (!this.partitionKeys.contains(partitionKey)) {
 			int pkLength = partitionKey.length();
 			messageSize += 1; // (message index + wire type for PK table)
-			messageSize += calculateVarintSize(pkLength); // size of pk length
-															// value
+			messageSize += calculateVarintSize(pkLength); // size of pk length value
 			messageSize += pkLength; // actual pk length
 		}
 
@@ -228,44 +229,31 @@ public class AggRecord {
 		if (!this.explicitHashKeys.contains(explicitHashKey)) {
 			int ehkLength = explicitHashKey.length();
 			messageSize += 1; // (message index + wire type for EHK table)
-			messageSize += calculateVarintSize(ehkLength); // size of ehk length
-															// value
+			messageSize += calculateVarintSize(ehkLength); // size of ehk length value
 			messageSize += ehkLength; // actual ehk length
 		}
 
-		// remaining calculations are for adding the new record to the list of
-		// records
+		// remaining calculations are for adding the new record to the list of records
 
 		long innerRecordSize = 0;
 
 		// partition key field
 		innerRecordSize += 1; // (message index + wire type for PK index)
-		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size
-																									// of
-																									// pk
-																									// index
-																									// value
+		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size of pk index value
 
 		// explicit hash key field (this is optional)
 		if (explicitHashKey != null) {
 			innerRecordSize += 1; // (message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size
-																												// of
-																												// ehk
-																												// index
-																												// value
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size of ehk index value
 		}
 
 		// data field
 		innerRecordSize += 1; // (message index + wire type for record data)
-		innerRecordSize += calculateVarintSize(data.length); // size of data
-																// length value
+		innerRecordSize += calculateVarintSize(data.length); // size of data length value
 		innerRecordSize += data.length; // actual data length
 
 		messageSize += 1; // (message index + wire type for record)
-		messageSize += calculateVarintSize(innerRecordSize); // size of entire
-																// record length
-																// value
+		messageSize += calculateVarintSize(innerRecordSize); // size of entire record length value
 		messageSize += innerRecordSize; // actual entire record length
 
 		return messageSize;
@@ -330,8 +318,7 @@ public class AggRecord {
 
 		validateData(data);
 
-		// Validate new record size won't overflow max size for a
-		// PutRecordRequest
+		// Validate new record size won't overflow max size for a PutRecordRequest
 		int sizeOfNewRecord = calculateRecordSize(partitionKey, explicitHashKey, data);
 		if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
 			return false;
@@ -355,8 +342,7 @@ public class AggRecord {
 		this.aggregatedMessageSizeBytes += sizeOfNewRecord;
 		this.aggregatedRecordBuilder.addRecords(newRecord.build());
 
-		// if this is the first record, we use its partition key and hash key
-		// for the entire agg record
+		// if this is the first record, we use its partition key and hash key for the entire agg record
 		if (this.aggregatedRecordBuilder.getRecordsCount() == 1) {
 			this.aggPartitionKey = partitionKey;
 			this.aggExplicitHashKey = explicitHashKey;
@@ -379,8 +365,11 @@ public class AggRecord {
 	public PutRecordRequest toPutRecordRequest(String streamName) {
 		byte[] recordBytes = toRecordBytes();
 		ByteBuffer bb = ByteBuffer.wrap(recordBytes);
-		return new PutRecordRequest().withStreamName(streamName).withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey()).withData(bb);
+		return new PutRecordRequest()
+					.withStreamName(streamName)
+					.withExplicitHashKey(getExplicitHashKey())
+					.withPartitionKey(getPartitionKey())
+					.withData(bb);
 	}
 
 	/**
@@ -396,8 +385,10 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		return new PutRecordsRequestEntry().withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey()).withData(ByteBuffer.wrap(toRecordBytes()));
+		return new PutRecordsRequestEntry()
+				.withExplicitHashKey(getExplicitHashKey())
+				.withPartitionKey(getPartitionKey())
+				.withData(ByteBuffer.wrap(toRecordBytes()));
 	}
 
 	/**
@@ -407,7 +398,7 @@ public class AggRecord {
 	 *            A byte array containing Kinesis user record data.
 	 */
 	private void validateData(final byte[] data) {
-		final int maxAllowableDataLength = MAX_BYTES_PER_RECORD - KPL_AGGREGATED_RECORD_MAGIC.length
+		final int maxAllowableDataLength = MAX_BYTES_PER_RECORD - AGGREGATED_RECORD_MAGIC.length
 				- this.md5.getDigestLength();
 		if (data != null && data.length > (maxAllowableDataLength)) {
 			throw new IllegalArgumentException("Data must be less than or equal to " + maxAllowableDataLength
@@ -526,11 +517,9 @@ public class AggRecord {
 		}
 
 		/**
-		 * Add a new key to this keyset. (Logic copied from KPL C++
-		 * implementation)
+		 * Add a new key to this keyset.
 		 * 
-		 * @param s
-		 *            The key to add to the keyset.
+		 * @param s The key to add to the keyset.
 		 * 
 		 * @return A pair of <boolean,long>. The boolean is true if this key is
 		 *         not already in this keyset, false otherwise. The long

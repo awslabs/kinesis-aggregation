@@ -16,7 +16,7 @@
 	</build>
 	<dependencies>
 		<!-- Even though we're a producer, not a consumer, this dependency gives us access to the
-		generated protocol buffer classes. -->
+		generated Google protocol buffer classes. -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-client</artifactId>

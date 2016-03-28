@@ -1,17 +1,22 @@
-# Example Kinesis Producer Classes for Testing
+# Kinesis Java Record Aggregator Test Producers
+
+This project contains a number of sample executable Java classes that demonstrate different methods of publishing records to Amazon Kinesis.
 
 ## Runnable Classes
-`SampleNormalProducer.java` - Uses a standard Kinesis PutRecords call to send records to the Kinesis stream in a single batch using PutRecords.
 
-`SampleKPLProducer.java` - Uses the official Kinesis Producer Library to send records to the Kinesis stream as Aggregated Protobuf Encoded messages.
+This project provides three different runnable Java classes for publishing data to Amazon Kinesis:
 
-`SampleAggregatorProducer.java` - Uses the KinesisAggregator project from this repository to create KPL-compatible records and send them to Kinesis as Aggregated Protobuf Encoded messages.
+`SampleNormalProducer.java` - Uses a standard Kinesis `PutRecords` call to send records to the Kinesis stream in a single batch.
+
+`SampleKPLProducer.java` - Uses the official Kinesis Producer Library (KPL) to send records to the Kinesis stream as aggregated records.
+
+`SampleAggregatorProducer.java` - Uses the `KinesisAggregator` project from this repository to create aggregated records and send them to Kinesis.
 
 ## Run Instructions
 
 1. Build the project with Maven: `mvn install`
 
-2. The producers rely on the Java [DefaultAWSCredentialsProviderChain] (https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) to set permissions.  You must supply them with credentials that have Put* access to the Kinesis stream you specify.  See [Using the Default Credential Provider Chain] (http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#id1) for the various other methods you can use to supply AWS credentials.
+2. The producers rely on the Java [DefaultAWSCredentialsProviderChain] (https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) to set permissions.  You must supply credentials that have Put* access to the Kinesis stream you specify.  See [Using the Default Credential Provider Chain] (http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html#id1) for the various methods you can use to supply AWS credentials.
 
 3.  The command to run the producers is of the form:
 
@@ -20,8 +25,6 @@
 E.g.:
 
 `java -cp target/KinesisTestProducers-1.0.jar com.amazonaws.kinesis.producer.SampleNormalProducer myStreamName us-east-1`
-
-
 
 ## Configuring Runtime Behavior
 

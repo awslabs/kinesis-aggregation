@@ -1,14 +1,14 @@
-# Kinesis Producer Library Compatible Java Lambda Processor
+# Kinesis Java Record Deaggregator Test Consumers
 
-This Lambda function will read events from Kinesis and perform the necessary deaggregation of KPL encoded data. It provides a few examples of how to process Kinesis data in Java from AWS Lambda which you can use to build new applications, depending on the style of code you prefer.
+This project contains a sample AWS Lambda function that will read events from Kinesis and perform the necessary deaggregation of any aggregated records. It provides a few different examples of how to process Kinesis data in a Java-based AWS Lambda function which you can use as a template to build new applications on AWS Lambda that are capable of handling Kinesis aggregated records.
 
 ## Lambda Function
 
-The code that provides our Lambda function is `KinesisLambdaReceiver.java`, which implements the `handleRequest` interface twice, once for each style of code. This code works in the same way, but you may find you prefer the Java 8 style using Streams, or alternatively the pre-Java 8 method of using Lists. If you want to use the List style method, then you'll need to change the method `handleRequestWithLists` to `handleRequest`.
+The code that provides our Lambda function is `KinesisLambdaReceiver.java`, which implements examples for the various deaggregation methods available in the associated `KinesisDeaggregator` project.  There are sample methods for processing aggregated records using stream-based, list-based and batch-based methods.
 
-## KPL Deaggregator
+## Record Deaggregator
 
-For details on how to use the `KplDeaggregator`, see the `KinesisDeaggregator` module in this repository.
+For more details on how to use the `RecordDeaggregator` object in these examples, see the `KinesisDeaggregator` module in this repository.
 
 ## Instructions for Use
 
@@ -16,9 +16,9 @@ For details on how to use the `KplDeaggregator`, see the `KinesisDeaggregator` m
 2. Create a new Lambda function in your AWS account
 3. Skip blueprint selection
 4. Choose Java 8 as the runtime
-5. Choose the built file (from step #2) KinesisLambdaTestConsumer-1.0-dev.jar as the code for the function (NOT the KinesisLambdaTestConsumer-0.0.1.jar file).
+5. Choose the built file (from step #2) KinesisLambdaTestConsumers-1.0-lambda.jar as the code for the function (NOT the KinesisLambdaTestConsumers-1.0.jar file).
 6. Choose com.amazonaws.KinesisLambdaReceiver as the Handler
-7. Set the default batch size as required for your Stream throughput
+7. Set the default batch size as required for your Kinesis stream throughput
 8. Set the Role, Memory and Timeout appropriately.
 9. Connect your new Lambda function to the Kinesis stream you'll be publishing to
 

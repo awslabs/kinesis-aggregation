@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Aggregation/Deaggregation Libraries for Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -25,7 +25,9 @@ import com.amazonaws.annotation.NotThreadSafe;
 
 /**
  * A class for taking multiple Kinesis user records and aggregating them into
- * more efficiently-packed records using the Kinesis Producer Library protocol.
+ * more efficiently-packed records using the Kinesis aggregated record format.
+ * 
+ * This class is NOT thread-safe.
  * 
  * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/
  *      aggregation-format.md
@@ -53,7 +55,7 @@ public class RecordAggregator {
 	private List<ListenerExecutorPair> listeners;
 
 	/**
-	 * Construct a new empty KPL aggregator instance.
+	 * Construct a new empty record aggregator instance.
 	 */
 	public RecordAggregator() {
 		this.currentRecord = new AggRecord();
@@ -71,7 +73,7 @@ public class RecordAggregator {
 	/**
 	 * @return The size of this aggregated record in bytes. This value is always
 	 *         less than the Kinesis-defined maximum size for a
-	 *         PutRecordRequest.
+	 *         PutRecordRequest (i.e. 1MB as of 3/26/2016).
 	 */
 	public long getSizeBytes() {
 		return this.currentRecord.getSizeBytes();

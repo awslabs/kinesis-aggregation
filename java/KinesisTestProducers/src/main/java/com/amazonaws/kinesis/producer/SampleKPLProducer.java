@@ -1,5 +1,5 @@
 /**
- * Kinesis Producer Library Aggregation/Deaggregation Examples for AWS Lambda/Java
+ * Kinesis Aggregation/Deaggregation Libraries for Java
  *
  * Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -33,7 +33,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * A sample of how to use the Kinesis Producer Library to transmit records to
+ * A sample of how to use the Kinesis Producer Library (KPL) to transmit records to
  * Kinesis (adapted from samples in https://github.com/awslabs/amazon-kinesis-producer)
  */
 public class SampleKPLProducer

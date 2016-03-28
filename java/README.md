@@ -1,28 +1,28 @@
-# Java Kinesis Producer Library (KPL) Aggregation & Deaggregation Modules
+# Java Kinesis Aggregation & Deaggregation Modules
 
-The Java KPL Aggregation/Deaggregation packages provide the ability to do in-memory aggregation and deaggregation of standard Kinesis user records using the [KPL Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) to allow for more efficient transmission of records.
+The Kinesis Aggregation/Deaggregation Libraries for Java provide the ability to do in-memory aggregation and deaggregation of standard Kinesis user records using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) to allow for more efficient transmission of records.
 
 ## KinesisAggregator 
 
-The [KinesisAggregator](KinesisAggregator) subproject contains Java classes that allow you to aggregate records using the [KPL Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) defined in the Kinesis Producer Library.  Using record aggregation improve throughput and reduce costs when writing producer applications that publish data to Amazon Kinesis.
+The [KinesisAggregator](KinesisAggregator) subproject contains Java classes that allow you to aggregate records using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md).  Using record aggregation improves throughput and reduces costs when writing producer applications that publish data to Amazon Kinesis.
 
 ## KinesisDeaggregator
 
-The [KinesisDeaggregator](KinesisDeaggregator) subproject contains Java classes that allow you to deaggregate records that were transmitted using the [KPL Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) defined in the Kinesis Producer Library.  This library will allow you to deaggregate KPL formatted aggregated records in any Java environment, including AWS Lambda.
+The [KinesisDeaggregator](KinesisDeaggregator) subproject contains Java classes that allow you to deaggregate records that were transmitted using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), including those transmitted by the Kinesis Producer Library.  This library will allow you to deaggregate aggregated records in any Java environment, including AWS Lambda.
 
 ## KinesisTestConsumers
 
-The [KinesisTestConsumers](KinesisTestConsumers) subproject contains Java examples of AWS Lambda functions that leverage the [KinesisDeaggregator](KinesisDeaggregator) subproject to demonstrate how to deaggregate KPL formatted aggregated records in an AWS Lambda function.  You can build on the examples in this subproject to make your own Java-based AWS Lambda functions that can handle KPL aggregated records.
+The [KinesisTestConsumers](KinesisTestConsumers) subproject contains Java examples of AWS Lambda functions that leverage the [KinesisDeaggregator](KinesisDeaggregator) subproject to demonstrate how to deaggregate Kinesis aggregated records in an AWS Lambda function.  You can build on the examples in this subproject to make your own Java-based AWS Lambda functions that can handle aggregated records.
 
 ## KinesisTestProducers
 
 The [KinesisTestProducers](KinesisTestProducers) subproject contains three separate standalone Java applications that demonstrate different methods of sending data to Amazon Kinesis:
 
 * Sending non-aggregated records via the standard Kinesis PutRecords API
-* Sending aggregated records via the full Amazon Kinesis Producer Library
+* Sending aggregated records via the Amazon Kinesis Producer Library
 * Sending aggregated records via the [KinesisAggregator](KinesisAggregator) utility in this project
 
-These utilities can be used to ensure that your Kinesis consumer applications can properly handle both standard and aggregated records.
+These utilities can be used to help ensure that your Kinesis consumer applications can properly handle both standard and aggregated records.
  
 ----
 
