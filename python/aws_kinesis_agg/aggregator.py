@@ -1,29 +1,25 @@
-# Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#Kinesis Aggregation/Deaggregation Libraries for Python
 #
-# Licensed under the Amazon Software License (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
+#Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved. 
+#
+#Licensed under the Amazon Software License (the "License").
+#You may not use this file except in compliance with the License.
+#A copy of the License is located at
 #
 # http://aws.amazon.com/asl/
 #
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
+#or in the "license" file accompanying this file. This file is distributed
+#on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#express or implied. See the License for the specific language governing
+#permissions and limitations under the License.
 
 from __future__ import print_function
 
+import aws_kinesis_agg
 import google.protobuf.message
 import kpl_pb2
 import md5
 import threading
-
-#KPL protocol-specific constants
-KPL_MAGIC = '\xf3\x89\x9a\xc2'
-KPL_DIGEST_SIZE = md5.digest_size
-#Kinesis Limits
-#(https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
-MAX_BYTES_PER_RECORD = 1048576 # 1 MB (1024 * 1024)
 
 
 def _calculate_varint_size(value):
@@ -127,13 +123,14 @@ class KeySet(object):
 #Not thread-safe
 class RecordAggregator(object):
     '''An object to ingest Kinesis user records and optimally aggregate
-    them (using the Kinesis Producer Library [KPL] protocol) into
-    aggregated Kinesis records.'''
+    them into aggregated Kinesis records.
+    
+    NOTE: This object is not thread-safe.'''
     
     def __init__(self):
         '''Create a new empty aggregator.'''
         
-        self.current_record = KplAggRecord()
+        self.current_record = AggRecord()
         self.callbacks = []
     
     
@@ -143,7 +140,12 @@ class RecordAggregator(object):
         
         Args:
             callback - A function handle or callable object that will be called
-            on a separate thread every time a new aggregated record is available.'''
+            on a separate thread every time a new aggregated record is available
+            (function or callable object).
+            
+            execute_on_new_thread - True if callbacks should be executed on a new
+            thread, False if it should be executed on the calling thread. Defaults
+            to True. (boolean)'''
         
         if not callback in self.callbacks:
             self.callbacks.append((callback,execute_on_new_thread))
@@ -168,7 +170,7 @@ class RecordAggregator(object):
         '''Clear all the user records from this aggregated record and reset it to an
         empty state.'''
         
-        self.current_record = KplAggRecord()
+        self.current_record = AggRecord()
     
     
     def clear_callbacks(self):
@@ -186,7 +188,7 @@ class RecordAggregator(object):
         haven't transmitted in a while).
         
         Returns:
-            A partially-filled KplAggRecord or None if the aggregator is empty. (KplAggRecord)'''
+            A partially-filled AggRecord or None if the aggregator is empty. (AggRecord)'''
         
         if self.get_num_user_records() == 0:
             return None
@@ -205,8 +207,8 @@ class RecordAggregator(object):
             data (str) - The raw data of the record to add
             explicit_hash_key (str) - The explicit hash key of the record to add (optional)
         Returns:
-            A KplAggRecord if this aggregated record is full and ready to
-            be transmitted or null otherwise. (KplAggRecord)'''
+            A AggRecord if this aggregated record is full and ready to
+            be transmitted or null otherwise. (AggRecord)'''
         
         #Attempt to add to the current aggregated record
         success = self.current_record.add_user_record(partition_key, data, explicit_hash_key)
@@ -230,12 +232,16 @@ class RecordAggregator(object):
         return out_record
     
     
-class KplAggRecord(object):
+class AggRecord(object):
     '''Represents a single aggregated Kinesis record. This Kinesis record is built
     by adding multiple user records and then serializing them to bytes using the
-    Kinesis Producer Library (KPL) serialization protocol. This class lifts
-    heavily from the existing KPL C++ libraries found at
-    https://github.com/awslabs/amazon-kinesis-producer.'''
+    Kinesis aggregated record format. This class lifts heavily from the existing 
+    KPL C++ libraries found at https://github.com/awslabs/amazon-kinesis-producer.
+    
+    This class is NOT thread-safe.
+    
+    For more details on the Kinesis aggregated record format, see:
+    https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md'''
     
     def __init__(self):
         '''Create a new empty aggregated record.'''
@@ -259,18 +265,14 @@ class KplAggRecord(object):
         '''Returns:
             The current size in bytes of this message in its serialized form. (int)'''
         
-        global KPL_MAGIC, KPL_DIGEST_SIZE
-        
-        return len(KPL_MAGIC) + self._agg_size_bytes + KPL_DIGEST_SIZE
+        return len(aws_kinesis_agg.MAGIC) + self._agg_size_bytes + aws_kinesis_agg.DIGEST_SIZE
     
     
     def _serialize_to_bytes(self):
         '''Serialize this record to bytes.  Has no side effects (i.e. does not affect the contents of this record object).
         
         Returns: 
-            A byte array containing a KPL protocol compatible Kinesis record. (binary str)'''
-        
-        global KPL_MAGIC
+            A byte array containing a aggregated Kinesis record. (binary str)'''
         
         message_body = self.agg_record.SerializeToString()
         
@@ -278,7 +280,7 @@ class KplAggRecord(object):
         md5_calc.update(message_body)
         calculated_digest = md5_calc.digest()
         
-        return KPL_MAGIC + message_body + calculated_digest
+        return aws_kinesis_agg.MAGIC + message_body + calculated_digest
     
     
     def clear(self):
@@ -335,15 +337,15 @@ class KplAggRecord(object):
         new size would be if we added another user record with the specified
         parameters (used to determine when this aggregated record is full and
         can't accept any more user records).  This calculation is highly dependent
-        on the KPL protocol buffer format.
+        on the Kinesis message aggregation format.
      
-    Args:
-        partition_key - The partition key of the new record to simulate adding (str)
-        explicit_hash_key - The explicit hash key of the new record to simulate adding (str) (optional)
-        data - The raw data of the new record to simulate adding (binary str)
-    Returns:
-        The new size of this existing record in bytes if a new user
-        record with the specified parameters was added. (int)'''
+        Args:
+            partition_key - The partition key of the new record to simulate adding (str)
+            explicit_hash_key - The explicit hash key of the new record to simulate adding (str) (optional)
+            data - The raw data of the new record to simulate adding (binary str)
+        Returns:
+            The new size of this existing record in bytes if a new user
+            record with the specified parameters was added. (int)'''
         
         message_size = 0
         
@@ -398,14 +400,12 @@ class KplAggRecord(object):
             True if the new user record was successfully added to this
             aggregated record or false if this aggregated record is too full.'''
         
-        global MAX_BYTES_PER_RECORD
-        
         partition_key = str(partition_key).strip()
         explicit_hash_key = str(explicit_hash_key).strip() if explicit_hash_key is not None else self._create_explicit_hash_key(partition_key)
         
         #Validate new record size won't overflow max size for a PutRecordRequest
         size_of_new_record = self._calculate_record_size(partition_key, data, explicit_hash_key)
-        if self.get_size_bytes() + size_of_new_record > MAX_BYTES_PER_RECORD:
+        if self.get_size_bytes() + size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
             return False
         
         record = self.agg_record.records.add()
@@ -441,15 +441,13 @@ class KplAggRecord(object):
             An explicit hash key based on the input partition key generated
             using an algorithm from the original KPL.'''
         
-        global KPL_DIGEST_SIZE
-        
         hash_key = 0
         
         md5_calc = md5.new()
         md5_calc.update(partition_key)
         pk_digest = md5_calc.hexdigest()
         
-        for i in range(0, KPL_DIGEST_SIZE):
+        for i in range(0, aws_kinesis_agg.DIGEST_SIZE):
             p = int(pk_digest, 16)
             p << (16 - i - 1) * 8
             hash_key += p

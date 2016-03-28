@@ -1,18 +1,21 @@
-# Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#Kinesis Aggregation/Deaggregation Libraries for Python
 #
-# Licensed under the Amazon Software License (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
+#Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved. 
+#
+#Licensed under the Amazon Software License (the "License").
+#You may not use this file except in compliance with the License.
+#A copy of the License is located at
 #
 # http://aws.amazon.com/asl/
 #
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
+#or in the "license" file accompanying this file. This file is distributed
+#on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#express or implied. See the License for the specific language governing
+#permissions and limitations under the License.
 
 from __future__ import print_function
 
+import aws_kinesis_agg
 import base64
 import collections
 import google.protobuf.message
@@ -21,20 +24,17 @@ import md5
 import StringIO
 import sys
 
-#KPL protocol-specific constants
-KPL_MAGIC = '\xf3\x89\x9a\xc2'
-KPL_DIGEST_SIZE = md5.digest_size
 
 def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     '''Given a protobuf message record, generate a new Kinesis user record
     
-    ehks - The list of explicit hash keys from the protobuf message
-    pks - The list of partition keys from the protobuf message
-    mr - A single deaggregated message record from the protobuf message
-    r - The original aggregated kinesis record containing the protobuf message record
-    sub_seq_num - The current subsequence number within the aggregated protobuf message
+    ehks - The list of explicit hash keys from the protobuf message (list of str)
+    pks - The list of partition keys from the protobuf message (list of str)
+    mr - A single deaggregated message record from the protobuf message (dict)
+    r - The original aggregated kinesis record containing the protobuf message record (dict)
+    sub_seq_num - The current subsequence number within the aggregated protobuf message (int)
     
-    return value - A Kinesis user record created from a message record in the protobuf message'''
+    return value - A Kinesis user record created from a message record in the protobuf message (dict)'''
     
     explicit_hash_key = None                            
     if ehks and ehks[mr.explicit_hash_key_index] is not None:
@@ -66,13 +66,13 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
 def _get_error_string(r, message_data, ehks, pks, ar):
     '''Generate a detailed error message for when protobuf parsing fails.
     
-    r - The original aggregated kinesis record containing the protobuf message record
-    message_data - The raw aggregated data from the protobuf message
-    ehks - The list of explicit hash keys from the protobuf message
-    pks - The list of partition keys from the protobuf message
-    ar - The protobuf aggregated record that was being parsed when the error occurred
+    r - The original aggregated kinesis record containing the protobuf message record (dict)
+    message_data - The raw aggregated data from the protobuf message (binary str)
+    ehks - The list of explicit hash keys from the protobuf message (list)
+    pks - The list of partition keys from the protobuf message (list)
+    ar - The protobuf aggregated record that was being parsed when the error occurred (dict)
     
-    return value - A detailed error string'''
+    return value - A detailed error string (str)'''
     
     error_buffer = StringIO.StringIO()
     
@@ -98,11 +98,12 @@ def _get_error_string(r, message_data, ehks, pks, ar):
 def deaggregate_records(records):
     '''Given a set of Kinesis records, deaggregate any records that were packed using the
     Kinesis Producer Library into individual records.  This method will be a no-op for any
-    records that were not aggregated using the KPL (but will still return them).
+    records that are not aggregated (but will still return them).
     
-    records - The list of raw Kinesis records to deaggregate.
+    records - The list of raw Kinesis records to deaggregate. (list of dict)
     
-    return value - A list of Kinesis user records greater than or equal to the size of the input record list.'''
+    return value - A list of Kinesis user records greater than or equal to the size of the 
+    input record list. (list of dict)'''
     
     #Use the existing generator function to deaggregate all the records
     return_records = []
@@ -112,14 +113,12 @@ def deaggregate_records(records):
 
 def iter_deaggregate_records(records):
     '''Generator function - Given a set of Kinesis records, deaggregate them one at a time
-    using the Kinesis Producer Library message format.  This method will not affect any
-    records that were no aggregated using the KPL (but will still return them).
+    using the Kinesis aggregated message format.  This method will not affect any
+    records that are not aggregated (but will still return them).
     
-    records - The list of raw Kinesis records to deaggregate.
+    records - The list of raw Kinesis records to deaggregate. (list of dict)
     
-    return value - Each yield returns a single Kinesis user record'''
-    
-    global KPL_MAGIC, KPL_DIGEST_SIZE
+    return value - Each yield returns a single Kinesis user record. (dict)'''
     
     #We got a single record...try to coerce it to a list
     if isinstance(records, collections.Mapping):
@@ -135,21 +134,21 @@ def iter_deaggregate_records(records):
         
         #Verify the magic header
         data_magic = None
-        if(len(decoded_data) >= len(KPL_MAGIC)):
-            data_magic = decoded_data[:len(KPL_MAGIC)]
+        if(len(decoded_data) >= len(aws_kinesis_agg.MAGIC)):
+            data_magic = decoded_data[:len(aws_kinesis_agg.MAGIC)]
         else:
             is_aggregated = False
         
-        decoded_data_no_magic = decoded_data[len(KPL_MAGIC):]
+        decoded_data_no_magic = decoded_data[len(aws_kinesis_agg.MAGIC):]
         
-        if KPL_MAGIC != data_magic or len(decoded_data_no_magic) <= KPL_DIGEST_SIZE:
+        if aws_kinesis_agg.MAGIC != data_magic or len(decoded_data_no_magic) <= aws_kinesis_agg.DIGEST_SIZE:
             is_aggregated = False
             
         if is_aggregated:            
             
             #verify the MD5 digest
-            message_digest = decoded_data_no_magic[-KPL_DIGEST_SIZE:]
-            message_data = decoded_data_no_magic[:-KPL_DIGEST_SIZE]
+            message_digest = decoded_data_no_magic[-aws_kinesis_agg.DIGEST_SIZE:]
+            message_data = decoded_data_no_magic[:-aws_kinesis_agg.DIGEST_SIZE]
             
             md5_calc = md5.new()
             md5_calc.update(message_data)
@@ -178,7 +177,7 @@ def iter_deaggregate_records(records):
                         error_string = _get_error_string(r, message_data, ehks, pks, ar)
                         print('ERROR: %s\n%s' % (str(e), error_string), file=sys.stderr)
                     
-                except google.protobuf.message.DecodeError as de:                    
+                except google.protobuf.message.DecodeError:                    
                     is_aggregated = False
         
         if not is_aggregated:

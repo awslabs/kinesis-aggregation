@@ -1,15 +1,17 @@
-# Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#Kinesis Aggregation/Deaggregation Libraries for Python
 #
-# Licensed under the Amazon Software License (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
+#Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved. 
+#
+#Licensed under the Amazon Software License (the "License").
+#You may not use this file except in compliance with the License.
+#A copy of the License is located at
 #
 # http://aws.amazon.com/asl/
 #
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
+#or in the "license" file accompanying this file. This file is distributed
+#on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#express or implied. See the License for the specific language governing
+#permissions and limitations under the License.
 
 import sys
 
@@ -35,7 +37,7 @@ import botocore.config
 import random
 import uuid
 
-import aws_kpl_agg.aggregator
+import aws_kinesis_agg.aggregator
     
 #Used for generating random record bodies
 ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
@@ -88,7 +90,7 @@ def send_record(agg_record):
     '''Send the input aggregated record to Kinesis via the PutRecord API.
     
     Args:
-        agg_record - The aggregated record to send to Kinesis. (KplAggRecord)'''
+        agg_record - The aggregated record to send to Kinesis. (AggRecord)'''
     
     global kinesis_client, stream_name
     
@@ -125,7 +127,7 @@ if __name__ == '__main__':
     region_name = sys.argv[2]
     
     init_kinesis_client(region_name)
-    kinesis_agg = aws_kpl_agg.aggregator.RecordAggregator()
+    kinesis_agg = aws_kinesis_agg.aggregator.RecordAggregator()
     kinesis_agg.on_record_complete(send_record)
     
     print 'Creating %d records...' % (RECORDS_TO_TRANSMIT)

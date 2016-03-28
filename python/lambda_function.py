@@ -1,22 +1,26 @@
-# Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#Kinesis Aggregation/Deaggregation Libraries for Python
 #
-# Licensed under the Amazon Software License (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
+#Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved. 
+#
+#Licensed under the Amazon Software License (the "License").
+#You may not use this file except in compliance with the License.
+#A copy of the License is located at
 #
 # http://aws.amazon.com/asl/
 #
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
+#or in the "license" file accompanying this file. This file is distributed
+#on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#express or implied. See the License for the specific language governing
+#permissions and limitations under the License.
 
 from __future__ import print_function
 
-from aws_kpl_agg.deaggregator import deaggregate_records, iter_deaggregate_records
+from aws_kinesis_agg.deaggregator import deaggregate_records, iter_deaggregate_records
 import base64
 
 def lambda_bulk_handler(event, context):
+    '''A Python AWS Lambda function to process Kinesis aggregated
+    records in a bulk fashion.'''
     
     raw_kinesis_records = event['Records']
     
@@ -33,6 +37,8 @@ def lambda_bulk_handler(event, context):
     return 'Successfully processed {} records.'.format(len(user_records))
 
 def lambda_generator_handler(event, context):
+    '''A Python AWS Lambda function to process Kinesis aggregated
+    records in a generator-based fashion.'''
     
     raw_kinesis_records = event['Records']
     record_count = 0
