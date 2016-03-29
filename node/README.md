@@ -4,10 +4,10 @@ These Kinesis Aggregation and Deaggregation modules provide a simple interface f
 
 ## Installation
 
-The Node.js record aggregation/deaggregation modules are available on NPM as [aws-kpl-agg](https://www.npmjs.com/package/aws-kpl-agg).  To get started, include the `aws-kpl-agg` module from npm into your new or existing NodeJS application:
+The Node.js record aggregation/deaggregation modules are available on NPM as [aws-kinesis-agg](https://www.npmjs.com/package/aws-kinesis-agg).  To get started, include the `aws-kinesis-agg` module from npm into your new or existing NodeJS application:
 
 ```
-var agg = require('aws-kpl-agg');
+var agg = require('aws-kinesis-agg');
 ```
 
 ## Record Aggregation
@@ -72,7 +72,7 @@ When using deaggregation, you provide a single aggregated Kinesis Record and get
 }
 ```
 
-When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the `aws-kpl-agg` module.  The `aws-kpl-agg` module provides both syncronous and asyncronous methods of deaggregating records.
+When you receive a Kinesis Record in your consumer application, you will extract the User Records using deaggregation methods in the `aws-kinesis-agg` module.  The `aws-kinesis-agg` module provides both syncronous and asyncronous methods of deaggregating records.
 
 ### Synchronous
 
@@ -95,7 +95,7 @@ If any errors are encountered during processing of the `perRecordCallback`, then
 {
 	partitionKey : String - The Partition Key of the enclosing Kinesis Aggregated Record
 	explicitPartitionKey : String - The Partition Key provided for the purposes of Shard Allocation
-	sequenceNumber : BigInt - The sequence number assigned to the record on submission of the Aggregated Record by the KPL
+	sequenceNumber : BigInt - The sequence number assigned to the record on submission of the Aggregated Record by the encoder
 	subSequenceNumber : Int - The sub-sequence number for the failing User Record in the aggregated record, if aggregation was in use by the producer
 	data : Buffer - The original protobuf message transmitted by the producer (base64 encoded)
 }
@@ -109,11 +109,11 @@ This module includes an example AWS Lambda function in the [index.js](index.js) 
 
 ```
 /**
- * Example lambda function which uses the KPL syncronous deaggregation
+ * Example lambda function which uses the syncronous deaggregation
  * interface to process Kinesis Records from the Event Source
  */
 exports.exampleSync = function(event, context) {
-	console.log("Processing KPL Aggregated Messages using aws-kpl-agg(sync)");
+	console.log("Processing Aggregated Messages using aws-kinesis-agg(sync)");
 
 	handleNoProcess(event, function() {
 		console.log("Processing " + event.Records.length + " Kinesis Input Records");
@@ -162,11 +162,11 @@ This example accumulates User Records into an enclosing array in a similar fashi
 
 ```
 /**
- * Example lambda function which uses the KPL asyncronous deaggregation
+ * Example lambda function which uses the asyncronous deaggregation
  * interface to process Kinesis Records from the Event Source
  */
 exports.exampleAsync = function(event, context) {
-	console.log("Processing KPL Aggregated Messages using aws-kpl-agg(async)");
+	console.log("Processing Aggregated Messages using aws-kinesis-agg(async)");
 
 	handleNoProcess(event, function() {
 		// process all records in parallel

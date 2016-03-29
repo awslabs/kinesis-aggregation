@@ -9,7 +9,7 @@
  */
 
 var deaggregator = require('./sample-deaggregation');
-var libPath = "./node_modules/aws-kpl-agg"
+var libPath = "./node_modules/aws-kinesis-agg"
 var aggregator = require(libPath + '/RecordAggregator');
 require(libPath + "/constants");
 

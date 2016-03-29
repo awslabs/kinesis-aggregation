@@ -1,16 +1,16 @@
 {
-    "name": "kpl-deagg",
-    "description": "Node.js module to simplify processing of Kinesis Records which have been created with the Kinesis Producer Library",
+    "name": "kinesis-aggregation",
+    "description": "Node.js module to simplify processing of Kinesis Records which are encoded with Google Protocol Buffers",
     "version": "2.1.1",
-    "homepage": "http://github.com/awslabs/kinesis-deaggregation",
+    "homepage": "http://github.com/awslabs/kinesis-aggregation",
     "bugs": {
-        "url": "http://github.com/awslabs/kinesis-deaggregation",
+        "url": "http://github.com/awslabs/kinesis-aggregation",
         "email": "meyersi@amazon.com"
     },
     "dependencies": {
         "async": "1.5.2",
         "protobufjs": "5.0.1",
-        "aws-kpl-agg": "2.2.0"
+        "aws-kinesis-agg": "2.2.0"
     },
     "keywords": [
         "amazon",
@@ -33,7 +33,7 @@
     "license" : "SEE LICENSE IN LICENSE.txt",
     "repository": {
         "type": "git",
-        "url": "http://github.com/awslabs/kinesis-deaggregation"
+        "url": "http://github.com/awslabs/kinesis-aggregation"
     }
 }
         

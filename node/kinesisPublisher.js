@@ -9,7 +9,7 @@
  */
 
 var AWS = require('aws-sdk');
-var libPath = "./node_modules/aws-kpl-agg"
+var libPath = "./node_modules/aws-kinesis-agg"
 var RecordAggregator = require(libPath + '/RecordAggregator');
 require(libPath + "/constants");
 
