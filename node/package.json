@@ -10,7 +10,7 @@
     "dependencies": {
         "async": "1.5.2",
         "protobufjs": "5.0.1",
-        "aws-kinesis-agg": "2.2.0"
+        "aws-kinesis-agg": "2.2.1"
     },
     "keywords": [
         "amazon",
