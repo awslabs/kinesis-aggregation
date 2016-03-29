@@ -45,8 +45,7 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 		// Stream the User Records from the Lambda Event
 		RecordDeaggregator.stream(event.getRecords().stream(), userRecord -> {
 			// Your User Record Processing Code Here!
-			logger.log(String.format("Processing UserRecord %s (%s:%s)", userRecord.getPartitionKey(),
-					userRecord.getSequenceNumber(), userRecord.getSubSequenceNumber()));
+			logger.log(new String(userRecord.getData().array()));
 		});
 
 		return null;
@@ -67,8 +66,7 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 				public Void process(List<UserRecord> userRecords) {
 					for (UserRecord userRecord : userRecords) {
 						// Your User Record Processing Code Here!
-						logger.log(String.format("Processing UserRecord %s (%s:%s)", userRecord.getPartitionKey(),
-								userRecord.getSequenceNumber(), userRecord.getSubSequenceNumber()));
+						logger.log(new String(userRecord.getData().array()));
 					}
 
 					return null;
@@ -92,8 +90,7 @@ public class KinesisLambdaReceiver implements RequestHandler<KinesisEvent, Void>
 			List<UserRecord> userRecords = RecordDeaggregator.deaggregate(event.getRecords());
 			for (UserRecord userRecord : userRecords) {
 				// Your User Record Processing Code Here!
-				logger.log(String.format("Processing UserRecord %s (%s:%s)", userRecord.getPartitionKey(),
-						userRecord.getSequenceNumber(), userRecord.getSubSequenceNumber()));
+				logger.log(new String(userRecord.getData().array()));
 			}
 		} catch (Exception e) {
 			logger.log(e.getMessage());
