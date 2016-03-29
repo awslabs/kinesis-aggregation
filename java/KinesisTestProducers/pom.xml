@@ -2,38 +2,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>KinesisTestProducers</artifactId>
-	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<parent>
-		<groupId>com.amazonaws.services.lambda</groupId>
-		<artifactId>kpl-lambda-java</artifactId>
+		<groupId>com.amazonaws.services.kinesis</groupId>
+		<artifactId>kinesis-aggregation-java</artifactId>
 		<version>1.0</version>
 	</parent>
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>dev</shadedClassifierName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -47,9 +24,9 @@
 			<version>0.10.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.13</version>
+			<groupId>com.amazonaws.services.kinesis</groupId>
+			<artifactId>KinesisAggregator</artifactId>
+			<version>1.0</version>
 		</dependency>
 	</dependencies>
 </project>

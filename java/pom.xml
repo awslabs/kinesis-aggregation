@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.amazonaws.services.lambda</groupId>
-	<artifactId>kpl-lambda-java</artifactId>
+	<groupId>com.amazonaws.services.kinesis</groupId>
+	<artifactId>kinesis-aggregation-java</artifactId>
 	<version>1.0</version>
 	<packaging>pom</packaging>
 	<properties>
@@ -11,8 +11,10 @@
 		<aws-kinesis-client.version>1.6.1</aws-kinesis-client.version>
 	</properties>
 	<modules>
-		<module>KinesisLambdaTestConsumer</module>
 		<module>KinesisTestProducers</module>
+		<module>KinesisAggregator</module>
+		<module>KinesisDeaggregator</module>
+		<module>KinesisTestConsumers</module>
 	</modules>
 	<build>
 		<plugins>

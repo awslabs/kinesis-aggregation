@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  	<modelVersion>4.0.0</modelVersion>
+  	<artifactId>KinesisAggregator</artifactId>
+  	<packaging>jar</packaging>
+	<parent>
+		<groupId>com.amazonaws.services.kinesis</groupId>
+		<artifactId>kinesis-aggregation-java</artifactId>
+		<version>1.0</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<build>
+		<defaultGoal>clean compile</defaultGoal>
+		<sourceDirectory>src/main/java</sourceDirectory>
+	</build>
+	<dependencies>
+		<!-- Even though we're a producer, not a consumer, this dependency gives us access to the
+		generated Google protocol buffer classes. -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-client</artifactId>
+			<version>${aws-kinesis-client.version}</version>
+			<!-- remove legacy dependency on the full java aws sdk -->
+			<exclusions>
+				<exclusion>
+					<groupId>com.amazonaws</groupId>
+					<artifactId>aws-java-sdk</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+</project>
