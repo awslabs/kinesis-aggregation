@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.amazonaws.services.kinesis</groupId>
 	<artifactId>kinesis-aggregation-java</artifactId>
-	<version>1.0</version>
+	<version>1.0.1</version>
 	<packaging>pom</packaging>
 	<properties>
-		<aws-java-sdk.version>1.10.47</aws-java-sdk.version>
+		<aws-java-sdk.version>1.10.67</aws-java-sdk.version>
 		<aws-lambda-sdk.version>1.1.0</aws-lambda-sdk.version>
 		<aws-kinesis-client.version>1.6.1</aws-kinesis-client.version>
 	</properties>
@@ -15,6 +15,7 @@
 		<module>KinesisAggregator</module>
 		<module>KinesisDeaggregator</module>
 		<module>KinesisTestConsumers</module>
+		<module>KinesisLambdaForwarder</module>
 	</modules>
 	<build>
 		<plugins>
