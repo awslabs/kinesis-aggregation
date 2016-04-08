@@ -405,7 +405,10 @@ class AggRecord(object):
         
         #Validate new record size won't overflow max size for a PutRecordRequest
         size_of_new_record = self._calculate_record_size(partition_key, data, explicit_hash_key)
-        if self.get_size_bytes() + size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+        if size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+            raise ValueError('Input record (PK=%s, EHK=%s, SizeBytes=%d) is too large to fit inside a single Kinesis record.' % 
+                             (partition_key, explicit_hash_key, size_of_new_record))
+        elif self.get_size_bytes() + size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
             return False
         
         record = self.agg_record.records.add()

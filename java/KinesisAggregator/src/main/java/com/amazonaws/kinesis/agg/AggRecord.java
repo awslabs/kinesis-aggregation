@@ -320,8 +320,16 @@ public class AggRecord {
 
 		// Validate new record size won't overflow max size for a PutRecordRequest
 		int sizeOfNewRecord = calculateRecordSize(partitionKey, explicitHashKey, data);
-		if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
-			return false;
+		if (sizeOfNewRecord > MAX_BYTES_PER_RECORD)
+		{
+		    throw new IllegalStateException("Input record (PK=" + partitionKey +
+		                                    ", EHK=" + explicitHashKey +
+		                                    ", SizeBytes=" + sizeOfNewRecord +
+		                                    ") is too large to fit inside a single Kinesis record.");
+		}
+		else if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD)
+		{
+		    return false;
 		}
 
 		Record.Builder newRecord = Record.newBuilder()

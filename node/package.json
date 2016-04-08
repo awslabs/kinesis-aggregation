@@ -1,7 +1,7 @@
 {
     "name": "kinesis-aggregation",
     "description": "Node.js module to simplify processing of Kinesis Records which are encoded with Google Protocol Buffers",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "homepage": "http://github.com/awslabs/kinesis-aggregation",
     "bugs": {
         "url": "http://github.com/awslabs/kinesis-aggregation",
@@ -10,7 +10,7 @@
     "dependencies": {
         "async": "1.5.2",
         "protobufjs": "5.0.1",
-        "aws-kinesis-agg": "2.2.1"
+        "aws-kinesis-agg": "2.2.2"
     },
     "keywords": [
         "amazon",
