@@ -22,6 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 
 import com.amazonaws.annotation.NotThreadSafe;
+import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 
 /**
  * A class for taking multiple Kinesis user records and aggregating them into
@@ -143,6 +144,28 @@ public class RecordAggregator {
 		clearRecord();
 		return out;
 	}
+
+    /**
+     * Add a new user record to this aggregated record (will trigger a callback
+     * via onRecordComplete if aggregated record is full).
+     *
+     * @param userRecord
+     *          The Kinesis user record to add to this aggregated record
+     * @param data
+     *            The record data of the record to add
+     * @return A AggRecord if this aggregated record is full and ready to be
+     *         transmitted or null otherwise.
+     */
+    public AggRecord addUserRecord(UserRecord userRecord) {
+        if(userRecord == null) {
+            throw new IllegalArgumentException("Input user record cannot be null.");
+        }
+        else if(!userRecord.getData().hasArray()) {
+            throw new IllegalStateException("The addUserRecord method only works for UserRecord objects whose data ByteBuffer " +
+                                            " has a backing byte[] available.");
+        }
+        return addUserRecord(userRecord.getPartitionKey(), userRecord.getExplicitHashKey(), userRecord.getData().array());
+    }
 
 	/**
 	 * Add a new user record to this aggregated record (will trigger a callback
