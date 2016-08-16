@@ -480,7 +480,7 @@ public class AggRecord {
 		for (int i = 0; i < this.md5.getDigestLength(); i++) {
 			BigInteger p = new BigInteger(Byte.toString(pkDigest[i]));
 			p.shiftLeft((16 - i - 1) * 8);
-			hashKey.add(p);
+			hashKey = hashKey.add(p);
 		}
 
 		return hashKey.toString(10);
