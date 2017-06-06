@@ -19,9 +19,9 @@ import aws_kinesis_agg
 import base64
 import collections
 import google.protobuf.message
-import kpl_pb2
-import md5
-import StringIO
+from . import kpl_pb2
+import hashlib
+from io import StringIO
 import sys
 
 
@@ -45,7 +45,7 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     new_record['kinesis'] = {}
     
     #Copy all the metadata from the original record (except the data-specific stuff)
-    for key, value in r.iteritems():
+    for key, value in r.items():
         if key != 'kinesis':
             new_record[key] = value
     new_record['kinesis']['kinesisSchemaVersion'] = r['kinesis']['kinesisSchemaVersion']
@@ -74,7 +74,7 @@ def _get_error_string(r, message_data, ehks, pks, ar):
     
     return value - A detailed error string (str)'''
     
-    error_buffer = StringIO.StringIO()
+    error_buffer = StringIO()
     
     error_buffer.write('Unexpected exception during deaggregation, record was:\n')
     error_buffer.write('PKS:\n')
@@ -150,7 +150,7 @@ def iter_deaggregate_records(records):
             message_digest = decoded_data_no_magic[-aws_kinesis_agg.DIGEST_SIZE:]
             message_data = decoded_data_no_magic[:-aws_kinesis_agg.DIGEST_SIZE]
             
-            md5_calc = md5.new()
+            md5_calc = hashlib.md5()
             md5_calc.update(message_data)
             calculated_digest = md5_calc.digest()
             
