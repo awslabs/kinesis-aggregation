@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>com.amazonaws.services.kinesis</groupId>
 			<artifactId>KinesisDeaggregator</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>
