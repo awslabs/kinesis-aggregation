@@ -1,7 +1,7 @@
 {
     "name": "kinesis-aggregation",
     "description": "Node.js module to simplify processing of Kinesis Records which are encoded with Google Protocol Buffers",
-    "version": "2.1.2",
+    "version": "3.0.0",
     "homepage": "http://github.com/awslabs/kinesis-aggregation",
     "bugs": {
         "url": "http://github.com/awslabs/kinesis-aggregation",
