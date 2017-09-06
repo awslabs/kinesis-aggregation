@@ -21,7 +21,7 @@ If the Kinesis stream you need to publish to is in a different AWS account than 
 5. Skip blueprint selection
 6. Choose Java 8 as the runtime
 7. Choose the built file (from step #2) KinesisLambdaForwarder-1.0-lambda.jar as the code for the function (NOT the KinesisLambdaForwarder-1.0.jar file).
-8. Choose com.amazonaws.kinesis.forwarder.KinesisLambdaForwarder as the Handler
+8. Choose com.amazonaws.kinesis.forwarder.LambdaAggregatingForwarder::handleRequest as the Handler
 9. Set the default batch size as required for your Kinesis stream throughput
 10. Set the Role, Memory and Timeout appropriately.
 11. Connect your new Lambda function to the Kinesis stream you'll be reading from
