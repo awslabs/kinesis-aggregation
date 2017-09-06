@@ -2,3 +2,6 @@ target
 .settings
 *.prefs
 *.class
+
+.idea/
+*.iml
