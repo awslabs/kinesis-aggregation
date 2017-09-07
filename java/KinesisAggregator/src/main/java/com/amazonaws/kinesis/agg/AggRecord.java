@@ -40,8 +40,8 @@ import com.google.protobuf.ByteString;
  * 
  * Represents a single aggregated Kinesis record. This Kinesis record is built
  * by adding multiple user records and then serializing them to bytes using the
- * Kinesis aggregated record format. This class lifts
- * heavily from the existing KPL C++ libraries found at
+ * Kinesis aggregated record format. This class lifts heavily from the existing
+ * KPL C++ libraries found at
  * https://github.com/awslabs/amazon-kinesis-producer.
  *
  * This class is NOT thread-safe.
@@ -55,14 +55,15 @@ public class AggRecord {
 	// https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
 	private static final byte[] AGGREGATED_RECORD_MAGIC = new byte[] { (byte) 0xf3, (byte) 0x89, (byte) 0x9a,
 			(byte) 0xc2 };
-	private static final String MESSAGE_DIGEST_NAME = "MD5";
+	protected static final String MESSAGE_DIGEST_NAME = "MD5";
 	private static final BigInteger UINT_128_MAX = new BigInteger(StringUtils.repeat("FF", 16), 16);
 
 	// Kinesis Limits
 	// (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
-	private static final int MAX_BYTES_PER_RECORD = 1024*1024; // 1 MB
-	private static final int PARTITION_KEY_MIN_LENGTH = 1;
-	private static final int PARTITION_KEY_MAX_LENGTH = 256;
+	protected static final int MAX_BYTES_PER_RECORD = 1024 * 1024; // 1 MB
+	protected static final int AGGREGATION_OVERHEAD_BYTES = 256;
+	protected static final int PARTITION_KEY_MIN_LENGTH = 1;
+	protected static final int PARTITION_KEY_MAX_LENGTH = 256;
 
 	/** The current size of the aggregated protobuf message. */
 	private int aggregatedMessageSizeBytes;
@@ -131,7 +132,8 @@ public class AggRecord {
 	 * Serialize this record to bytes. Has no side effects (i.e. does not affect
 	 * the contents of this record object).
 	 * 
-	 * @return A byte array containing an Kinesis aggregated format-compatible Kinesis record.
+	 * @return A byte array containing an Kinesis aggregated format-compatible
+	 *         Kinesis record.
 	 */
 	public byte[] toRecordBytes() {
 		if (getNumUserRecords() == 0) {
@@ -221,7 +223,8 @@ public class AggRecord {
 		if (!this.partitionKeys.contains(partitionKey)) {
 			int pkLength = partitionKey.length();
 			messageSize += 1; // (message index + wire type for PK table)
-			messageSize += calculateVarintSize(pkLength); // size of pk length value
+			messageSize += calculateVarintSize(pkLength); // size of pk length
+															// value
 			messageSize += pkLength; // actual pk length
 		}
 
@@ -229,31 +232,44 @@ public class AggRecord {
 		if (!this.explicitHashKeys.contains(explicitHashKey)) {
 			int ehkLength = explicitHashKey.length();
 			messageSize += 1; // (message index + wire type for EHK table)
-			messageSize += calculateVarintSize(ehkLength); // size of ehk length value
+			messageSize += calculateVarintSize(ehkLength); // size of ehk length
+															// value
 			messageSize += ehkLength; // actual ehk length
 		}
 
-		// remaining calculations are for adding the new record to the list of records
+		// remaining calculations are for adding the new record to the list of
+		// records
 
 		long innerRecordSize = 0;
 
 		// partition key field
 		innerRecordSize += 1; // (message index + wire type for PK index)
-		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size of pk index value
+		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size
+																									// of
+																									// pk
+																									// index
+																									// value
 
 		// explicit hash key field (this is optional)
 		if (explicitHashKey != null) {
 			innerRecordSize += 1; // (message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size of ehk index value
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size
+																												// of
+																												// ehk
+																												// index
+																												// value
 		}
 
 		// data field
 		innerRecordSize += 1; // (message index + wire type for record data)
-		innerRecordSize += calculateVarintSize(data.length); // size of data length value
+		innerRecordSize += calculateVarintSize(data.length); // size of data
+																// length value
 		innerRecordSize += data.length; // actual data length
 
 		messageSize += 1; // (message index + wire type for record)
-		messageSize += calculateVarintSize(innerRecordSize); // size of entire record length value
+		messageSize += calculateVarintSize(innerRecordSize); // size of entire
+																// record length
+																// value
 		messageSize += innerRecordSize; // actual entire record length
 
 		return messageSize;
@@ -310,26 +326,25 @@ public class AggRecord {
 	 *         aggregated record or false if this aggregated record is too full.
 	 */
 	public boolean addUserRecord(String partitionKey, String explicitHashKey, byte[] data) {
+		// set the explicit hash key for the message to the partition key -
+		// required for encoding
+		explicitHashKey = explicitHashKey != null ? explicitHashKey : createExplicitHashKey(partitionKey);
+
+		// validate values from the provided message
 		validatePartitionKey(partitionKey);
-		partitionKey = partitionKey.trim();
-
-		explicitHashKey = explicitHashKey != null ? explicitHashKey.trim() : createExplicitHashKey(partitionKey);
 		validateExplicitHashKey(explicitHashKey);
-
 		validateData(data);
 
-		// Validate new record size won't overflow max size for a PutRecordRequest
+		// Validate new record size won't overflow max size for a
+		// PutRecordRequest
 		int sizeOfNewRecord = calculateRecordSize(partitionKey, explicitHashKey, data);
-		if (sizeOfNewRecord > MAX_BYTES_PER_RECORD)
-		{
-		    throw new IllegalStateException("Input record (PK=" + partitionKey +
-		                                    ", EHK=" + explicitHashKey +
-		                                    ", SizeBytes=" + sizeOfNewRecord +
-		                                    ") is too large to fit inside a single Kinesis record.");
-		}
-		else if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD)
-		{
-		    return false;
+		if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
+			return false;
+		} else if (sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
+			throw new IllegalArgumentException(
+					"Input record (PK=" + partitionKey + ", EHK=" + explicitHashKey + ", SizeBytes=" + sizeOfNewRecord
+							+ ") is larger than the maximum size before Aggregation encoding of "
+							+ (MAX_BYTES_PER_RECORD - AGGREGATION_OVERHEAD_BYTES) + " bytes");
 		}
 
 		Record.Builder newRecord = Record.newBuilder()
@@ -350,7 +365,8 @@ public class AggRecord {
 		this.aggregatedMessageSizeBytes += sizeOfNewRecord;
 		this.aggregatedRecordBuilder.addRecords(newRecord.build());
 
-		// if this is the first record, we use its partition key and hash key for the entire agg record
+		// if this is the first record, we use its partition key and hash key
+		// for the entire agg record
 		if (this.aggregatedRecordBuilder.getRecordsCount() == 1) {
 			this.aggPartitionKey = partitionKey;
 			this.aggExplicitHashKey = explicitHashKey;
@@ -373,11 +389,8 @@ public class AggRecord {
 	public PutRecordRequest toPutRecordRequest(String streamName) {
 		byte[] recordBytes = toRecordBytes();
 		ByteBuffer bb = ByteBuffer.wrap(recordBytes);
-		return new PutRecordRequest()
-					.withStreamName(streamName)
-					.withExplicitHashKey(getExplicitHashKey())
-					.withPartitionKey(getPartitionKey())
-					.withData(bb);
+		return new PutRecordRequest().withStreamName(streamName).withExplicitHashKey(getExplicitHashKey())
+				.withPartitionKey(getPartitionKey()).withData(bb);
 	}
 
 	/**
@@ -393,10 +406,8 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		return new PutRecordsRequestEntry()
-				.withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey())
-				.withData(ByteBuffer.wrap(toRecordBytes()));
+		return new PutRecordsRequestEntry().withExplicitHashKey(getExplicitHashKey())
+				.withPartitionKey(getPartitionKey()).withData(ByteBuffer.wrap(toRecordBytes()));
 	}
 
 	/**
@@ -427,7 +438,7 @@ public class AggRecord {
 
 		if (partitionKey.length() < PARTITION_KEY_MIN_LENGTH || partitionKey.length() > PARTITION_KEY_MAX_LENGTH) {
 			throw new IllegalArgumentException(
-					"Invalid parition key. Length must be at least " + PARTITION_KEY_MIN_LENGTH + " and at most "
+					"Invalid partition key. Length must be at least " + PARTITION_KEY_MIN_LENGTH + " and at most "
 							+ PARTITION_KEY_MAX_LENGTH + ", got length of " + partitionKey.length());
 		}
 
@@ -478,7 +489,10 @@ public class AggRecord {
 		byte[] pkDigest = this.md5.digest(partitionKey.getBytes(StandardCharsets.UTF_8));
 
 		for (int i = 0; i < this.md5.getDigestLength(); i++) {
-			BigInteger p = new BigInteger(String.valueOf((int) pkDigest[i] & 0xFF)); // convert to unsigned integer
+			BigInteger p = new BigInteger(String.valueOf((int) pkDigest[i] & 0xFF)); // convert
+																						// to
+																						// unsigned
+																						// integer
 			BigInteger shifted = p.shiftLeft((16 - i - 1) * 8);
 			hashKey = hashKey.add(shifted);
 		}
@@ -527,7 +541,8 @@ public class AggRecord {
 		/**
 		 * Add a new key to this keyset.
 		 * 
-		 * @param s The key to add to the keyset.
+		 * @param s
+		 *            The key to add to the keyset.
 		 * 
 		 * @return A pair of <boolean,long>. The boolean is true if this key is
 		 *         not already in this keyset, false otherwise. The long
