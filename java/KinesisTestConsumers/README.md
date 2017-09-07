@@ -20,7 +20,7 @@ For more details on how to use the `RecordDeaggregator` object in these examples
 6. Choose com.amazonaws.KinesisLambdaReceiver as the Handler
 7. Set the default batch size as required for your Kinesis stream throughput
 8. Set the Role, Memory and Timeout appropriately.
-9. Connect your new Lambda function to the Kinesis stream you'll be publishing to
+9. Connect your new Lambda function to the Kinesis stream you'll be reading from
 
 ## IAM Role
 

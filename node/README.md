@@ -17,6 +17,7 @@ Applications implemented in AWS Lambda often emit new events based on the events
 To use Aggregation, you simply construct a `RecordAggregator` function:
 
 ```
+var agg = require('aws-kinesis-agg/RecordAggregator');
 var aggregator = new RecordAggregator();
 ```
 

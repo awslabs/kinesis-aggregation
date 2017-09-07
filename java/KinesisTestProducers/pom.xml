@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.amazonaws.services.kinesis</groupId>
 		<artifactId>kinesis-aggregation-java</artifactId>
-		<version>1.0</version>
+		<version>1.0.1</version>
 	</parent>
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>com.amazonaws.services.kinesis</groupId>
 			<artifactId>KinesisAggregator</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>

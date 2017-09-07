@@ -478,9 +478,9 @@ public class AggRecord {
 		byte[] pkDigest = this.md5.digest(partitionKey.getBytes(StandardCharsets.UTF_8));
 
 		for (int i = 0; i < this.md5.getDigestLength(); i++) {
-			BigInteger p = new BigInteger(Byte.toString(pkDigest[i]));
-			p.shiftLeft((16 - i - 1) * 8);
-			hashKey.add(p);
+			BigInteger p = new BigInteger(String.valueOf((int) pkDigest[i] & 0xFF)); // convert to unsigned integer
+			BigInteger shifted = p.shiftLeft((16 - i - 1) * 8);
+			hashKey = hashKey.add(shifted);
 		}
 
 		return hashKey.toString(10);
