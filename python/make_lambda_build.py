@@ -13,6 +13,7 @@
 #express or implied. See the License for the specific language governing
 #permissions and limitations under the License.
 
+from __future__ import print_function
 import os.path
 import shutil
 import subprocess
@@ -41,15 +42,15 @@ def initialize_current_working_dir():
     global cur_dir, proj_dir
 
     cur_dir = os.path.normpath(os.getcwd())
-    print 'Current Working Directory = %s' % (os.getcwd())
+    print('Current Working Directory = {}'.format(os.getcwd()))
     
     proj_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
-    print 'Project Directory = %s' % (proj_dir)
+    print('Project Directory = {}'.format(proj_dir))
     
     if cur_dir != proj_dir:
-        print 'Changing CWD to script directory...'
+        print('Changing CWD to script directory...')
         os.chdir(proj_dir)        
-    print 'Current Working Directory = %s' % (os.getcwd())
+    print('Current Working Directory = {}'.format(os.getcwd()))
 
     
 def setup_build_dir():
@@ -59,9 +60,9 @@ def setup_build_dir():
     
     global BUILD_DIR_NAME, build_dir
     
-    print ''
+    print('')
     build_dir = os.path.join(os.getcwd(),BUILD_DIR_NAME)
-    print 'Setting up build directory: %s' % (build_dir)
+    print('Setting up build directory: {}'.format(build_dir))
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir,True)
     os.mkdir(build_dir)
@@ -72,14 +73,14 @@ def copy_source_to_build_dir():
     
     global BUILD_DIR_NAME, build_dir
     
-    print ''
-    print 'Looking for Python source files...'
+    print('')
+    print('Looking for Python source files...')
     for source in os.listdir(os.getcwd()):
         if is_python_file(source) and source != __file__:
-            print 'Copy file %s to build directory...' % (source)
+            print('Copy file {} to build directory...'.format(source))
             shutil.copy(source, build_dir)
         elif os.path.isdir(source) and source != BUILD_DIR_NAME:
-            print 'Copy folder %s to build directory...' % (source)
+            print('Copy folder {} to build directory...'.format(source))
             shutil.copytree(source, os.path.join(build_dir,source))
             
             
@@ -89,26 +90,26 @@ def install_dependencies():
     global PIP_DEPENDENCIES, build_dir
     
     #Make sure PIP is available on the command line
-    print ''
-    print 'Verifying PIP installation...'
+    print('')
+    print('Verifying PIP installation...')
     with open(os.devnull,'w') as devnull:
         aws_cmd_line_result = subprocess.call('pip', shell=True, stdout=devnull, stderr=subprocess.STDOUT)
         if aws_cmd_line_result != 0:
-            print>>sys.stderr,'You do not have "pip" installed or it is not on your PATH.  This script requires access to it.'
+            print('You do not have "pip" installed or it is not on your PATH.  This script requires access to it.', file=sys.stderr)
             sys.exit(1)
-        print 'Successfully located "pip".'
+        print('Successfully located "pip".')
     
     #Install PIP dependencies to the build directory
-    print ''
-    print 'Installing necessary modules from pip...'
+    print('')
+    print('Installing necessary modules from pip...')
     for dependency in PIP_DEPENDENCIES:
-        pip_install_cmd = 'pip install %s -t "%s"' % (dependency, build_dir)
-        print pip_install_cmd
+        pip_install_cmd = 'pip install {} -t "{}"'.format(dependency, build_dir)
+        print(pip_install_cmd)
         pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
         if pip_install_cmd_line_result != 0:
-            print>>sys.stderr,'Failed to install module via pip. Try running \'%s\' to debug the issue.' % (pip_install_cmd)
+            print('Failed to install module via pip. Try running \'{}\' to debug the issue.'.format(pip_install_cmd), file=sys.stderr)
             sys.exit(1)
-        print 'Successfully installed %s from pip.' % (dependency)
+        print('Successfully installed {} from pip.'.format(dependency))
 
     #AWS Lambda has issues with the normal protobuf install lacking a root level __init__.py
     protobuf_install_dir = os.path.join(build_dir,'google')
@@ -123,14 +124,14 @@ def create_zip():
     
     global build_dir
     
-    print ''
-    print 'Building zip file for AWS Lambda...'
+    print('')
+    print('Building zip file for AWS Lambda...')
     zip_file_path = os.path.join(os.getcwd(),'python_lambda_build.zip')
     os.chdir(build_dir)
     with zipfile.PyZipFile(zip_file_path, 'w') as output_zip:
         for item in os.listdir(build_dir):
             if os.path.isdir(item) or is_python_file(item):
-                print 'Adding %s to zip...' % (item)
+                print('Adding {} to zip...'.format(item))
                 output_zip.writepy(item)
     
     return zip_file_path
@@ -138,9 +139,9 @@ def create_zip():
     
 if __name__ == '__main__':
     
-    print ''
-    print 'Creating build for AWS Lambda...'
-    print ''
+    print('')
+    print('Creating build for AWS Lambda...')
+    print('')
     
     initialize_current_working_dir()
     
@@ -152,9 +153,9 @@ if __name__ == '__main__':
     
     zip_file_path = create_zip()
         
-    print ''
-    print 'Successfully created Lambda build zip file: %s' % (zip_file_path)
-    print ''
+    print('')
+    print('Successfully created Lambda build zip file: {}'.format(zip_file_path))
+    print('')
     
     sys.exit(0)
     
