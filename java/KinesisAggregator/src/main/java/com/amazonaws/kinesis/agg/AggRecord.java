@@ -232,8 +232,8 @@ public class AggRecord {
 		if (!this.explicitHashKeys.contains(explicitHashKey)) {
 			int ehkLength = explicitHashKey.length();
 			messageSize += 1; // (message index + wire type for EHK table)
-			messageSize += calculateVarintSize(ehkLength); // size of ehk length
-															// value
+			messageSize += calculateVarintSize(
+					ehkLength); /* size of ehk length value */
 			messageSize += ehkLength; // actual ehk length
 		}
 
@@ -244,32 +244,26 @@ public class AggRecord {
 
 		// partition key field
 		innerRecordSize += 1; // (message index + wire type for PK index)
-		innerRecordSize += calculateVarintSize(this.partitionKeys.getPotentialIndex(partitionKey)); // size
-																									// of
-																									// pk
-																									// index
-																									// value
+		innerRecordSize += calculateVarintSize(this.partitionKeys
+				.getPotentialIndex(partitionKey)); /* size of pk index value */
 
 		// explicit hash key field (this is optional)
 		if (explicitHashKey != null) {
 			innerRecordSize += 1; // (message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(explicitHashKey)); // size
-																												// of
-																												// ehk
-																												// index
-																												// value
+			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(
+					explicitHashKey)); /* size of ehk index value */
 		}
 
 		// data field
 		innerRecordSize += 1; // (message index + wire type for record data)
-		innerRecordSize += calculateVarintSize(data.length); // size of data
-																// length value
+
+		innerRecordSize += calculateVarintSize(
+				data.length); /* size of data length value */
 		innerRecordSize += data.length; // actual data length
 
 		messageSize += 1; // (message index + wire type for record)
-		messageSize += calculateVarintSize(innerRecordSize); // size of entire
-																// record length
-																// value
+		messageSize += calculateVarintSize(
+				innerRecordSize); /* size of entire record length value */
 		messageSize += innerRecordSize; // actual entire record length
 
 		return messageSize;

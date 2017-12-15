@@ -4,7 +4,9 @@ This library provides a set of convenience functions to perform in-memory record
 
 ## Record Aggregation
 
-The `RecordAggregator` is the class that does the work of accepting individual Kinesis user records and aggregating them into a single aggregated Kinesis record (using the same Google Protobuf format as the full Kinesis Producer Library).  The `RecordAggregator` provides two interfaces for aggregating records: batch-based and callback-based.
+The `RecordAggregator` is the class that does the work of accepting individual Kinesis user records and aggregating them into a single aggregated Kinesis record (using the same Google Protobuf format as the full Kinesis Producer Library). 
+
+The `RecordAggregator` class provides two interfaces for aggregating records: batch-based and callback-based.
 
 ### Batch-based Aggregation
 
@@ -64,7 +66,10 @@ You can find a full working sample of batch-based aggregation in the `SampleAggr
 
 When using the batch-based and callback-based aggregation methods, it is important to note that you're only given an `AggRecord` object (via return value or callback) when the `RecordAggregator` object has a full record (i.e. as close to the 1MB PutRecord limit as possible).  There are certain scenarios, however, where you want to be able to flush records to Kinesis before the aggregated record is 100% full.  Some example scenarios include flushing records at application shutdown or making sure that records get flushed every N minutes.
 
-To solve this problem, the `RecordAggregator` object provides a method called `flushAndFinish` that will returned an aggregated record that contains all the existing records in the `RecordAggregator` as a `AggRecord` object (even if it's not completely full).
+To solve this problem, the `RecordAggregator` object provides a method called `clearAndGet` that will return an aggregated record that contains all the existing records in the `RecordAggregator` as a `AggRecord` object (even if it's not completely full).
+
+Record aggregation works by providing lists of the partition and explicit hash keys that index a table of records. This list indexing has an overhead, which we have determined is approximately 256 bytes. Records which exceed the Kinesis maximum record size of 1MB minus this encoding overhead will be rejected and throw an `IllegalArgumentException` on the call to `RecordAggregator.addUserRecord()`.
+
 
 ----
 
