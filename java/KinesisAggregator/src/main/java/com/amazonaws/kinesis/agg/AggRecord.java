@@ -256,6 +256,7 @@ public class AggRecord {
 
 		// data field
 		innerRecordSize += 1; // (message index + wire type for record data)
+
 		innerRecordSize += calculateVarintSize(
 				data.length); /* size of data length value */
 		innerRecordSize += data.length; // actual data length
