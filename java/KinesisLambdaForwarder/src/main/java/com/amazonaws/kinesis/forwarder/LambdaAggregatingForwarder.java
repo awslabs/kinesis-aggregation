@@ -128,8 +128,15 @@ public class LambdaAggregatingForwarder implements RequestHandler<KinesisEvent, 
             
             for (UserRecord userRecord : userRecords) 
             {
-                AggRecord aggRecord = this.aggregator.addUserRecord(userRecord);
-                checkAndForwardRecords(logger, aggRecord);
+                try
+                {
+                    AggRecord aggRecord = this.aggregator.addUserRecord(userRecord);
+                    checkAndForwardRecords(logger, aggRecord);
+                }
+                catch(Exception e)
+                {
+                    logger.log("[ERROR] Could not add user record: " + e.getMessage());
+                }
             }
             
             checkAndForwardRecords(logger, this.aggregator.clearAndGet());
