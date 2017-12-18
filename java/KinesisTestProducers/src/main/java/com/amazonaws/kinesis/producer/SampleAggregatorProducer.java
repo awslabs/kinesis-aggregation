@@ -80,7 +80,13 @@ public class SampleAggregatorProducer {
 			String pk = ProducerUtils.randomPartitionKey();
 			String ehk = ProducerUtils.randomExplicitHashKey();
 			byte[] data = ProducerUtils.randomData(i, ProducerConfig.RECORD_SIZE_BYTES);
-			aggregator.addUserRecord(pk, ehk, data);
+			try {
+                aggregator.addUserRecord(pk, ehk, data);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Failed to add user record: " + e.getMessage());
+            }
 		}
 
 		flushAndFinish(producer, streamName, aggregator);
@@ -100,12 +106,18 @@ public class SampleAggregatorProducer {
 
 			// addUserRecord returns non-null when a full record is ready to
 			// transmit
-			AggRecord aggRecord = aggregator.addUserRecord(pk, ehk, data);
-			if (aggRecord != null) {
-				ForkJoinPool.commonPool().execute(() -> {
-					sendRecord(producer, streamName, aggRecord);
-				});
-			}
+			try {
+                final AggRecord aggRecord = aggregator.addUserRecord(pk, ehk, data);
+                if (aggRecord != null) {
+                    ForkJoinPool.commonPool().execute(() -> {
+                        sendRecord(producer, streamName, aggRecord);
+                    });
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Failed to add user record: " + e.getMessage());
+            }
 		}
 
 		flushAndFinish(producer, streamName, aggregator);

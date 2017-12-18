@@ -16,19 +16,19 @@
  */
 package com.amazonaws.kinesis.agg;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class AggRecordTest {
@@ -42,35 +42,10 @@ public class AggRecordTest {
         return Arrays.asList(new Object[]{
                         "abcd",
                         "LBpUxDst3pfL2wFS0WMh" +
-                                "4HVTvxhD04WbZdKFkJyQ" +
-                                "xmqlIDgoqj18g6kODL57" +
-                                "cUHYk6EAk8hGwyuBMzJ1" +
-                                "02rRthyGdWgw5iyiOLu6" +
-                                "Gihs47AEEChW7KBIcTR8" +
-                                "CzI7tY9QOuY5rV0SlPN3" +
-                                "sl9GxIeVNi6y8FT0PrWW" +
-                                "R05a2rMK81PFGYIYlviS" +
-                                "XgJDolOiH13Zh3JiTmtA" +
-                                "2jJMhdDx1Tab3Gr3itWq" +
-                                "8kg6UavBBgAUtCnQUxhV" +
-                                "patNMrl28W0dKaqZ",
-                        new String(new byte[]{
-                                66,
-                                69,
-                                84,
-                                0,
-                                0,
-                                0,
-                                0,
-                                46,
-                                69,
-                                -17,
-                                -65,
-                                -67,
-                                -17,
-                                -65,
-                                -67
-                        })
+                        "4HVTvxhD04WbZdKFkJyQxmqlIDgoqj18g6kODL57cUHYk6EAk8hGwyuBMzJ102rRthyGdWgw5iyiOLu6" +
+                        "Gihs47AEEChW7KBIcTR8CzI7tY9QOuY5rV0SlPN3sl9GxIeVNi6y8FT0PrWWR05a2rMK81PFGYIYlviS" +
+                        "XgJDolOiH13Zh3JiTmtA2jJMhdDx1Tab3Gr3itWq8kg6UavBBgAUtCnQUxhVpatNMrl28W0dKaqZ",
+                        new String(new byte[]{ 66, 69, 84, 0, 0, 0, 0, 46, 69, -17, -65, -67, -17, -65, -67 })
                 }
         );
     }
@@ -89,11 +64,11 @@ public class AggRecordTest {
         final AggRecord record = new AggRecord();
         record.addUserRecord(partitionKey, null, "dummy data".getBytes());
 
-        assertThat(new BigInteger(expectedHashKeyDecimal).compareTo(MIN_VALID_HASHKEY) >= 0, is(true));
+        Assert.assertThat(new BigInteger(expectedHashKeyDecimal).compareTo(MIN_VALID_HASHKEY) >= 0, is(true));
 
-        assertThat(new BigInteger(expectedHashKeyDecimal).compareTo(MAX_VALID_HASHKEY) <= 0, is(true));
+        Assert.assertThat(new BigInteger(expectedHashKeyDecimal).compareTo(MAX_VALID_HASHKEY) <= 0, is(true));
 
-        assertThat(record.getExplicitHashKey(), equalTo(expectedHashKeyDecimal));
+        Assert.assertThat(record.getExplicitHashKey(), equalTo(expectedHashKeyDecimal));
     }
 
 }
