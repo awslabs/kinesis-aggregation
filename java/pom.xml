@@ -9,6 +9,7 @@
 		<aws-java-sdk.version>1.11.188</aws-java-sdk.version>
 		<aws-lambda-sdk.version>1.1.0</aws-lambda-sdk.version>
 		<aws-kinesis-client.version>1.8.1</aws-kinesis-client.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<modules>
 		<module>KinesisTestProducers</module>
