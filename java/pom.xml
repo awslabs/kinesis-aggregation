@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.amazonaws.services.kinesis</groupId>
 	<artifactId>kinesis-aggregation-java</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>pom</packaging>
 	<properties>
 		<aws-java-sdk.version>1.11.188</aws-java-sdk.version>
