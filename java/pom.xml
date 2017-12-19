@@ -10,6 +10,7 @@
 		<aws-lambda-sdk.version>1.1.0</aws-lambda-sdk.version>
 		<aws-kinesis-client.version>1.8.1</aws-kinesis-client.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<parent.output-directory>${project.build.outputDirectory}</parent.output-directory>
 	</properties>
 
 	<url>https://aws.amazon.com/kinesis</url>
@@ -32,6 +33,7 @@
 		<module>KinesisDeaggregator</module>
 		<module>KinesisTestConsumers</module>
 		<module>KinesisLambdaForwarder</module>
+		<module>pom-aggregate</module>
 	</modules>
 	<build>
 		<plugins>
