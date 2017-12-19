@@ -11,6 +11,21 @@
 		<aws-kinesis-client.version>1.8.1</aws-kinesis-client.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<url>https://aws.amazon.com/kinesis</url>
+
+	<scm>
+		<url>https://github.com/awslabs/kinesis-aggregation.git</url>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>Amazon Software License</name>
+			<url>https://aws.amazon.com/asl</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<modules>
 		<module>KinesisTestProducers</module>
 		<module>KinesisAggregator</module>
@@ -42,6 +57,37 @@
 					<execution>
 						<goals>
 							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<show>public</show>
+					<nohelp>true</nohelp>
+					<author>false</author>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>aggregate-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>aggregate</goal>
 						</goals>
 					</execution>
 				</executions>
