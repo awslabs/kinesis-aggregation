@@ -46,8 +46,7 @@ import com.google.protobuf.ByteString;
  *
  * This class is NOT thread-safe.
  * 
- * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/
- *      aggregation-format.md
+ * @see <a href="https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md">https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md</a>
  */
 @NotThreadSafe
 public class AggRecord {
@@ -392,9 +391,6 @@ public class AggRecord {
 	 * PutRecordsRequestEntry. This method has no side effects (i.e. it will not
 	 * clear the current contents of the aggregated record).
 	 * 
-	 * @param streamName
-	 *            The Kinesis stream name where this PutRecordsRequestEntry will
-	 *            be sent.
 	 * @return A PutRecordsRequestEntry containing all the current data in this
 	 *         aggregated record that can be sent to Kinesis via a
 	 *         PutRecordsRequest.

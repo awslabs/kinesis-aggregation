@@ -30,8 +30,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
  * 
  * This class is NOT thread-safe.
  * 
- * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/
- *      aggregation-format.md
+ * @see <a href="https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md">https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md</a>
  */
 @NotThreadSafe
 public class RecordAggregator {
@@ -151,10 +150,9 @@ public class RecordAggregator {
 	 *
 	 * @param userRecord
 	 *            The Kinesis user record to add to this aggregated record
-	 * @param data
-	 *            The record data of the record to add
 	 * @return A AggRecord if this aggregated record is full and ready to be
 	 *         transmitted or null otherwise.
+	 * @throws Exception If the user record can't be added to the current agg record
 	 */
 	public AggRecord addUserRecord(UserRecord userRecord) throws Exception {
 		if (userRecord == null) {
@@ -178,6 +176,7 @@ public class RecordAggregator {
 	 *            The record data of the record to add
 	 * @return A AggRecord if this aggregated record is full and ready to be
 	 *         transmitted or null otherwise.
+     * @throws Exception If the user record can't be added to the current agg record
 	 */
 	public AggRecord addUserRecord(String partitionKey, byte[] data) throws Exception {
 		return addUserRecord(partitionKey, null, data);
@@ -195,6 +194,7 @@ public class RecordAggregator {
 	 *            The record data of the record to add
 	 * @return A AggRecord if this aggregated record is full and ready to be
 	 *         transmitted or null otherwise.
+     * @throws Exception If the user record can't be added to the current agg record
 	 */
 	public AggRecord addUserRecord(String partitionKey, String explicitHashKey, byte[] data) throws Exception {
 		boolean success = this.currentRecord.addUserRecord(partitionKey, explicitHashKey, data);
