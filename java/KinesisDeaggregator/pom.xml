@@ -5,6 +5,7 @@
 	<groupId>com.amazonaws.services.kinesis</groupId>
 	<artifactId>kinesis-deagg</artifactId>
 	<version>1.0.3</version>
+	<description>A library for performing in-memory deaggregation of Kinesis aggregated stream records.</description>
 
 	<packaging>jar</packaging>
 
@@ -78,7 +79,7 @@
                         <id>copy</id>
                         <configuration>
                             <target name="copy POM to target">
-                                <copy file="${project.basedir}/pom.xml" tofile="${project.build.directory}/${project.artifactId}-${project.version}-pom.xml" />
+                                <copy file="${project.basedir}/pom.xml" tofile="${project.build.directory}/pom.xml" />
                             </target>
                         </configuration>
                         <phase>package</phase>
