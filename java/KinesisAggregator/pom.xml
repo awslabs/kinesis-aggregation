@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-	     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  	<modelVersion>4.0.0</modelVersion>
-  	<artifactId>KinesisAggregator</artifactId>
-  	<packaging>jar</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>KinesisAggregator</artifactId>
+	<packaging>jar</packaging>
 	<parent>
 		<groupId>com.amazonaws.services.kinesis</groupId>
 		<artifactId>kinesis-aggregation-java</artifactId>
@@ -13,10 +12,41 @@
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<show>public</show>
+					<nohelp>true</nohelp>
+					<author>false</author>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	<dependencies>
-		<!-- Even though we're a producer, not a consumer, this dependency gives us access to the
-		generated Google protocol buffer classes. -->
+		<!-- Even though we're a producer, not a consumer, this dependency gives 
+			us access to the generated Google protocol buffer classes. -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
