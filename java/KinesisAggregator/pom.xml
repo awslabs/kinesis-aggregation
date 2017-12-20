@@ -2,11 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<name>KinesisAggregator</name>
+	<description>A library for performing in-memory aggregation of Kinesis stream records.</description>
+
 	<groupId>com.amazonaws.services.kinesis</groupId>
 	<artifactId>kinesis-agg</artifactId>
 	<version>1.0.3</version>
-	<description>A library for performing in-memory aggregation of Kinesis stream records.</description>
-
+	
 	<packaging>jar</packaging>
 
 	<properties>
@@ -18,6 +20,7 @@
 		<connection>scm:git:git://github.com/awslabs/kinesis-aggregation.git</connection>
 		<url>https://github.com/awslabs/kinesis-aggregation.git</url>
 	</scm>
+	
 	<licenses>
 		<license>
 			<name>Amazon Software License</name>
@@ -25,6 +28,17 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+    <developers>
+        <developer>
+            <id>amazonwebservices</id>
+            <organization>Amazon Web Services</organization>
+            <organizationUrl>https://aws.amazon.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
 
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
