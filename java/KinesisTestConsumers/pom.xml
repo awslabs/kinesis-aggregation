@@ -49,14 +49,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-client</artifactId>
-			<version>1.8.1</version>
-			<!-- remove legacy dependency on the full java aws sdk -->
-			<exclusions>
-				<exclusion>
-					<groupId>com.amazonaws</groupId>
-					<artifactId>aws-java-sdk</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>1.8.8</version>
 		</dependency>
 		<!-- Stuff for running on AWS Lambda -->
 		<dependency>
@@ -71,7 +64,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>KinesisDeaggregator</artifactId>
+			<artifactId>kinesis-deagg</artifactId>
 			<version>1.0.2</version>
 		</dependency>
 	</dependencies>

@@ -69,12 +69,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>KinesisDeaggregator</artifactId>
+			<artifactId>kinesis-deagg</artifactId>
 			<version>1.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>KinesisAggregator</artifactId>
+			<artifactId>kinesis-agg</artifactId>
 			<version>1.0.2</version>
 		</dependency>
 	</dependencies>
