@@ -18,7 +18,7 @@
 	<url>https://aws.amazon.com/kinesis</url>
 	<scm>
 		<connection>scm:git:git://github.com/awslabs/kinesis-aggregation.git</connection>
-		<url>https://github.com/awslabs/kinesis-aggregation.git</url>
+		<url>https://github.com/awslabs/kinesis-aggregation</url>
 	</scm>
 	
 	<licenses>
