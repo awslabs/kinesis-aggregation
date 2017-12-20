@@ -4,7 +4,7 @@
 
 	<groupId>com.amazonaws.services.kinesis</groupId>
 	<artifactId>lambda-forwarder</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 
 	<packaging>jar</packaging>
 
@@ -16,8 +16,9 @@
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.7.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -49,12 +50,12 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-kinesis</artifactId>
-			<version>1.11.188</version>
+			<version>1.11.251</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-sts</artifactId>
-			<version>1.11.188</version>
+			<version>1.11.251</version>
 		</dependency>
 		<!-- Stuff for running on AWS Lambda -->
 		<dependency>
