@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>lambda-forwarder</artifactId>
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-lambda-forwarder</artifactId>
 	<version>1.0.3</version>
 
 	<packaging>jar</packaging>
@@ -69,14 +69,14 @@
 			<version>1.1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>kinesis-deagg</artifactId>
-			<version>1.0.2</version>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-aggregator</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
-			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>kinesis-agg</artifactId>
-			<version>1.0.2</version>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-deaggregator</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 </project>

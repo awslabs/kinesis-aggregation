@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>pom-aggregate</artifactId>
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-aggregation-pom-aggregate</artifactId>
 	<version>1.0.3</version>
 	
 	<packaging>pom</packaging>
@@ -42,35 +42,35 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>kinesis-agg</artifactId>
+			<artifactId>amazon-kinesis-aggregator</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>kinesis-deagg</artifactId>
+			<artifactId>amazon-kinesis-deaggregator</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>lambda-forwarder</artifactId>
+			<artifactId>amazon-kinesis-lambda-forwarder</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>test-consumers</artifactId>
+			<artifactId>amazon-kinesis-test-consumers</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>test-producers</artifactId>
+			<artifactId>amazon-kinesis-test-producers</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>

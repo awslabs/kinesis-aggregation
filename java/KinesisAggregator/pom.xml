@@ -2,11 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<name>KinesisAggregator</name>
+	<name>amazon-kinesis-aggregator</name>
 	<description>A library for performing in-memory aggregation of Kinesis stream records.</description>
 
-	<groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>kinesis-agg</artifactId>
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-aggregator</artifactId>
 	<version>1.0.3</version>
 	
 	<packaging>jar</packaging>

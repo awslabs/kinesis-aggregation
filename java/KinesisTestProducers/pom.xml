@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>test-producers</artifactId>
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-test-producers</artifactId>
 	<version>1.0.3</version>
 
 	<packaging>jar</packaging>
@@ -38,9 +38,9 @@
 			<version>0.10.2</version>
 		</dependency>
 		<dependency>
-			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>kinesis-agg</artifactId>
-			<version>1.0.2</version>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-aggregator</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 </project>
