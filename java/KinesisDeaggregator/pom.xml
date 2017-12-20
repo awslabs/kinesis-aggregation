@@ -1,19 +1,42 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>KinesisDeaggregator</artifactId>
+
+	<groupId>com.amazonaws.services.kinesis</groupId>
+	<artifactId>kinesis-deagg</artifactId>
+	<version>1.0.2</version>
+
 	<packaging>jar</packaging>
-	<parent>
-		<groupId>com.amazonaws.services.kinesis</groupId>
-		<artifactId>kinesis-aggregation-java</artifactId>
-		<version>1.0.2</version>
-		<relativePath>..</relativePath>
-	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<url>https://aws.amazon.com/kinesis</url>
+	<scm>
+		<connection>scm:git:git://github.com/awslabs/kinesis-aggregation.git</connection>
+		<url>https://github.com/awslabs/kinesis-aggregation.git</url>
+	</scm>
+	<licenses>
+		<license>
+			<name>Amazon Software License</name>
+			<url>https://aws.amazon.com/asl</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.0.0</version>
@@ -46,12 +69,12 @@
 		</plugins>
 	</build>
 	<dependencies>
-		<!-- While we can't use the KCL directly in AWS Lambda, it does contain classes
-		to perform most of the record deaggregation effort. -->
+		<!-- While we can't use the KCL directly in AWS Lambda, it does contain 
+			classes to perform most of the record deaggregation effort. -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-client</artifactId>
-			<version>${aws-kinesis-client.version}</version>
+			<version>1.8.1</version>
 			<!-- remove legacy dependency on the full java aws sdk -->
 			<exclusions>
 				<exclusion>
@@ -63,7 +86,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-lambda-java-events</artifactId>
-			<version>${aws-lambda-sdk.version}</version>
+			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
 </project>
