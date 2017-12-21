@@ -1,31 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>kinesis-aggregation-java</artifactId>
-	<version>1.0.2</version>
+
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-aggregation-java</artifactId>
+	<version>1.0.3</version>
+	
 	<packaging>pom</packaging>
-	<properties>
-		<aws-java-sdk.version>1.11.188</aws-java-sdk.version>
-		<aws-lambda-sdk.version>1.1.0</aws-lambda-sdk.version>
-		<aws-kinesis-client.version>1.8.1</aws-kinesis-client.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<parent.output-directory>${project.build.outputDirectory}</parent.output-directory>
-	</properties>
-
-	<url>https://aws.amazon.com/kinesis</url>
-
-	<scm>
-		<url>https://github.com/awslabs/kinesis-aggregation.git</url>
-	</scm>
-
-	<licenses>
-		<license>
-			<name>Amazon Software License</name>
-			<url>https://aws.amazon.com/asl</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
 
 	<modules>
 		<module>KinesisTestProducers</module>
@@ -39,7 +20,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.7.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -48,7 +29,7 @@
 			<plugin>
 				<groupId>com.mycila</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>2.3</version>
+				<version>3.0</version>
 				<configuration>
 					<header>${basedir}/license/asl/header.txt</header>
 					<includes>
@@ -59,37 +40,6 @@
 					<execution>
 						<goals>
 							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.0</version>
-				<configuration>
-					<show>public</show>
-					<nohelp>true</nohelp>
-					<author>false</author>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>aggregate-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>aggregate</goal>
 						</goals>
 					</execution>
 				</executions>

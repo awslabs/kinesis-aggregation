@@ -1,19 +1,60 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>KinesisAggregator</artifactId>
+
+	<name>amazon-kinesis-aggregator</name>
+	<description>A library for performing in-memory aggregation of Kinesis stream records.</description>
+
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-aggregator</artifactId>
+	<version>1.0.3</version>
+	
 	<packaging>jar</packaging>
-	<parent>
-		<groupId>com.amazonaws.services.kinesis</groupId>
-		<artifactId>kinesis-aggregation-java</artifactId>
-		<version>1.0.2</version>
-		<relativePath>..</relativePath>
-	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<url>https://aws.amazon.com/kinesis</url>
+	<scm>
+		<connection>scm:git:git://github.com/awslabs/kinesis-aggregation.git</connection>
+		<url>https://github.com/awslabs/kinesis-aggregation</url>
+	</scm>
+	
+	<licenses>
+		<license>
+			<name>Amazon Software License</name>
+			<url>https://aws.amazon.com/asl</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+    <developers>
+        <developer>
+            <id>amazonwebservices</id>
+            <organization>Amazon Web Services</organization>
+            <organizationUrl>https://aws.amazon.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.0.0</version>
 				<executions>
@@ -31,6 +72,7 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>3.0.1</version>
 				<executions>
@@ -42,11 +84,35 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <configuration>
+                            <target name="copy POM to target">
+                                <copy file="${project.basedir}/pom.xml" tofile="${project.build.directory}/pom.xml" />
+                            </target>
+                        </configuration>
+                        <phase>package</phase>
+						<goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 	<dependencies>
 		<!-- Even though we're a producer, not a consumer, this dependency gives 
 			us access to the generated Google protocol buffer classes. -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-client</artifactId>
+			<version>1.8.8</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -56,20 +122,8 @@
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.10</version>
+			<version>1.11</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>amazon-kinesis-client</artifactId>
-			<version>${aws-kinesis-client.version}</version>
-			<!-- remove legacy dependency on the full java aws sdk -->
-			<exclusions>
-				<exclusion>
-					<groupId>com.amazonaws</groupId>
-					<artifactId>aws-java-sdk</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

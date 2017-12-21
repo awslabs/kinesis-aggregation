@@ -1,15 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.amazonaws.services.kinesis</groupId>
-		<artifactId>kinesis-aggregation-java</artifactId>
-		<version>1.0.2</version>
-	</parent>
-	<artifactId>pom-aggregate</artifactId>
+
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-aggregation-pom-aggregate</artifactId>
+	<version>1.0.3</version>
+	
 	<packaging>pom</packaging>
+	
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -34,35 +42,35 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>KinesisAggregator</artifactId>
+			<artifactId>amazon-kinesis-aggregator</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>KinesisDeaggregator</artifactId>
+			<artifactId>amazon-kinesis-deaggregator</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>KinesisLambdaForwarder</artifactId>
+			<artifactId>amazon-kinesis-lambda-forwarder</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>KinesisTestConsumers</artifactId>
+			<artifactId>amazon-kinesis-test-consumers</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>KinesisTestProducers</artifactId>
+			<artifactId>amazon-kinesis-test-producers</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>

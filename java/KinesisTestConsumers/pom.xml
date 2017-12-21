@@ -1,17 +1,29 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>KinesisTestConsumers</artifactId>
-  <packaging>jar</packaging>
-  <parent>
-    <groupId>com.amazonaws.services.kinesis</groupId>
-	<artifactId>kinesis-aggregation-java</artifactId>
-    <version>1.0.2</version>
-    <relativePath>..</relativePath>
-  </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.amazonaws</groupId>
+	<artifactId>amazon-kinesis-test-consumers</artifactId>
+	<version>1.0.3</version>
+
+	<packaging>jar</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -38,30 +50,23 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>amazon-kinesis-client</artifactId>
-			<version>${aws-kinesis-client.version}</version>
-			<!-- remove legacy dependency on the full java aws sdk -->
-			<exclusions>
-				<exclusion>
-					<groupId>com.amazonaws</groupId>
-					<artifactId>aws-java-sdk</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>1.8.8</version>
 		</dependency>
 		<!-- Stuff for running on AWS Lambda -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-lambda-java-core</artifactId>
-			<version>${aws-lambda-sdk.version}</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-lambda-java-events</artifactId>
-			<version>${aws-lambda-sdk.version}</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.amazonaws.services.kinesis</groupId>
-			<artifactId>KinesisDeaggregator</artifactId>
-			<version>${project.version}</version>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>amazon-kinesis-deaggregator</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 </project>
