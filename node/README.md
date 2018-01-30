@@ -31,7 +31,7 @@ When you receive a Kinesis Record in your consumer application, you will extract
 The syncronous model of deaggregation extracts all the Kinesis User Records from the received Kinesis Record, and accumulates them into an array. The method then makes a callback with any errors encountered, and the array of User Records that were deaggregated:
 
 ```
-deaggregateSync(kinesisRecord, afterRecordCallback(err, UserRecord[]);
+deaggregateSync(kinesisRecord, computeChecksums, afterRecordCallback(err, UserRecord[]);
 ```
 
 ### Asyncronous
@@ -39,7 +39,7 @@ deaggregateSync(kinesisRecord, afterRecordCallback(err, UserRecord[]);
 The asyncronous model of deaggregation allows you to provide a callback which is invoked for each User Record that is extracted from the Kinesis Record. When all User Records have been extracted from the Kinesis Record, an ```afterRecordCallback``` is invoked which allows you to continue processing additional Kinesis Records that your consumer receives:
 
 ```
-deaggregate(kinesisRecord, perRecordCallback(err, UserRecord), afterRecordCallback(err, errorKinesisRecord));
+deaggregate(kinesisRecord, computeChecksums, perRecordCallback(err, UserRecord), afterRecordCallback(err, errorKinesisRecord));
 ```
 If any errors are encountered during processing of the `perRecordCallback`, then the `afterRecordCallback` is called with the `err` plus an error Record which contains the failed subSequenceNumber from the aggregated data with details about the enclosing Kinesis Record:
 
@@ -52,6 +52,9 @@ If any errors are encountered during processing of the `perRecordCallback`, then
 	data : Buffer - The original protobuf message transmitted by the producer (base64 encoded)
 }
 ```
+
+The `computeChecksums` parameter accepts a Boolean that indicates whether the checksum in the kinesis record should be validated. If the checksum is incorrect, an error will be returned via the `afterRecordCallback`.
+
 
 ## Record Aggregation
 
