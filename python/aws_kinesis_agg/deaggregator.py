@@ -15,13 +15,12 @@
 
 from __future__ import print_function
 
-import aws_kinesis_agg
+import aws_kinesis_agg.kpl_pb2
 import base64
 import collections
 import google.protobuf.message
-import kpl_pb2
-import md5
-import StringIO
+import hashlib
+import six
 import sys
 
 
@@ -45,7 +44,7 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     new_record['kinesis'] = {}
     
     #Copy all the metadata from the original record (except the data-specific stuff)
-    for key, value in r.iteritems():
+    for key, value in six.iteritems(r):
         if key != 'kinesis':
             new_record[key] = value
     new_record['kinesis']['kinesisSchemaVersion'] = r['kinesis']['kinesisSchemaVersion']
@@ -74,15 +73,15 @@ def _get_error_string(r, message_data, ehks, pks, ar):
     
     return value - A detailed error string (str)'''
     
-    error_buffer = StringIO.StringIO()
+    error_buffer = six.StringIO()
     
     error_buffer.write('Unexpected exception during deaggregation, record was:\n')
     error_buffer.write('PKS:\n')
     for pk in pks:
-        error_buffer.write('%s\n' % (pk))
+        error_buffer.write('%s\n' % pk)
     error_buffer.write('EHKS:\n')
     for ehk in ehks:
-        error_buffer.write('%s\n' % (ehk))
+        error_buffer.write('%s\n' % ehk)
     for mr in ar.records:
         error_buffer.write('Record: [hasEhk=%s, ehkIdex=%d, pkIdx=%d, dataLen=%d]\n' %
                         (ehks and ehks[mr.explicit_hash_key_index] is not None,
@@ -134,7 +133,7 @@ def iter_deaggregate_records(records):
         
         #Verify the magic header
         data_magic = None
-        if(len(decoded_data) >= len(aws_kinesis_agg.MAGIC)):
+        if len(decoded_data) >= len(aws_kinesis_agg.MAGIC):
             data_magic = decoded_data[:len(aws_kinesis_agg.MAGIC)]
         else:
             is_aggregated = False
@@ -149,8 +148,8 @@ def iter_deaggregate_records(records):
             #verify the MD5 digest
             message_digest = decoded_data_no_magic[-aws_kinesis_agg.DIGEST_SIZE:]
             message_data = decoded_data_no_magic[:-aws_kinesis_agg.DIGEST_SIZE]
-            
-            md5_calc = md5.new()
+
+            md5_calc = hashlib.md5()
             md5_calc.update(message_data)
             calculated_digest = md5_calc.digest()
             
@@ -159,7 +158,7 @@ def iter_deaggregate_records(records):
             else:                            
                 #Extract the protobuf message
                 try:    
-                    ar = kpl_pb2.AggregatedRecord()
+                    ar = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
                     ar.ParseFromString(message_data)
                     
                     pks = ar.partition_key_table

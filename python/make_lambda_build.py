@@ -16,18 +16,18 @@
 from __future__ import print_function
 import os.path
 import shutil
+import six
 import subprocess
 import sys
 import zipfile
 
-#Add your PIP dependencies here
-PIP_DEPENDENCIES = ['protobuf']
-
 BUILD_DIR_NAME = 'build'
+REQUIREMENTS_FILE_NAME = 'requirements.txt'
 
 cur_dir = None
 proj_dir = None
 build_dir = None
+
 
 def is_python_file(filename):
     '''Returns True if the input flie path has a .py extension. False otherwise.'''
@@ -38,8 +38,6 @@ def is_python_file(filename):
 def initialize_current_working_dir():
     '''Forces the current working directory to be set to the directory where
     this build script lives (which should be the python project root).'''
-
-    global cur_dir, proj_dir
 
     cur_dir = os.path.normpath(os.getcwd())
     print('Current Working Directory = {}'.format(os.getcwd()))
@@ -58,8 +56,6 @@ def setup_build_dir():
     running "pip install <foo> -t <build_dir>" multiple times to the same directory, it's
     easier to just create a new build dir every time.'''
     
-    global BUILD_DIR_NAME, build_dir
-    
     print('')
     build_dir = os.path.join(os.getcwd(),BUILD_DIR_NAME)
     print('Setting up build directory: {}'.format(build_dir))
@@ -70,8 +66,6 @@ def setup_build_dir():
     
 def copy_source_to_build_dir():
     '''Copy all Python source files to the build directory.'''
-    
-    global BUILD_DIR_NAME, build_dir
     
     print('')
     print('Looking for Python source files...')
@@ -87,9 +81,7 @@ def copy_source_to_build_dir():
 def install_dependencies():
     '''Using PIP, install all dependencies to the build directory.'''
     
-    global PIP_DEPENDENCIES, build_dir
-    
-    #Make sure PIP is available on the command line
+    # Make sure PIP is available on the command line
     print('')
     print('Verifying PIP installation...')
     with open(os.devnull,'w') as devnull:
@@ -99,19 +91,19 @@ def install_dependencies():
             sys.exit(1)
         print('Successfully located "pip".')
     
-    #Install PIP dependencies to the build directory
+    # Install PIP dependencies to the build directory
     print('')
     print('Installing necessary modules from pip...')
-    for dependency in PIP_DEPENDENCIES:
-        pip_install_cmd = 'pip install {} -t "{}"'.format(dependency, build_dir)
-        print(pip_install_cmd)
-        pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
-        if pip_install_cmd_line_result != 0:
-            print('Failed to install module via pip. Try running \'{}\' to debug the issue.'.format(pip_install_cmd), file=sys.stderr)
-            sys.exit(1)
-        print('Successfully installed {} from pip.'.format(dependency))
+    requirements_file = os.path.join(proj_dir, REQUIREMENTS_FILE_NAME)
+    pip_install_cmd = 'pip install -r {} -t "{}"'.format(requirements_file, build_dir)
+    print(pip_install_cmd)
+    pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
+    if pip_install_cmd_line_result != 0:
+        print('Failed to install modules via pip. Try running \'{}\' to debug the issue.'.format(pip_install_cmd), file=sys.stderr)
+        sys.exit(1)
+    print('Successfully installed dependencies from pip.')
 
-    #AWS Lambda has issues with the normal protobuf install lacking a root level __init__.py
+    # AWS Lambda has issues with the normal protobuf install lacking a root level __init__.py
     protobuf_install_dir = os.path.join(build_dir,'google')
     protobuf_init_file = os.path.join(protobuf_install_dir,'__init__.py')
     if os.path.exists(protobuf_install_dir) and not os.path.exists(protobuf_init_file):
@@ -122,19 +114,17 @@ def create_zip():
     '''Zip up the contents of the build directory into a zip file that can be deployed
     to AWS Lambda.'''
     
-    global build_dir
-    
     print('')
     print('Building zip file for AWS Lambda...')
-    zip_file_path = os.path.join(os.getcwd(),'python_lambda_build.zip')
+    zip_path = os.path.join(os.getcwd(),'python_lambda_build.zip')
     os.chdir(build_dir)
-    with zipfile.PyZipFile(zip_file_path, 'w') as output_zip:
+    with zipfile.PyZipFile(zip_path, 'w') as output_zip:
         for item in os.listdir(build_dir):
             if os.path.isdir(item) or is_python_file(item):
                 print('Adding {} to zip...'.format(item))
                 output_zip.writepy(item)
     
-    return zip_file_path
+    return zip_path
 
     
 if __name__ == '__main__':

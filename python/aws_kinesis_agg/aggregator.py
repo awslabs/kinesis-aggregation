@@ -15,10 +15,8 @@
 
 from __future__ import print_function
 
-import aws_kinesis_agg
-import google.protobuf.message
-import kpl_pb2
-import md5
+import aws_kinesis_agg.kpl_pb2
+import hashlib
 import threading
 
 
@@ -93,13 +91,13 @@ class KeySet(object):
             the index of the key.'''
         
         if key in self.lookup:
-            return (False, self.lookup[key])
+            return False, self.lookup[key]
     
         if not key in self.lookup:
             self.lookup[key] = len(self.keys)
             
         self.keys.append(key)
-        return (True, len(self.keys) - 1)
+        return True, len(self.keys) - 1
     
     
     def contains(self, key):
@@ -246,7 +244,7 @@ class AggRecord(object):
     def __init__(self):
         '''Create a new empty aggregated record.'''
         
-        self.agg_record = kpl_pb2.AggregatedRecord()
+        self.agg_record = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
         self._agg_partition_key = ''
         self._agg_explicit_hash_key = ''
         self._agg_size_bytes = 0
@@ -275,8 +273,8 @@ class AggRecord(object):
             A byte array containing a aggregated Kinesis record. (binary str)'''
         
         message_body = self.agg_record.SerializeToString()
-        
-        md5_calc = md5.new()
+
+        md5_calc = hashlib.md5()
         md5_calc.update(message_body)
         calculated_digest = md5_calc.digest()
         
@@ -287,7 +285,7 @@ class AggRecord(object):
         '''Clears out all records and metadata from this object so that it can be
         reused just like a fresh instance of this object.'''
         
-        self.agg_record = kpl_pb2.AggregatedRecord()
+        self.agg_record = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
         self._agg_partition_key = ''
         self._agg_explicit_hash_key = ''
         self._agg_size_bytes = 0
@@ -305,7 +303,7 @@ class AggRecord(object):
             the contents of this aggregated record. (str,str,binary str)'''
         
         agg_bytes = self._serialize_to_bytes()
-        return (self._agg_partition_key, self._agg_explicit_hash_key, agg_bytes)
+        return self._agg_partition_key, self._agg_explicit_hash_key, agg_bytes
     
     
     def get_partition_key(self):
@@ -446,7 +444,7 @@ class AggRecord(object):
         
         hash_key = 0
         
-        md5_calc = md5.new()
+        md5_calc = hashlib.md5()
         md5_calc.update(partition_key)
         pk_digest = md5_calc.hexdigest()
         
