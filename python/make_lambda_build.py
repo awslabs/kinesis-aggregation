@@ -39,6 +39,8 @@ def initialize_current_working_dir():
     '''Forces the current working directory to be set to the directory where
     this build script lives (which should be the python project root).'''
 
+    global cur_dir, proj_dir
+
     cur_dir = os.path.normpath(os.getcwd())
     print('Current Working Directory = {}'.format(os.getcwd()))
     
@@ -55,7 +57,9 @@ def setup_build_dir():
     '''Removes any existing build directories and creates a new one.  Due to issues with
     running "pip install <foo> -t <build_dir>" multiple times to the same directory, it's
     easier to just create a new build dir every time.'''
-    
+
+    global build_dir
+
     print('')
     build_dir = os.path.join(os.getcwd(),BUILD_DIR_NAME)
     print('Setting up build directory: {}'.format(build_dir))
@@ -80,7 +84,9 @@ def copy_source_to_build_dir():
             
 def install_dependencies():
     '''Using PIP, install all dependencies to the build directory.'''
-    
+
+    global proj_dir, build_dir
+
     # Make sure PIP is available on the command line
     print('')
     print('Verifying PIP installation...')
@@ -113,6 +119,8 @@ def install_dependencies():
 def create_zip():
     '''Zip up the contents of the build directory into a zip file that can be deployed
     to AWS Lambda.'''
+
+    global build_dir
     
     print('')
     print('Building zip file for AWS Lambda...')
