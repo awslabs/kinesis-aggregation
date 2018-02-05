@@ -14,9 +14,11 @@
 #permissions and limitations under the License.
 
 from __future__ import print_function
+from __future__ import division
 
 import aws_kinesis_agg.kpl_pb2
 import hashlib
+import six
 import threading
 
 
@@ -46,7 +48,7 @@ def _calculate_varint_size(value):
             value = value >> 1
         
     #varints only use 7 bits of the byte for the actual value
-    num_varint_bytes = num_bits_needed / 7
+    num_varint_bytes = num_bits_needed // 7
     if num_bits_needed % 7 > 0:
         num_varint_bytes += 1
         
@@ -201,13 +203,24 @@ class RecordAggregator(object):
         via onRecordComplete if aggregated record is full).
            
         Args:
-            partition_key (str) - The partition key of the record to add
-            data (str) - The raw data of the record to add
+            partition_key (bytes or str) - The partition key of the record to add. If pk is a
+                                  string type, it will be encoded to bytes using utf-8.
+            data (bytes or str) - The raw data of the record to add. If data is a string type,
+                                  it will be encoded to bytes using utf-8.
             explicit_hash_key (str) - The explicit hash key of the record to add (optional)
+                                      If ehk is a string type, it will be encoded to bytes
+                                      using utf-8.
         Returns:
             A AggRecord if this aggregated record is full and ready to
             be transmitted or null otherwise. (AggRecord)'''
-        
+
+        if isinstance(partition_key, six.string_types):
+            partition_key = partition_key.encode('utf-8')
+        if explicit_hash_key is not None and isinstance(explicit_hash_key, six.string_types):
+            explicit_hash_key = explicit_hash_key.encode('utf-8')
+        if isinstance(data, six.string_types):
+            data = data.encode('utf-8')
+
         #Attempt to add to the current aggregated record
         success = self.current_record.add_user_record(partition_key, data, explicit_hash_key)
         if success:
@@ -391,15 +404,17 @@ class AggRecord(object):
         enough space (based on the defined Kinesis limits for a PutRecord call).
         
         Args:
-            partition_key - The partition key of the new user record to add (str)
-            explicit_hash_key - The explicit hash key of the new user record to add (str)
-            data - The raw data of the new user record to add (binary str)
+            partition_key - The partition key of the new user record to add (bytes)
+            explicit_hash_key - The explicit hash key of the new user record to add (bytes)
+            data - The raw data of the new user record to add (bytes)
         Returns:
             True if the new user record was successfully added to this
             aggregated record or false if this aggregated record is too full.'''
         
-        partition_key = str(partition_key).strip()
-        explicit_hash_key = str(explicit_hash_key).strip() if explicit_hash_key is not None else self._create_explicit_hash_key(partition_key)
+        partition_key = partition_key
+        explicit_hash_key = explicit_hash_key
+        if explicit_hash_key is None:
+            explicit_hash_key = self._create_explicit_hash_key(partition_key)
         
         #Validate new record size won't overflow max size for a PutRecordRequest
         size_of_new_record = self._calculate_record_size(partition_key, data, explicit_hash_key)
@@ -453,6 +468,4 @@ class AggRecord(object):
             p << (16 - i - 1) * 8
             hash_key += p
         
-        return str(p)
-    
-    
+        return str(p).encode('utf-8')

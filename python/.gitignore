@@ -3,3 +3,4 @@
 .pydevproject
 .idea
 build
+.pytest_cache
