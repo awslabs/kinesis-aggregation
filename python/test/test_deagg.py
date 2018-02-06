@@ -14,12 +14,12 @@
 # permissions and limitations under the License.
 
 from __future__ import print_function
-import aws_kinesis_agg.aggregator as agg
+import aws_kinesis_agg.deaggregator as deagg
 import base64
 import unittest
 
 
-class RecordAggregatorTest(unittest.TestCase):
+class RecordDeaggregatorTest(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -30,6 +30,7 @@ class RecordAggregatorTest(unittest.TestCase):
     def test_dummy(self):
 
         self.assertEqual(1,1)
+
 
 if __name__ == '__main__':
     unittest.main()

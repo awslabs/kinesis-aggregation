@@ -214,13 +214,6 @@ class RecordAggregator(object):
             A AggRecord if this aggregated record is full and ready to
             be transmitted or null otherwise. (AggRecord)'''
 
-        if isinstance(partition_key, six.string_types):
-            partition_key = partition_key.encode('utf-8')
-        if explicit_hash_key is not None and isinstance(explicit_hash_key, six.string_types):
-            explicit_hash_key = explicit_hash_key.encode('utf-8')
-        if isinstance(data, six.string_types):
-            data = data.encode('utf-8')
-
         #Attempt to add to the current aggregated record
         success = self.current_record.add_user_record(partition_key, data, explicit_hash_key)
         if success:
@@ -228,7 +221,7 @@ class RecordAggregator(object):
             return None
         
         #If we hit this point, aggregated record is full
-        #Call all the callbacks on a separate thread
+        #Call all the callbacks (potentially on a separate thread)
         out_record = self.current_record
         for (callback,execute_on_new_thread) in self.callbacks:
             if execute_on_new_thread:
@@ -410,14 +403,27 @@ class AggRecord(object):
         Returns:
             True if the new user record was successfully added to this
             aggregated record or false if this aggregated record is too full.'''
-        
-        partition_key = partition_key
-        explicit_hash_key = explicit_hash_key
-        if explicit_hash_key is None:
-            explicit_hash_key = self._create_explicit_hash_key(partition_key)
-        
+
+        if isinstance(partition_key, six.string_types):
+            partition_key_bytes = partition_key.encode('utf-8')
+        else:
+            partition_key_bytes = partition_key
+
+        if explicit_hash_key is not None and isinstance(explicit_hash_key, six.string_types):
+            explicit_hash_key_bytes = explicit_hash_key.encode('utf-8')
+        elif explicit_hash_key is None:
+            explicit_hash_key_bytes = self._create_explicit_hash_key(partition_key_bytes)
+            explicit_hash_key = explicit_hash_key_bytes.decode('utf-8')
+        else:
+            explicit_hash_key_bytes = explicit_hash_key
+
+        if isinstance(data, six.string_types):
+            data_bytes = data.encode('utf-8')
+        else:
+            data_bytes = data
+
         #Validate new record size won't overflow max size for a PutRecordRequest
-        size_of_new_record = self._calculate_record_size(partition_key, data, explicit_hash_key)
+        size_of_new_record = self._calculate_record_size(partition_key_bytes, data_bytes, explicit_hash_key_bytes)
         if size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
             raise ValueError('Input record (PK=%s, EHK=%s, SizeBytes=%d) is too large to fit inside a single Kinesis record.' % 
                              (partition_key, explicit_hash_key, size_of_new_record))
@@ -425,7 +431,7 @@ class AggRecord(object):
             return False
         
         record = self.agg_record.records.add()
-        record.data = data
+        record.data = data_bytes
         
         pk_add_result = self.partition_keys.add_key(partition_key)
         if pk_add_result[0]:
@@ -447,12 +453,12 @@ class AggRecord(object):
         return True
     
     
-    def _create_explicit_hash_key(self, partition_key):
+    def _create_explicit_hash_key(self, partition_key_bytes):
         '''Calculate a new explicit hash key based on the input partition key
         (following the algorithm from the original KPL).
     
         Args:
-            partition_key The partition key to seed the new explicit hash key with
+            partition_key The partition key to seed the new explicit hash key with (bytes)
         Returns:
             An explicit hash key based on the input partition key generated
             using an algorithm from the original KPL.'''
@@ -460,12 +466,12 @@ class AggRecord(object):
         hash_key = 0
         
         md5_calc = hashlib.md5()
-        md5_calc.update(partition_key)
+        md5_calc.update(partition_key_bytes)
         pk_digest = md5_calc.hexdigest()
         
         for i in range(0, aws_kinesis_agg.DIGEST_SIZE):
             p = int(pk_digest, 16)
-            p << (16 - i - 1) * 8
+            p = (p << (16 - i - 1) * 8)
             hash_key += p
-        
-        return str(p).encode('utf-8')
+
+        return str(hash_key).encode('utf-8')
