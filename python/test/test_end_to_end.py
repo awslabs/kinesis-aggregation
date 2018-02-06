@@ -23,7 +23,7 @@ ALPHABET = b'abcdefghijklmnopqrstuvwxyz'
 
 # See https://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-kinesis-streams
 # for where the structure of this record comes from
-def create_kinesis_lambda_record(pk, data):
+def create_kinesis_lambda_record(pk, ehk, data):
 
     return {
         "Records": [
@@ -32,6 +32,7 @@ def create_kinesis_lambda_record(pk, data):
           "eventVersion": "1.0",
           "kinesis": {
             "partitionKey": pk,
+            "explicitHashKey" : ehk,
             "data": base64.b64encode(data),
             "kinesisSchemaVersion": "1.0",
             "sequenceNumber": "49545115243490985018280067714973144582180062593244200961"
@@ -87,28 +88,30 @@ class EndToEndTest(unittest.TestCase):
                          intermediate_ehk,
                          'Calculated explicit hash key does not match.')
 
-        event = create_kinesis_lambda_record(intermediate_pk, intermediate_data)
-        records = deagg.deaggregate_records(event['Records'])
+        # NOTE: intermediate_data is a fully aggregated record, not just the raw input data at this point
 
-        for record in records:
-            print('Record = %s' % record)
+        event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
+        records = deagg.deaggregate_records(event['Records'])
 
         self.assertEqual(1, len(records))
 
         record = records[0]
         output_pk = record['kinesis']['partitionKey']
-
-        output_data = record['kinesis']['data']
-        output_data = base64.b64decode(output_data)
+        output_ehk = record['kinesis']['explicitHashKey']
+        output_data = base64.b64decode(record['kinesis']['data'])
 
         self.assertEqual(input_pk, output_pk,
                          'Input and output partition keys do not match.')
+        self.assertEqual(intermediate_ehk, output_ehk,
+                         'Intermediate and output EHK do not match.')
         self.assertEqual(input_data, output_data,
                          'Input and output record data does not match.')
+
 
     def test_single_user_record_as_bytes(self):
 
         pass
+
 
 if __name__ == '__main__':
     unittest.main()
