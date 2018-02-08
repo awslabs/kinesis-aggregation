@@ -19,30 +19,32 @@ import aws_kinesis_agg.deaggregator as deagg
 import base64
 import unittest
 
+
 # See https://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-kinesis-streams
 # for where the structure of this record comes from
 def create_kinesis_lambda_record(pk, ehk, data):
 
     return {
         "Records": [
-        {
-          "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
-          "eventVersion": "1.0",
-          "kinesis": {
-            "partitionKey": pk,
-            "explicitHashKey" : ehk,
-            "data": base64.b64encode(data),
-            "kinesisSchemaVersion": "1.0",
-            "sequenceNumber": "49545115243490985018280067714973144582180062593244200961"
-          },
-          "invokeIdentityArn": 'identity-arn',
-          "eventName": "aws:kinesis:record",
-          "eventSourceARN": 'kinesis-event-arn',
-          "eventSource": "aws:kinesis",
-          "awsRegion": "us-east-1"
-        }
-      ]
+            {
+              "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
+              "eventVersion": "1.0",
+              "kinesis": {
+                "partitionKey": pk,
+                "explicitHashKey": ehk,
+                "data": base64.b64encode(data),
+                "kinesisSchemaVersion": "1.0",
+                "sequenceNumber": "49545115243490985018280067714973144582180062593244200961"
+              },
+              "invokeIdentityArn": 'identity-arn',
+              "eventName": "aws:kinesis:record",
+              "eventSourceARN": 'kinesis-event-arn',
+              "eventSource": "aws:kinesis",
+              "awsRegion": "us-east-1"
+            }
+        ]
     }
+
 
 class EndToEndTest(unittest.TestCase):
 
@@ -52,15 +54,13 @@ class EndToEndTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    # TODO: Have a separate test for passing in bytes directly
-
     def test_single_user_record_as_str(self):
 
         input_pk = 'partition_key'
         input_data = 'abcdefghijklmnopqrstuvwxyz'
 
         aggregator = agg.RecordAggregator()
-        self.assertEqual(0,aggregator.get_num_user_records(),
+        self.assertEqual(0, aggregator.get_num_user_records(),
                          'New aggregator reported non-empty content.')
 
         result = aggregator.add_user_record(input_pk, input_data)
@@ -111,7 +111,7 @@ class EndToEndTest(unittest.TestCase):
         input_data = b'abcdefghijklmnopqrstuvwxyz'
 
         aggregator = agg.RecordAggregator()
-        self.assertEqual(0,aggregator.get_num_user_records(),
+        self.assertEqual(0, aggregator.get_num_user_records(),
                          'New aggregator reported non-empty content.')
 
         result = aggregator.add_user_record(input_pk, input_data)
