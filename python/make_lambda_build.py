@@ -97,7 +97,7 @@ def install_dependencies():
     print('')
     print('Installing necessary modules from pip...')
     requirements_file = os.path.join(proj_dir, REQUIREMENTS_FILE_NAME)
-    pip_install_cmd = 'python -m pip install -r {} -t "{}"'.format(requirements_file, build_dir)
+    pip_install_cmd = '{} -m pip install -r {} -t "{}"'.format(sys.executable, requirements_file, build_dir)
     print(pip_install_cmd)
     pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
     if pip_install_cmd_line_result != 0:

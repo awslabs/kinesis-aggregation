@@ -4,3 +4,4 @@
 .idea
 build
 .pytest_cache
+python_lambda_build.zip
