@@ -16,13 +16,15 @@
 from __future__ import print_function
 import os.path
 import shutil
-import six
 import subprocess
 import sys
 import zipfile
 
 BUILD_DIR_NAME = 'build'
+TEST_DIR_NAME = 'test'
 REQUIREMENTS_FILE_NAME = 'requirements.txt'
+
+IGNORE_DIRS = [BUILD_DIR_NAME, TEST_DIR_NAME]
 
 cur_dir = None
 proj_dir = None
@@ -70,16 +72,18 @@ def setup_build_dir():
     
 def copy_source_to_build_dir():
     '''Copy all Python source files to the build directory.'''
-    
+
+    global build_dir
+
     print('')
     print('Looking for Python source files...')
     for source in os.listdir(os.getcwd()):
         if is_python_file(source) and source != __file__:
             print('Copy file {} to build directory...'.format(source))
             shutil.copy(source, build_dir)
-        elif os.path.isdir(source) and source != BUILD_DIR_NAME:
+        elif os.path.isdir(source) and source not in IGNORE_DIRS:
             print('Copy folder {} to build directory...'.format(source))
-            shutil.copytree(source, os.path.join(build_dir,source))
+            shutil.copytree(source, os.path.join(build_dir, source))
             
             
 def install_dependencies():
@@ -87,25 +91,18 @@ def install_dependencies():
 
     global proj_dir, build_dir
 
-    # Make sure PIP is available on the command line
     print('')
-    print('Verifying PIP installation...')
-    with open(os.devnull,'w') as devnull:
-        aws_cmd_line_result = subprocess.call('pip', shell=True, stdout=devnull, stderr=subprocess.STDOUT)
-        if aws_cmd_line_result != 0:
-            print('You do not have "pip" installed or it is not on your PATH.  This script requires access to it.', file=sys.stderr)
-            sys.exit(1)
-        print('Successfully located "pip".')
     
     # Install PIP dependencies to the build directory
     print('')
     print('Installing necessary modules from pip...')
     requirements_file = os.path.join(proj_dir, REQUIREMENTS_FILE_NAME)
-    pip_install_cmd = 'pip install -r {} -t "{}"'.format(requirements_file, build_dir)
+    pip_install_cmd = 'python -m pip install -r {} -t "{}"'.format(requirements_file, build_dir)
     print(pip_install_cmd)
     pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
     if pip_install_cmd_line_result != 0:
-        print('Failed to install modules via pip. Try running \'{}\' to debug the issue.'.format(pip_install_cmd), file=sys.stderr)
+        print('Failed to install modules via pip. Try running \'{}\' to debug the issue.'.format(pip_install_cmd),
+              file=sys.stderr)
         sys.exit(1)
     print('Successfully installed dependencies from pip.')
 
