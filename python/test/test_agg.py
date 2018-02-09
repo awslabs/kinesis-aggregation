@@ -14,8 +14,9 @@
 # permissions and limitations under the License.
 
 from __future__ import print_function
+import aws_kinesis_agg.aggregator as agg
+import base64
 import unittest
-
 
 class RecordAggregatorTest(unittest.TestCase):
 
@@ -25,11 +26,9 @@ class RecordAggregatorTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_dummy(self):
+    def test_single_record_agg_matches_real_kpl(self):
 
-        self.assertEqual(1, 1)
-
-    # TODO: Generate record with actual KPL and compare
+        pass
 
 
 if __name__ == '__main__':
