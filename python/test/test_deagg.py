@@ -55,7 +55,7 @@ class RecordDeaggregatorTest(unittest.TestCase):
 
     def test_deagg_with_real_kpl_data(self):
 
-        # Each entry is of the form (pk, ehk, data)
+        # Each entry is of the form (pk, ehk, data) and corresponds to the expected results
         actual_user_records = [
             {'partitionKey':'fc03dd88-3e79-448a-b01a-7cf1bd47b784',
              'explicitHashKey':'38486495867508399078159723846051807020',
@@ -75,8 +75,6 @@ class RecordDeaggregatorTest(unittest.TestCase):
             }
         ]
 
-        # kpl_generated_rec = {u'eventVersion': u'1.0', u'eventID': u'shardId-000000000003:49581544954143914480256700934210366840104395343224897586', u'kinesis': {u'approximateArrivalTimestamp': 1518133507.063, u'partitionKey': u'a', u'data': u'84mawgokZmMwM2RkODgtM2U3OS00NDhhLWIwMWEtN2NmMWJkNDdiNzg0CiRjYWU0MWIxYy1lYTYxLTQzZjItOTBiZS1iODc1NWViZjg4ZTIKJGQ0OTA2OTBjLWU3NGQtNGRiMi1hM2M4LWQ4ZjJmMTg0ZmQyMwokYzkyNGJjMDktYjg1ZS00N2YxLWIzMmUtMzM2NTIyZWU1M2M4EiYzODQ4NjQ5NTg2NzUwODM5OTA3ODE1OTcyMzg0NjA1MTgwNzAyMBInMTkzNzg3NjAwMDM3NjgxNzA2OTUyMTQzMzU3MDcxOTE2MzUyNjA0EicyNjY4ODA0MzY5NjQ5MzI0MjQyNjU0NjY5MTY3MzQwNjg2ODQ0MzkSJzMzOTYwNjYwMDk0Mjk2NzM5MTg1NDYwMzU1MjQwMjAyMTg0NzI5MhomCAAQABogUkVDT1JEIDIyIHBlZW9iaGN6YnpkbXNrYm91cGd5cQoaJggBEAEaIFJFQ09SRCAyMyB1c3dreGZ0eHJvZXVzc2N4c2pobm8KGiYIAhACGiBSRUNPUkQgMjQgY2FzZWhkZ2l2ZmF4ZXVzdGx5c3p5ChomCAMQAxogUkVDT1JEIDI1IG52ZmZ2cG11b2dkb3BqaGFtZXZyawpRwVPQ3go0yp4Y6kvM0q3V', u'kinesisSchemaVersion': u'1.0', u'sequenceNumber': u'49581544954143914480256700934210366840104395343224897586'}, u'invokeIdentityArn': u'arn:aws:iam::857565855790:role/service-role/Python27KinesisDeaggregatorRole', u'eventName': u'aws:kinesis:record', u'eventSourceARN': u'arn:aws:kinesis:us-east-1:857565855790:stream/AggRecordStream', u'eventSource': u'aws:kinesis', u'awsRegion': u'us-east-1'}
-
         records = deagg.deaggregate_records(json.loads(json.dumps(kpl_generated_rec)))
 
         self.assertEqual(4, len(records),
@@ -86,13 +84,16 @@ class RecordDeaggregatorTest(unittest.TestCase):
             generated_record = records[i]
             actual_record = actual_user_records[i]
 
-            # print(generated_record)
-            # print(actual_record)
-
             self.assertEqual(generated_record['kinesis']['partitionKey'], actual_record['partitionKey'],
                              'Actual and generated partition keys do not match for record %d' % i)
             self.assertEqual(generated_record['kinesis']['explicitHashKey'], actual_record['explicitHashKey'],
                              'Actual and generated explicit hash keys do not match for record %d' % i)
+
+            # Decode base64 to bytes and decode bytes to utf-8
+            decoded_data = base64.b64decode(generated_record['kinesis']['data']).decode('utf-8')
+            actual_data = actual_record['data']
+            self.assertEqual(decoded_data, actual_data,
+                             'Deaggregated data does not match expected actual data.')
 
 
 if __name__ == '__main__':
