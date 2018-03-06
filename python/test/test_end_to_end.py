@@ -80,13 +80,7 @@ class EndToEndTest(unittest.TestCase):
 
         self.assertEqual(input_pk, intermediate_pk,
                          'Intermediate PK and input PK do not match.')
-
-        # No input EHK is specified, but calculating one should be deterministic based on PK
-        self.assertEqual('166672149269223421180636453361785199783724579696249764508579298334598714607',
-                         intermediate_ehk,
-                         'Calculated explicit hash key does not match.')
-
-        # NOTE: intermediate_data is a fully aggregated record, not just the raw input data at this point
+        self.assertIsNone(intermediate_ehk, 'Calculated explicit hash key should be None.')
 
         event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
         records = deagg.deaggregate_records(event['Records'])
@@ -100,8 +94,7 @@ class EndToEndTest(unittest.TestCase):
 
         self.assertEqual(input_pk, output_pk,
                          'Input and output partition keys do not match.')
-        self.assertEqual(intermediate_ehk, output_ehk,
-                         'Intermediate and output EHK do not match.')
+        self.assertIsNone(output_ehk, 'Output EHK should be None.')
         self.assertEqual(input_data, output_data.decode('utf-8'),
                          'Input and output record data does not match.')
 
@@ -131,13 +124,7 @@ class EndToEndTest(unittest.TestCase):
 
         self.assertEqual(input_pk, intermediate_pk,
                          'Intermediate PK and input PK do not match.')
-
-        # No input EHK is specified, but calculating one should be deterministic based on PK
-        self.assertEqual('166672149269223421180636453361785199783724579696249764508579298334598714607',
-                         intermediate_ehk,
-                         'Calculated explicit hash key does not match.')
-
-        # NOTE: intermediate_data is a fully aggregated record, not just the raw input data at this point
+        self.assertIsNone(intermediate_ehk, 'Calculated explicit hash key should be None.')
 
         event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
         records = deagg.deaggregate_records(event['Records'])
@@ -151,10 +138,108 @@ class EndToEndTest(unittest.TestCase):
 
         self.assertEqual(input_pk, output_pk,
                          'Input and output partition keys do not match.')
-        self.assertEqual(intermediate_ehk, output_ehk,
-                         'Intermediate and output EHK do not match.')
+        self.assertIsNone(output_ehk, 'Output EHK should be None.')
         self.assertEqual(input_data, output_data,
                          'Input and output record data does not match.')
+
+    def test_single_user_record_with_ehk(self):
+
+        input_pk = 'partition_key'
+        input_data = 'abcdefghijklmnopqrstuvwxyz'
+        input_ehk = '339606600942967391854603552402021847292'
+
+        aggregator = agg.RecordAggregator()
+        self.assertEqual(0, aggregator.get_num_user_records(),
+                         'New aggregator reported non-empty content.')
+
+        result = aggregator.add_user_record(partition_key=input_pk,
+                                            data=input_data,
+                                            explicit_hash_key=input_ehk)
+        if result is not None:
+            self.fail('Agg record reporting as full when it should not.')
+
+        agg_record = aggregator.clear_and_get()
+        if not agg_record:
+            self.fail('Failed to extract aggregated record.')
+
+        self.assertEqual(1, agg_record.get_num_user_records(),
+                         'Improper number of user records in agg record.')
+        self.assertEqual(0, aggregator.get_num_user_records(),
+                         'Agg record is not empty after clear_and_get() call.')
+
+        intermediate_pk, intermediate_ehk, intermediate_data = agg_record.get_contents()
+
+        self.assertEqual(input_pk, intermediate_pk,
+                         'Intermediate PK and input PK do not match.')
+        self.assertEqual(intermediate_ehk, input_ehk,
+                          'Intermediate EHK and input EHK do not match.')
+
+        event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
+        records = deagg.deaggregate_records(event['Records'])
+
+        self.assertEqual(1, len(records))
+
+        record = records[0]
+        output_pk = record['kinesis']['partitionKey']
+        output_ehk = record['kinesis']['explicitHashKey']
+        output_data = base64.b64decode(record['kinesis']['data'])
+
+        self.assertEqual(input_pk, output_pk,
+                         'Input and output partition keys do not match.')
+        self.assertEqual(input_ehk, output_ehk,
+                         'Input and output explicit hash keys do not match.')
+        self.assertEqual(input_data, output_data.decode('utf-8'),
+                         'Input and output record data does not match.')
+
+    def test_multiple_records(self):
+
+        inputs = [
+            ('partition_key1', 'abcdefghijklmnopqrstuvwxyz'),
+            ('partition_key2', 'zyxwvutsrqponmlkjihgfedcba'),
+            ('partition_key3', 'some_third_data_string')
+        ]
+
+        aggregator = agg.RecordAggregator()
+        self.assertEqual(0, aggregator.get_num_user_records(),
+                         'New aggregator reported non-empty content.')
+
+        for i in range(0, len(inputs)):
+            result = aggregator.add_user_record(partition_key=inputs[i][0], data=inputs[i][1])
+            if result is not None:
+                self.fail('Agg record reporting as full when it should not.')
+            self.assertEqual(i+1, aggregator.get_num_user_records(),
+                             'New aggregator reported incorrect number of records.')
+
+        agg_record = aggregator.clear_and_get()
+        if not agg_record:
+            self.fail('Failed to extract aggregated record.')
+
+        self.assertEqual(len(inputs), agg_record.get_num_user_records(),
+                         'Improper number of user records in agg record.')
+        self.assertEqual(0, aggregator.get_num_user_records(),
+                         'Agg record is not empty after clear_and_get() call.')
+
+        intermediate_pk, intermediate_ehk, intermediate_data = agg_record.get_contents()
+
+        self.assertEqual(inputs[0][0], intermediate_pk, 'Intermediate PK and input PK do not match.')
+
+        event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
+        records = deagg.deaggregate_records(event['Records'])
+
+        self.assertEqual(len(inputs), len(records))
+
+        for i in range(0,len(records)):
+            record = records[i]
+            output_pk = record['kinesis']['partitionKey']
+            output_ehk = record['kinesis']['explicitHashKey']
+            output_data = base64.b64decode(record['kinesis']['data'])
+
+            self.assertEqual(inputs[i][0], output_pk,
+                             'Input and output partition keys do not match.')
+            self.assertIsNone(output_ehk,
+                             'Explicit hash key should be None.')
+            self.assertEqual(inputs[i][1], output_data.decode('utf-8'),
+                             'Input and output record data does not match.')
 
 
 if __name__ == '__main__':
