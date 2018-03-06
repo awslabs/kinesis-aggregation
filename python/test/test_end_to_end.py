@@ -172,7 +172,7 @@ class EndToEndTest(unittest.TestCase):
         self.assertEqual(input_pk, intermediate_pk,
                          'Intermediate PK and input PK do not match.')
         self.assertEqual(intermediate_ehk, input_ehk,
-                          'Intermediate EHK and input EHK do not match.')
+                         'Intermediate EHK and input EHK do not match.')
 
         event = create_kinesis_lambda_record(intermediate_pk, intermediate_ehk, intermediate_data)
         records = deagg.deaggregate_records(event['Records'])
@@ -228,7 +228,7 @@ class EndToEndTest(unittest.TestCase):
 
         self.assertEqual(len(inputs), len(records))
 
-        for i in range(0,len(records)):
+        for i in range(0, len(records)):
             record = records[i]
             output_pk = record['kinesis']['partitionKey']
             output_ehk = record['kinesis']['explicitHashKey']
@@ -237,7 +237,7 @@ class EndToEndTest(unittest.TestCase):
             self.assertEqual(inputs[i][0], output_pk,
                              'Input and output partition keys do not match.')
             self.assertIsNone(output_ehk,
-                             'Explicit hash key should be None.')
+                              'Explicit hash key should be None.')
             self.assertEqual(inputs[i][1], output_data.decode('utf-8'),
                              'Input and output record data does not match.')
 
