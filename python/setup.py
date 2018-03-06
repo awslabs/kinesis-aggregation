@@ -26,7 +26,7 @@ def read_file(filename):
 setup(
   name='aws_kinesis_agg',
   packages=['aws_kinesis_agg'],
-  version='1.0.1',
+  version='1.1.0',
   description='Python module to assist in taking advantage of the Kinesis message aggregation '
               'format for both aggregation and deaggregation.',
   long_description=read_file('README.rst'),
