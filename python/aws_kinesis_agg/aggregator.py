@@ -392,8 +392,9 @@ class AggRecord(object):
         if explicit_hash_key is not None and isinstance(explicit_hash_key, six.string_types):
             explicit_hash_key_bytes = explicit_hash_key.encode('utf-8')
         elif explicit_hash_key is None:
-            explicit_hash_key_bytes = AggRecord._create_explicit_hash_key(partition_key_bytes)
-            explicit_hash_key = explicit_hash_key_bytes.decode('utf-8')
+            explicit_hash_key_bytes = None
+            # explicit_hash_key_bytes = AggRecord._create_explicit_hash_key(partition_key_bytes)
+            # explicit_hash_key = explicit_hash_key_bytes.decode('utf-8')
         else:
             explicit_hash_key_bytes = explicit_hash_key
 
@@ -417,11 +418,12 @@ class AggRecord(object):
         if pk_add_result[0]:
             self.agg_record.partition_key_table.append(partition_key)
         record.partition_key_index = pk_add_result[1]
-    
-        ehk_add_result = self.explicit_hash_keys.add_key(explicit_hash_key)
-        if ehk_add_result[0]:
-            self.agg_record.explicit_hash_key_table.append(explicit_hash_key)
-        record.explicit_hash_key_index = ehk_add_result[1]
+
+        if explicit_hash_key:
+            ehk_add_result = self.explicit_hash_keys.add_key(explicit_hash_key)
+            if ehk_add_result[0]:
+                self.agg_record.explicit_hash_key_table.append(explicit_hash_key)
+            record.explicit_hash_key_index = ehk_add_result[1]
         
         self._agg_size_bytes += size_of_new_record
         
@@ -447,11 +449,11 @@ class AggRecord(object):
         
         md5_calc = hashlib.md5()
         md5_calc.update(partition_key_bytes)
-        pk_digest = md5_calc.hexdigest()
+        pk_digest = md5_calc.digest()
         
         for i in range(0, aws_kinesis_agg.DIGEST_SIZE):
-            p = int(pk_digest, 16)
-            p = (p << (16 - i - 1) * 8)
+            p = int(pk_digest[i].encode('hex'), 16)
+            p <<= (16 - i - 1) * 8
             hash_key += p
 
         return str(hash_key).encode('utf-8')
