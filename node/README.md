@@ -107,7 +107,7 @@ If any errors are encountered during processing of the `perRecordCallback`, then
 
 ### Examples
 
-This module includes an example AWS Lambda function in the [index.js](index.js) file, which gives you easy ability to build new functions to process Kinesis aggregated message data. Both examples use [async.js](async.js) to process the received Kinesis Records.
+This module includes an example AWS Lambda function in the [sample-deaggregation.js](sample-deaggregation.js) file, which gives you easy ability to build new functions to process Kinesis aggregated message data. Both examples use [async.js](async.js) to process the received Kinesis Records.
 
 #### Syncronous Example
 
@@ -218,7 +218,7 @@ exports.exampleAsync = function(event, context) {
 
 ## Build & Deploy a Lambda Function to process Kinesis Records
 
-One easy way to get started processing Kinesis data is to use AWS Lambda. By extending the [index.js](index.js) file, you can take advantage of Kinesis message deaggregation features without having to write any boilerplate code. To do this, fork the GitHub codebase to a new project, select whether you want to build on the exampleSync or exampleAsync interfaces, and write your Kinesis processing code as normal. You can run `node test.js` to test your code (including both Kinesis aggregated message data as well as non-aggregated plain Kinesis records). Give your function a name and version number in [package.json](package.json) and then when you are ready to run from AWS Lambda, use:
+One easy way to get started processing Kinesis data is to use AWS Lambda. By extending the [sample-deaggregation.js](sample-deaggregation.js) file, you can take advantage of Kinesis message deaggregation features without having to write any boilerplate code. To do this, fork the GitHub codebase to a new project, select whether you want to build on the exampleSync or exampleAsync interfaces, and write your Kinesis processing code as normal. You can run `node test.js` to test your code (including both Kinesis aggregated message data as well as non-aggregated plain Kinesis records). Give your function a name and version number in [package.json](package.json) and then when you are ready to run from AWS Lambda, use:
 
 ```bash
 $ ./build.js true
