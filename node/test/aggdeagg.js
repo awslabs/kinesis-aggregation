@@ -16,7 +16,7 @@ describe('#deaggregate-aggregate', () => {
         const rawRecords = [ {
             partitionKey : 'aaaaaaaaa',
             explicitHashKey : 'ccccccccc',
-            data : 'Testing KPL Aggregated Record 1'
+            data : 'Testing KPL Aggregated Record 1 我愛你'
         }, {
             partitionKey : 'bbbbbbbb',
             explicitHashKey : 'ccccccccc',
@@ -44,7 +44,7 @@ describe('#deaggregate-aggregate', () => {
             deaggregatedRecords.forEach((item) => {
                 item.explicitPartitionKey.should.be.equal('ccccccccc')
                 if (item.partitionKey == 'aaaaaaaaa') {
-                    Buffer.from(item.data, 'base64').toString('utf-8').should.be.equal('Testing KPL Aggregated Record 1')
+                    Buffer.from(item.data, 'base64').toString('utf-8').should.be.equal('Testing KPL Aggregated Record 1 我愛你')
                 }
                 if (item.partitionKey == 'bbbbbbbb') {
                     Buffer.from(item.data, 'base64').toString('utf-8').should.be.equal('Testing KPL Aggregated Record 2')

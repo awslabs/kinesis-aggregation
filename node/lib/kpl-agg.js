@@ -84,7 +84,7 @@ function calculateRecordSize(self, record) {
 	}
 
 	if (typeof (record.data) === 'string') {
-		record.data = Buffer.from(record.data, 'binary');
+		record.data = Buffer.from(record.data); // default utf8
 	}
 	var dataLength = Buffer.byteLength(record.data, 'binary');
 

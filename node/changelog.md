@@ -1,7 +1,10 @@
 # Change Log
 
+# (current) 4.0.1
 
-# current (4.0.0)
+- fix utf-8 issue on aggregate record with string data
+
+# 4.0.0
 
 - Issue fixed for nodejs:
     - https://github.com/awslabs/kinesis-aggregation/issues/30: nodejs kinesis encoded record size limit
