@@ -195,12 +195,16 @@ function generateEncodedRecord(records) {
 			break;
 		}
 	}
-	// return encoded record 
-	return {
+	const encodedRecord = {
 		partitionKey: pk,
-		explicitHashKey: ehk,
 		data: aggregateRecord(records)
 	}
+	// if we find an ExplicitHashKey set it
+	if(ehk !== undefined) {
+		encodedRecord["ExplicitHashKey"] = ehk
+	}
+	// return encoded record 
+	return encodedRecord
 }
 
 // call onReadyCallback with encoded record

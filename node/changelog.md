@@ -1,6 +1,10 @@
 # Change Log
 
-# (current) 4.0.1
+# (current) 4.0.2
+
+- integrate [don't spuriously add ExplicitHashKey values to user records](https://github.com/awslabs/kinesis-aggregation/pull/49)
+
+# 4.0.1
 
 - fix utf-8 issue on aggregate record with string data
 
