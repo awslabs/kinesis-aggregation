@@ -60,7 +60,7 @@ def get_random_record(seq_num=0, desired_len=50):
 
 
 def init_kinesis_client(region):
-    """Create a boto3 Kinesis client for the given reason.
+    """Create a boto3 Kinesis client for the given region.
     
     Args:
         region_name - The name of the AWS region the Kinesis client will be configured for (e.g. us-east-1) (str)
