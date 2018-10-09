@@ -4,3 +4,6 @@ node/.project
 python/.project
 
 python/.pydevproject
+.DS_Store
+node/.idea/*
+.idea/*

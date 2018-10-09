@@ -13,7 +13,6 @@ const crypto = require("crypto");
 const async = require('async')
 
 const common = require('./common');
-const AggregatedRecord = common.AggregatedRecord
 
 // calculate the maximum amount of data to accumulate before emitting to
 // kinesis. 1MB - 16 bytes for checksum and the length of the magic number
@@ -137,7 +136,7 @@ function aggregateRecord(records) {
 	});
 
 	// encode the data
-	const protoData = AggregatedRecord.encode({
+	const protoData = common.AggregatedRecord.encode({
 		"partition_key_table": Object.keys(partitionKeyTable),
 		"explicit_hash_key_table": Object.keys(explicitHashKeyTable),
 		"records": putRecords

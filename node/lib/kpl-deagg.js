@@ -10,7 +10,6 @@
 const crypto = require("crypto");
 
 const common = require('./common');
-const AggregatedRecord = common.AggregatedRecord
 
 /** synchronous deaggregation interface */
 module.exports.deaggregateSync = function(kinesisRecord, computeChecksums,
@@ -41,7 +40,7 @@ module.exports.deaggregate = function(kinesisRecord, computeChecksums,
 	// underscores in protobuf model)
 	//
 	// we receive the record data as a base64 encoded string
-	var recordBuffer = new Buffer(kinesisRecord.data, 'base64');
+	var recordBuffer = Buffer.from(kinesisRecord.data, 'base64');
 
 	// first 4 bytes are the kpl assigned magic number
 	// https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
@@ -50,7 +49,7 @@ module.exports.deaggregate = function(kinesisRecord, computeChecksums,
 
 			// decode the protobuf binary from byte offset 4 to length-16 (last
 			// 16 are checksum)
-			var protobufMessage = AggregatedRecord.decode(recordBuffer.slice(4,
+			var protobufMessage = common.AggregatedRecord.decode(recordBuffer.slice(4,
 					recordBuffer.length - 16));
 
 			// extract the kinesis record checksum

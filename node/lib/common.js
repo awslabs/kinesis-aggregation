@@ -2,8 +2,8 @@
  * @module common.js
  * Common methods.
  */
-const ProtoBuf = require("protobufjs")
-const Path = require('path')
+const ProtoBuf = require("protobufjs");
+const Path = require('path');
 
 /**
  * Define some constant.
@@ -18,16 +18,16 @@ const constants = {
 			messageName: "AggregatedRecord"
 		}
 	}
-}
-module.exports.KplVersion = constants.useKplVersion
-module.exports.debug = constants.debug
+};
+module.exports.KplVersion = constants.useKplVersion;
+module.exports.debug = constants.debug;
 
 
 /**
  * Magic Number
  */
-module.exports.magic = new Buffer(constants.kplConfig[constants.useKplVersion].magicNumber, 'hex')
-module.exports.magicNumber = constants.kplConfig[constants.useKplVersion].magicNumber
+module.exports.magic =  Buffer.from(constants.kplConfig[constants.useKplVersion].magicNumber, 'hex');
+module.exports.magicNumber = constants.kplConfig[constants.useKplVersion].magicNumber;
 
 
 /**
@@ -35,25 +35,25 @@ module.exports.magicNumber = constants.kplConfig[constants.useKplVersion].magicN
  */
 const loadBuilder = () => {
 	if (constants.debug) {
-		console.log("Loading Protocol Buffer Model from " + constants.protofile)
+		console.log("Loading Protocol Buffer Model from " + constants.protofile);
 	}
 
 	// create the builder from the proto file
-	const builder = ProtoBuf.loadProtoFile(Path.resolve(__dirname, constants.protofile))
-	return builder.build(constants.kplConfig[constants.useKplVersion].messageName)
-}
-module.exports.loadBuilder = loadBuilder
+	const builder = ProtoBuf.loadProtoFile(Path.resolve(__dirname, constants.protofile));
+	return builder.build(constants.kplConfig[constants.useKplVersion].messageName);
+};
+module.exports.loadBuilder = loadBuilder;
 
 /**
  * AggregatedRecord encoder/decoder.
  * Global object which will hold the protocol buffer model
  */
 const AggregatedRecord = loadBuilder();
-module.exports.AggregatedRecord = AggregatedRecord
+module.exports.AggregatedRecord = AggregatedRecord;
 
 // randomPartitionKey function definition
-const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER
-const floor = Math.floor
-const random = Math.random
-const randomPartitionKey = () => floor(MAX_SAFE_INTEGER * random()).toString()
-module.exports.randomPartitionKey = randomPartitionKey
+const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+const floor = Math.floor;
+const random = Math.random;
+const randomPartitionKey = () => floor(MAX_SAFE_INTEGER * random()).toString();
+module.exports.randomPartitionKey = randomPartitionKey;
