@@ -2,15 +2,15 @@ import {Kinesis} from 'aws-sdk';
 
 declare module 'aws-kinesis-agg-fix' {
     export interface UserRecord {
-        partitionKey: String;
-        explicitPartitionKey: String;
-        sequenceNumber: String;
-        subSequenceNumber: Number;
+        partitionKey: string;
+        explicitPartitionKey: string;
+        sequencenumber: string;
+        subSequencenumber: number;
         data: Buffer;
     }
 
     export interface EncodedRecord {
-        partitionKey: String,
+        partitionKey: string,
         data: Buffer;
     }
 
@@ -29,6 +29,6 @@ declare module 'aws-kinesis-agg-fix' {
         encodedRecordHandler: (encodedRecord: EncodedRecord, callback: (err?: Error, data?: Kinesis.Types.PutRecordOutput) => void) => void,
         afterPutAggregatedRecords: () => void, 
         errorCallback: (error: Error, data?: EncodedRecord) => void,
-        queueSize: Number = 1
+        queueSize: number = 1
     ): void;
 }
