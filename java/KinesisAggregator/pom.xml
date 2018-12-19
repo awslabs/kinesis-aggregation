@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -7,8 +8,8 @@
 
 	<groupId>com.amazonaws</groupId>
 	<artifactId>amazon-kinesis-aggregator</artifactId>
-	<version>1.0.3</version>
-	
+	<version>1.0.4</version>
+
 	<packaging>jar</packaging>
 
 	<properties>
@@ -21,7 +22,7 @@
 		<connection>scm:git:git://github.com/awslabs/kinesis-aggregation.git</connection>
 		<url>https://github.com/awslabs/kinesis-aggregation</url>
 	</scm>
-	
+
 	<licenses>
 		<license>
 			<name>Amazon Software License</name>
@@ -30,16 +31,16 @@
 		</license>
 	</licenses>
 
-    <developers>
-        <developer>
-            <id>amazonwebservices</id>
-            <organization>Amazon Web Services</organization>
-            <organizationUrl>https://aws.amazon.com</organizationUrl>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
-    </developers>
+	<developers>
+		<developer>
+			<id>amazonwebservices</id>
+			<organization>Amazon Web Services</organization>
+			<organizationUrl>https://aws.amazon.com</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
 
 	<build>
 		<defaultGoal>clean compile</defaultGoal>
@@ -86,24 +87,34 @@
 				</executions>
 			</plugin>
 			<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <configuration>
-                            <target name="copy POM to target">
-                                <copy file="${project.basedir}/pom.xml" tofile="${project.build.directory}/pom.xml" />
-                            </target>
-                        </configuration>
-                        <phase>package</phase>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<finalName>KinesisAggregator-${version}</finalName>
+					<descriptors>
+						<descriptor>assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<configuration>
+							<target name="copy POM to target">
+								<copy file="${project.basedir}/pom.xml"
+									tofile="${project.build.directory}/pom.xml" />
+							</target>
+						</configuration>
+						<phase>package</phase>
 						<goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -124,6 +135,12 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.8.11.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

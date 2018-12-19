@@ -25,7 +25,6 @@ import org.junit.Test;
 public class RecordAggregatorTest
 {
     protected final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-    protected final String REVERSE_ALPHABET = "zyxwvutsrqponmlkjihgfedcba";
     
     @Test
     public void testSingleUserRecord()

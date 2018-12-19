@@ -46,7 +46,8 @@ import com.google.protobuf.ByteString;
  *
  * This class is NOT thread-safe.
  * 
- * @see <a href="https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md">https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md</a>
+ * @see <a href=
+ *      "https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md">https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md</a>
  */
 @NotThreadSafe
 public class AggRecord {
@@ -107,8 +108,8 @@ public class AggRecord {
 	 * Get the current number of user records contained inside this aggregate
 	 * record.
 	 * 
-	 * @return The current number of user records added via the
-	 *         "addUserRecord(...)" method.
+	 * @return The current number of user records added via the "addUserRecord(...)"
+	 *         method.
 	 */
 	public int getNumUserRecords() {
 		return this.aggregatedRecordBuilder.getRecordsCount();
@@ -128,8 +129,8 @@ public class AggRecord {
 	}
 
 	/**
-	 * Serialize this record to bytes. Has no side effects (i.e. does not affect
-	 * the contents of this record object).
+	 * Serialize this record to bytes. Has no side effects (i.e. does not affect the
+	 * contents of this record object).
 	 * 
 	 * @return A byte array containing an Kinesis aggregated format-compatible
 	 *         Kinesis record.
@@ -157,8 +158,8 @@ public class AggRecord {
 	}
 
 	/**
-	 * Clears out all records and metadata from this object so that it can be
-	 * reused just like a fresh instance of this object.
+	 * Clears out all records and metadata from this object so that it can be reused
+	 * just like a fresh instance of this object.
 	 */
 	public void clear() {
 		this.md5.reset();
@@ -173,8 +174,8 @@ public class AggRecord {
 	/**
 	 * Get the overarching partition key for the entire aggregated record.
 	 * 
-	 * @return The partition key to use for the aggregated record or null if
-	 *         this aggregated record is empty.
+	 * @return The partition key to use for the aggregated record or null if this
+	 *         aggregated record is empty.
 	 */
 	public String getPartitionKey() {
 		if (getNumUserRecords() == 0) {
@@ -199,11 +200,11 @@ public class AggRecord {
 	}
 
 	/**
-	 * Based on the current size of this aggregated record, calculate what the
-	 * new size would be if we added another user record with the specified
-	 * parameters (used to determine when this aggregated record is full and
-	 * can't accept any more user records). This calculation is highly dependent
-	 * on the Kinesis aggregated message format.
+	 * Based on the current size of this aggregated record, calculate what the new
+	 * size would be if we added another user record with the specified parameters
+	 * (used to determine when this aggregated record is full and can't accept any
+	 * more user records). This calculation is highly dependent on the Kinesis
+	 * aggregated message format.
 	 * 
 	 * @param partitionKey
 	 *            The partition key of the new record to simulate adding
@@ -211,8 +212,8 @@ public class AggRecord {
 	 *            The explicit hash key of the new record to simulate adding
 	 * @param data
 	 *            The raw data of the new record to simulate adding
-	 * @return The new size of this existing record in bytes if a new user
-	 *         record with the specified parameters was added.
+	 * @return The new size of this existing record in bytes if a new user record
+	 *         with the specified parameters was added.
 	 * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
 	 */
 	private int calculateRecordSize(String partitionKey, String explicitHashKey, byte[] data) {
@@ -220,7 +221,7 @@ public class AggRecord {
 
 		// has the partition key been added to the table of known PKs yet?
 		if (!this.partitionKeys.contains(partitionKey)) {
-			int pkLength = partitionKey.length();
+			int pkLength = partitionKey.getBytes().length;
 			messageSize += 1; // (message index + wire type for PK table)
 			messageSize += calculateVarintSize(pkLength); // size of pk length
 															// value
@@ -229,10 +230,9 @@ public class AggRecord {
 
 		// has the explicit hash key been added to the table of known EHKs yet?
 		if (!this.explicitHashKeys.contains(explicitHashKey)) {
-			int ehkLength = explicitHashKey.length();
+			int ehkLength = explicitHashKey.getBytes().length;
 			messageSize += 1; // (message index + wire type for EHK table)
-			messageSize += calculateVarintSize(
-					ehkLength); /* size of ehk length value */
+			messageSize += calculateVarintSize(ehkLength); /* size of ehk length value */
 			messageSize += ehkLength; // actual ehk length
 		}
 
@@ -243,34 +243,32 @@ public class AggRecord {
 
 		// partition key field
 		innerRecordSize += 1; // (message index + wire type for PK index)
-		innerRecordSize += calculateVarintSize(this.partitionKeys
-				.getPotentialIndex(partitionKey)); /* size of pk index value */
+		innerRecordSize += calculateVarintSize(
+				this.partitionKeys.getPotentialIndex(partitionKey)); /* size of pk index value */
 
 		// explicit hash key field (this is optional)
 		if (explicitHashKey != null) {
 			innerRecordSize += 1; // (message index + wire type for EHK index)
-			innerRecordSize += calculateVarintSize(this.explicitHashKeys.getPotentialIndex(
-					explicitHashKey)); /* size of ehk index value */
+			innerRecordSize += calculateVarintSize(
+					this.explicitHashKeys.getPotentialIndex(explicitHashKey)); /* size of ehk index value */
 		}
 
 		// data field
 		innerRecordSize += 1; // (message index + wire type for record data)
 
-		innerRecordSize += calculateVarintSize(
-				data.length); /* size of data length value */
+		innerRecordSize += calculateVarintSize(data.length); /* size of data length value */
 		innerRecordSize += data.length; // actual data length
 
 		messageSize += 1; // (message index + wire type for record)
-		messageSize += calculateVarintSize(
-				innerRecordSize); /* size of entire record length value */
+		messageSize += calculateVarintSize(innerRecordSize); /* size of entire record length value */
 		messageSize += innerRecordSize; // actual entire record length
 
 		return messageSize;
 	}
 
 	/**
-	 * For an integral value represented by a varint, calculate how many bytes
-	 * are necessary to represent the value in a protobuf message.
+	 * For an integral value represented by a varint, calculate how many bytes are
+	 * necessary to represent the value in a protobuf message.
 	 * 
 	 * @param value
 	 *            The value whose varint size will be calculated
@@ -306,8 +304,8 @@ public class AggRecord {
 	}
 
 	/**
-	 * Add a new user record to this existing aggregated record if there is
-	 * enough space (based on the defined Kinesis limits for a PutRecord call).
+	 * Add a new user record to this existing aggregated record if there is enough
+	 * space (based on the defined Kinesis limits for a PutRecord call).
 	 * 
 	 * @param partitionKey
 	 *            The partition key of the new user record to add
@@ -315,8 +313,8 @@ public class AggRecord {
 	 *            The explicit hash key of the new user record to add
 	 * @param data
 	 *            The raw data of the new user record to add
-	 * @return True if the new user record was successfully added to this
-	 *         aggregated record or false if this aggregated record is too full.
+	 * @return True if the new user record was successfully added to this aggregated
+	 *         record or false if this aggregated record is too full.
 	 */
 	public boolean addUserRecord(String partitionKey, String explicitHashKey, byte[] data) {
 		// set the explicit hash key for the message to the partition key -
@@ -369,15 +367,14 @@ public class AggRecord {
 	}
 
 	/**
-	 * Convert the aggregated data in this record into a single
-	 * PutRecordRequest. This method has no side effects (i.e. it will not clear
-	 * the current contents of the aggregated record).
+	 * Convert the aggregated data in this record into a single PutRecordRequest.
+	 * This method has no side effects (i.e. it will not clear the current contents
+	 * of the aggregated record).
 	 * 
 	 * @param streamName
-	 *            The Kinesis stream name where this PutRecordRequest will be
-	 *            sent.
-	 * @return A PutRecordRequest containing all the current data in this
-	 *         aggregated record.
+	 *            The Kinesis stream name where this PutRecordRequest will be sent.
+	 * @return A PutRecordRequest containing all the current data in this aggregated
+	 *         record.
 	 */
 	public PutRecordRequest toPutRecordRequest(String streamName) {
 		byte[] recordBytes = toRecordBytes();
@@ -426,10 +423,11 @@ public class AggRecord {
 			throw new IllegalArgumentException("Partition key cannot be null");
 		}
 
-		if (partitionKey.length() < PARTITION_KEY_MIN_LENGTH || partitionKey.length() > PARTITION_KEY_MAX_LENGTH) {
+		if (partitionKey.getBytes().length < PARTITION_KEY_MIN_LENGTH
+				|| partitionKey.getBytes().length > PARTITION_KEY_MAX_LENGTH) {
 			throw new IllegalArgumentException(
 					"Invalid partition key. Length must be at least " + PARTITION_KEY_MIN_LENGTH + " and at most "
-							+ PARTITION_KEY_MAX_LENGTH + ", got length of " + partitionKey.length());
+							+ PARTITION_KEY_MAX_LENGTH + ", got length of " + partitionKey.getBytes().length);
 		}
 
 		try {
@@ -464,13 +462,13 @@ public class AggRecord {
 	}
 
 	/**
-	 * Calculate a new explicit hash key based on the input partition key
-	 * (following the algorithm from the original KPL).
+	 * Calculate a new explicit hash key based on the input partition key (following
+	 * the algorithm from the original KPL).
 	 * 
 	 * @param partitionKey
 	 *            The partition key to seed the new explicit hash key with
-	 * @return An explicit hash key based on the input partition key generated
-	 *         using an algorithm from the original KPL.
+	 * @return An explicit hash key based on the input partition key generated using
+	 *         an algorithm from the original KPL.
 	 */
 	private String createExplicitHashKey(final String partitionKey) {
 		BigInteger hashKey = BigInteger.ZERO;
@@ -492,8 +490,8 @@ public class AggRecord {
 
 	/**
 	 * A class for tracking unique partition keys or explicit hash keys for an
-	 * aggregated Kinesis record. Also assists in keeping track of indexes for
-	 * their locations in the protobuf tables.
+	 * aggregated Kinesis record. Also assists in keeping track of indexes for their
+	 * locations in the protobuf tables.
 	 */
 	private class KeySet {
 		/** The list of unique keys in this keyset. */
@@ -510,14 +508,14 @@ public class AggRecord {
 		}
 
 		/**
-		 * If the input key were added to this KeySet, determine what its
-		 * resulting index would be.
+		 * If the input key were added to this KeySet, determine what its resulting
+		 * index would be.
 		 * 
 		 * @param s
 		 *            The input string to potentially add to the KeySet
 		 * 
-		 * @return The table index that this string would occupy if it were
-		 *         added to this KeySet.
+		 * @return The table index that this string would occupy if it were added to
+		 *         this KeySet.
 		 */
 		public Long getPotentialIndex(String s) {
 			Long it = this.lookup.get(s);
@@ -534,9 +532,9 @@ public class AggRecord {
 		 * @param s
 		 *            The key to add to the keyset.
 		 * 
-		 * @return A pair of <boolean,long>. The boolean is true if this key is
-		 *         not already in this keyset, false otherwise. The long
-		 *         indicates the index of the key.
+		 * @return A pair of <boolean,long>. The boolean is true if this key is not
+		 *         already in this keyset, false otherwise. The long indicates the index
+		 *         of the key.
 		 */
 		public ExistenceIndexPair add(String s) {
 			Long it = this.lookup.get(s);
@@ -569,8 +567,8 @@ public class AggRecord {
 	};
 
 	/**
-	 * A helper class for use with the KeySet that indicates whether or not a
-	 * key exists in the KeySet and what its saved index would be.
+	 * A helper class for use with the KeySet that indicates whether or not a key
+	 * exists in the KeySet and what its saved index would be.
 	 */
 	private class ExistenceIndexPair {
 		private Boolean first;
