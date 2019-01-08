@@ -1,5 +1,5 @@
 {
-    "name": "aws-kinesis-agg-fix",
+    "name": "aws-kinesis-agg",
     "description": "Node.js module to simplify working with Amazon Kinesis Records using Protcol Buffers encoding",
     "version": "4.0.2",
     "homepage": "http://github.com/awslabs/kinesis-aggregation",
@@ -8,8 +8,8 @@
         "email": "meyersi@amazon.com"
     },
     "dependencies": {
-        "async": "^2.6.0",
-        "jshint": "^2.9.6",
+        "async": "2.6.1",
+        "jshint": "2.9.7",
         "protobufjs": "5.0.3"
     },
     "keywords": [
