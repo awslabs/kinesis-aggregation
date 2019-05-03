@@ -21,8 +21,7 @@ const KINESIS_MAX_PAYLOAD_BYTES = (1024 * 1024) - 16 - Buffer.byteLength(common.
 
 function calculateVarIntSize(value) {
 	if (value < 0) {
-		raise
-		Error("Size values should not be negative.");
+		throw new Error("Size values should not be negative.");
 	} else if (value == 0) {
 		return 1;
 	}
