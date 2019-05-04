@@ -281,6 +281,14 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 };
 
 /**
+ * Method to check if a specific record will fit in the inflight records array (1 MB max)
+ * @param {*} record record to check
+ */
+RecordAggregator.prototype.checkIfUserRecordFits = function(record){
+	return !((this.totalBytes + this.calculateUserRecordSize(record)) > KINESIS_MAX_PAYLOAD_BYTES);
+}
+
+/**
  * Method to calculate a record size without adding it to the inflight records.
  * @param {*} record record to check
  */
