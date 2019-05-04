@@ -232,7 +232,7 @@ function RecordAggregator(onReadyCallback) {
 	this.onReadyCallback = onReadyCallback;
 
 };
-module.exports = RecordAggregator;
+module.exports.RecordAggregator = RecordAggregator;
 
 /**
  * Set onReadyCallback
