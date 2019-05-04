@@ -281,6 +281,13 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 };
 
 /**
+ * Method to return the length of inflight records.
+ */
+RecordAggregator.prototype.length = function(){
+	return this.putRecords.length;
+}
+
+/**
  * Method to check if a specific record will fit in the inflight records array (1 MB max)
  * @param {*} record record to check
  */
