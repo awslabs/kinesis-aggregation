@@ -101,6 +101,15 @@ function calculateRecordSize(self, record) {
 	return messageSize
 }
 
+function validateRecord(record){
+		if (!record.data) {
+			throw new Error('Record.Data field is mandatory');
+		}
+		if (!record.partitionKey) {
+			throw new Error('record.partitionKey field is mandatory');
+		}
+}
+
 function aggregateRecord(records) {
 	if (common.debug) {
 		console.log("Protobuf Aggregation of " + records.length + " records");
@@ -270,6 +279,54 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 	callOnReadyCallback(null, this.putRecords, onReadyCallback ||  this.onReadyCallback);
 	this.clearRecords();
 };
+
+/**
+ * method to add a record to inflight records.
+ * @param {*} record record to add
+ */
+RecordAggregator.prototype.addUserRecord = function(record){
+		validateRecord(record);
+		let messageSize = calculateRecordSize(this, record)
+		if (common.debug) {
+			console.log("Current Pending Size: " +
+				this.putRecords.length + " records, " +
+				this.totalBytes + " bytes");
+			console.log("Next: " + messageSize + " bytes");
+		}
+
+		// if the size of this record would push us over the limit,
+		// then encode the current set
+		if (messageSize > KINESIS_MAX_PAYLOAD_BYTES) {
+			throw new Error('Input record (PK=' + record.partitionKey +
+				', EHK=' + record.explicitHashKey +
+				', SizeBytes=' + messageSize +
+				') is too large to fit inside a single Kinesis record.');
+		} else if ((this.totalBytes + messageSize) > KINESIS_MAX_PAYLOAD_BYTES) {
+			if (common.debug) {
+				console.log("calculated totalBytes=" + this.totalBytes);
+			}
+			throw new Error("record won't fit");
+		} else {
+			// the current set of records is still within the kinesis
+			// max payload size so increment inflight/total bytes
+			this.putRecords.push(record);
+			this.totalBytes += messageSize;
+		}
+
+		if (!this.partitionKeyTable.hasOwnProperty(record.partitionKey)) {
+			// add the size of the partition key when encoded
+			this.partitionKeyTable[record.partitionKey] = this.partitionKeyCount;
+			this.partitionKeyCount += 1;
+		}
+
+		if (record.explicitHashKey &&
+			!this.explicitHashKeyTable
+			.hasOwnProperty(record.explicitHashKey)) {
+			// add the size of the explicit hash key when encoded
+			this.explicitHashKeyTable[record.explicitHashKey] = this.explicitHashKeyCount;
+			this.explicitHashKeyCount += 1;
+		}
+}
 
 /**
  * method to aggregate a set of records.
