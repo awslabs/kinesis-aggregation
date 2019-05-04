@@ -281,6 +281,15 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 };
 
 /**
+ * Method to calculate a record size without adding it to the inflight records.
+ * @param {*} record record to check
+ */
+RecordAggregator.prototype.calculateUserRecordSize = function(record){
+	validateRecord(record);
+	return calculateRecordSize(this, record)
+}
+
+/**
  * method to add a record to inflight records.
  * @param {*} record record to add
  */
