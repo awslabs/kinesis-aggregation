@@ -281,6 +281,16 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 };
 
 /**
+ * Method to build an encoded record of all inflight records, flushes
+ * the current inflight records after getting called.
+ */
+RecordAggregator.prototype.build = function(){
+	const data= generateEncodedRecord(this.putRecords);
+	this.clearRecords();
+	return data;
+}
+
+/**
  * Method to return the length of inflight records.
  */
 RecordAggregator.prototype.length = function(){
