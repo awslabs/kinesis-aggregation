@@ -11,7 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 
-	deagg "github.com/awslabs/kinesis-aggregation/go"
+	deagg "github.com/awslabs/kinesis-aggregation/go/deaggregator"
 	rec "github.com/awslabs/kinesis-aggregation/go/records"	
 )
 
