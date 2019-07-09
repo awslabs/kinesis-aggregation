@@ -1,6 +1,6 @@
 import {Kinesis} from 'aws-sdk';
 
-declare module 'aws-kinesis-agg-fix' {
+declare module 'aws-kinesis-agg' {
     export interface UserRecord {
         partitionKey: string;
         explicitPartitionKey: string;
