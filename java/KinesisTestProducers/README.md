@@ -12,6 +12,8 @@ This project provides three different runnable Java classes for publishing data 
 
 `SampleAggregatorProducer.java` - Uses the `KinesisAggregator` project from this repository to create aggregated records and send them to Kinesis.
 
+`SampleAggregatorProducerKCLCompliant.java` - Uses the `KinesisAggregator` project from this repository to create aggregated records and send them to Kinesis. It uses the same PartitionKey and ExplicitHashKey on all UserRecords that belongs to the same KinesisRecord in order to be compliant with KCL.
+
 ## Run Instructions
 
 1. Build the project with Maven: `mvn install`
