@@ -21,8 +21,7 @@ const KINESIS_MAX_PAYLOAD_BYTES = (1024 * 1024) - 16 - Buffer.byteLength(common.
 
 function calculateVarIntSize(value) {
 	if (value < 0) {
-		raise
-		Error("Size values should not be negative.");
+		throw new Error("Size values should not be negative.");
 	} else if (value == 0) {
 		return 1;
 	}
@@ -100,6 +99,15 @@ function calculateRecordSize(self, record) {
 
 	messageSize += innerRecordSize; // actual entire record length
 	return messageSize
+}
+
+function validateRecord(record){
+		if (!record.data) {
+			throw new Error('Record.Data field is mandatory');
+		}
+		if (!record.partitionKey) {
+			throw new Error('record.partitionKey field is mandatory');
+		}
 }
 
 function aggregateRecord(records) {
@@ -233,7 +241,7 @@ function RecordAggregator(onReadyCallback) {
 	this.onReadyCallback = onReadyCallback;
 
 };
-module.exports = RecordAggregator;
+module.exports.RecordAggregator = RecordAggregator;
 
 /**
  * Set onReadyCallback
@@ -271,6 +279,88 @@ RecordAggregator.prototype.flushBufferedRecords = function (onReadyCallback) {
 	callOnReadyCallback(null, this.putRecords, onReadyCallback ||  this.onReadyCallback);
 	this.clearRecords();
 };
+
+/**
+ * Method to build an encoded record of all inflight records, flushes
+ * the current inflight records after getting called.
+ */
+RecordAggregator.prototype.build = function(){
+	const data= generateEncodedRecord(this.putRecords);
+	this.clearRecords();
+	return data;
+}
+
+/**
+ * Method to return the length of inflight records.
+ */
+RecordAggregator.prototype.length = function(){
+	return this.putRecords.length;
+}
+
+/**
+ * Method to check if a specific record will fit in the inflight records array (1 MB max)
+ * @param {*} record record to check
+ */
+RecordAggregator.prototype.checkIfUserRecordFits = function(record){
+	return !((this.totalBytes + this.calculateUserRecordSize(record)) > KINESIS_MAX_PAYLOAD_BYTES);
+}
+
+/**
+ * Method to calculate a record size without adding it to the inflight records.
+ * @param {*} record record to check
+ */
+RecordAggregator.prototype.calculateUserRecordSize = function(record){
+	validateRecord(record);
+	return calculateRecordSize(this, record)
+}
+
+/**
+ * method to add a record to inflight records.
+ * @param {*} record record to add
+ */
+RecordAggregator.prototype.addUserRecord = function(record){
+		validateRecord(record);
+		let messageSize = calculateRecordSize(this, record)
+		if (common.debug) {
+			console.log("Current Pending Size: " +
+				this.putRecords.length + " records, " +
+				this.totalBytes + " bytes");
+			console.log("Next: " + messageSize + " bytes");
+		}
+
+		// if the size of this record would push us over the limit,
+		// then encode the current set
+		if (messageSize > KINESIS_MAX_PAYLOAD_BYTES) {
+			throw new Error('Input record (PK=' + record.partitionKey +
+				', EHK=' + record.explicitHashKey +
+				', SizeBytes=' + messageSize +
+				') is too large to fit inside a single Kinesis record.');
+		} else if ((this.totalBytes + messageSize) > KINESIS_MAX_PAYLOAD_BYTES) {
+			if (common.debug) {
+				console.log("calculated totalBytes=" + this.totalBytes);
+			}
+			throw new Error("record won't fit");
+		} else {
+			// the current set of records is still within the kinesis
+			// max payload size so increment inflight/total bytes
+			this.putRecords.push(record);
+			this.totalBytes += messageSize;
+		}
+
+		if (!this.partitionKeyTable.hasOwnProperty(record.partitionKey)) {
+			// add the size of the partition key when encoded
+			this.partitionKeyTable[record.partitionKey] = this.partitionKeyCount;
+			this.partitionKeyCount += 1;
+		}
+
+		if (record.explicitHashKey &&
+			!this.explicitHashKeyTable
+			.hasOwnProperty(record.explicitHashKey)) {
+			// add the size of the explicit hash key when encoded
+			this.explicitHashKeyTable[record.explicitHashKey] = this.explicitHashKeyCount;
+			this.explicitHashKeyCount += 1;
+		}
+}
 
 /**
  * method to aggregate a set of records.
