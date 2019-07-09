@@ -40,40 +40,21 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
         explicit_hash_key = ehks[mr.explicit_hash_key_index]
     partition_key = pks[mr.partition_key_index]
 
-    try:
-        new_record = {
-            'kinesis': {
-                'kinesisSchemaVersion': r['kinesis']['kinesisSchemaVersion'],
-                'sequenceNumber': r['kinesis']['sequenceNumber'],
+    new_record = {
+        'kinesis': {
+            'kinesisSchemaVersion': r['kinesis']['kinesisSchemaVersion'],
+            'sequenceNumber': r['kinesis']['sequenceNumber'],
+            'approximateArrivalTimestamp': r['kinesis']['approximateArrivalTimestamp'],
+            # Fill in the new values
+            'explicitHashKey': explicit_hash_key,
+            'partitionKey': partition_key,
+            'subSequenceNumber': sub_seq_num,
+            'aggregated': True,
 
-                # Fill in the new values
-                'explicitHashKey': explicit_hash_key,
-                'partitionKey': partition_key,
-                'subSequenceNumber': sub_seq_num,
-                'aggregated': True,
-
-                # We actually re-base64-encode the data because that's how Lambda Python normally delivers records
-                'data': base64.b64encode(mr.data)
-            }
+            # We actually re-base64-encode the data because that's how Lambda Python normally delivers records
+            'data': base64.b64encode(mr.data)
         }
-    except KeyError:
-        # Kinesis Analytics preprocessors use a different format for aggregated Kinesis records
-        new_record = {
-            'kinesis': {
-                # Kinesis Analytics doesn't pass along the kinesisSchemaVersion, so this is a guess
-                'kinesisSchemaVersion': '1.0',
-                'sequenceNumber': r['kinesisStreamRecordMetadata']['sequenceNumber'],
-
-                # Fill in the new values
-                'explicitHashKey': explicit_hash_key,
-                'partitionKey': partition_key,
-                'subSequenceNumber': sub_seq_num,
-                'aggregated': True,
-
-                # We actually re-base64-encode the data because that's how Lambda Python normally delivers records
-                'data': base64.b64encode(mr.data)
-            }
-        }
+    }
 
     # Copy all the metadata from the original record (except the data-specific stuff)
     for key, value in six.iteritems(r):
@@ -110,15 +91,34 @@ def _get_error_string(r, message_data, ehks, pks, ar):
                             mr.partition_key_index,
                             len(mr.data)))
 
-    try:
-        error_buffer.write('Sequence number: %s\n' % (r['kinesis']['sequenceNumber']))
-    except KeyError:
-        # Kinesis Analytics preprocessors use a different format for aggregated Kinesis records
-        error_buffer.write('Sequence number: %s\n' % (r['kinesisStreamRecordMetadata']['sequenceNumber']))
+    error_buffer.write('Sequence number: %s\n' % (r['kinesis']['sequenceNumber']))
 
     error_buffer.write('Raw data: %s\n' % (base64.b64encode(message_data)))
     
     return error_buffer.getvalue()
+
+
+def _convert_from_ka_format(record):
+    """Convert From Kinesis Analytics record format to Kinesis Stream record format.  Kinesis Analytics preprocessors
+    use a different format for aggregated Kinesis records than Kinesis Streams.
+
+    record - Raw Kinesis Analytics record to deaggregate. (dict)
+
+    return value - Each yield returns a single Kinesis user record. (dict)"""
+
+    new_record = {
+        'kinesis': {
+            # Kinesis Analytics doesn't pass along the kinesisSchemaVersion, so this is an educated guess
+            'kinesisSchemaVersion': '1.0',
+            'sequenceNumber': record['kinesisStreamRecordMetadata']['sequenceNumber'],
+            'partitionKey': record['kinesisStreamRecordMetadata']['partitionKey'],
+            'approximateArrivalTimestamp': record['kinesisStreamRecordMetadata']['approximateArrivalTimestamp'],
+            'shardId': record['kinesisStreamRecordMetadata']['shardId'],
+            'data': record['data']
+        }
+    }
+
+    return new_record
 
 
 def deaggregate_records(records):
@@ -153,13 +153,14 @@ def iter_deaggregate_records(records):
     for r in records:
         is_aggregated = True
         sub_seq_num = 0
-        
+
+        if 'kinesis' not in r and 'data' in r:
+            # Kinesis Analytics preprocessors use a different format for aggregated Kinesis Stream
+            # records, so we're going to convert KA style records to KS style records.
+            r = _convert_from_ka_format(r)
+
         # Decode the incoming data
-        try:
-            raw_data = r['kinesis']['data']
-        except KeyError:
-            # Kinesis Analytics preprocessors use a different format for aggregated Kinesis records
-            raw_data = r['data']
+        raw_data = r['kinesis']['data']
 
         decoded_data = base64.b64decode(raw_data)
         
