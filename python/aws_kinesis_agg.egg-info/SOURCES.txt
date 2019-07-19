@@ -1,6 +1,6 @@
 LICENSE.txt
 MANIFEST.in
-README.rst
+README.md
 setup.cfg
 setup.py
 aws_kinesis_agg/__init__.py

@@ -114,7 +114,8 @@ def _convert_from_ka_format(record):
             'partitionKey': record['kinesisStreamRecordMetadata']['partitionKey'],
             'approximateArrivalTimestamp': record['kinesisStreamRecordMetadata']['approximateArrivalTimestamp'],
             'shardId': record['kinesisStreamRecordMetadata']['shardId'],
-            'data': record['data']
+            'data': record['data'],
+            'recordId': record['recordId']
         }
     }
 
