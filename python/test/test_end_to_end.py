@@ -34,7 +34,8 @@ def create_kinesis_lambda_record(pk, ehk, data):
                 "explicitHashKey": ehk,
                 "data": base64.b64encode(data),
                 "kinesisSchemaVersion": "1.0",
-                "sequenceNumber": "49545115243490985018280067714973144582180062593244200961"
+                "sequenceNumber": "49545115243490985018280067714973144582180062593244200961",
+                "approximateArrivalTimestamp": 1518133507.063
               },
               "invokeIdentityArn": 'identity-arn',
               "eventName": "aws:kinesis:record",
