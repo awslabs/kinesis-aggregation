@@ -14,25 +14,21 @@
 # permissions and limitations under the License.
 
 from setuptools import setup
-import os.path
 
-
-def read_file(filename):
-    path = os.path.join(os.path.dirname(__file__), filename)
-    with open(path, 'r') as source_file:
-        return source_file.read()
-
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
   name='aws_kinesis_agg',
   packages=['aws_kinesis_agg'],
-  version='1.1.0',
+  version='1.1.1',
   description='Python module to assist in taking advantage of the Kinesis message aggregation '
               'format for both aggregation and deaggregation.',
-  long_description=read_file('README.rst'),
+  long_description=long_description,
+  long_description_content_type='text/markdown',
   author='Brent Nash',
   author_email='brenash@amazon.com',
-  license='SEE LICENSE IN LICENSE.TXT',
+  license="Amazon Software License",
   url='http://github.com/awslabs/kinesis-aggregation',
   keywords=['aws', 'kinesis', 'aggregation', 'deaggregation', 'kpl'],
   classifiers=['Development Status :: 5 - Production/Stable',

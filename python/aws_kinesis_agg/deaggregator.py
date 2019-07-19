@@ -44,7 +44,7 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
         'kinesis': {
             'kinesisSchemaVersion': r['kinesis']['kinesisSchemaVersion'],
             'sequenceNumber': r['kinesis']['sequenceNumber'],
-
+            'approximateArrivalTimestamp': r['kinesis']['approximateArrivalTimestamp'],
             # Fill in the new values
             'explicitHashKey': explicit_hash_key,
             'partitionKey': partition_key,
