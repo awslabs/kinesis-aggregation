@@ -25,6 +25,7 @@
     "main": "./index.js",
     "files": [
         "index.js",
+        "index.d.ts",
         "lib/kpl-deagg.js",
         "lib/kpl-agg.js",
         "lib/kpl.proto",
