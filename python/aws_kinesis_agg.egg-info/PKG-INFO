@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: aws-kinesis-agg
-Version: 1.1.1
+Version: 1.1.3
 Summary: Python module to assist in taking advantage of the Kinesis message aggregation format for both aggregation and deaggregation.
 Home-page: http://github.com/awslabs/kinesis-aggregation
 Author: Brent Nash
