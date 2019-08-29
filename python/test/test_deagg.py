@@ -211,22 +211,26 @@ class RecordDeaggregatorTest(unittest.TestCase):
            {
              'explicitHashKey': '339606600942967391854603552402021847292',
              'partitionKey': '1562602074896',
-             'data': 'RECORD 2005 pjqrcfbxafzdndzmbgane'
+             'data': 'RECORD 2005 pjqrcfbxafzdndzmbgane',
+             'recordId': '49597411459012285111935017621194032819223185658889633794'
            },
            {
              'explicitHashKey': '339606600942967391854603552402021847292',
              'partitionKey': '1562602074896',
-             'data': 'RECORD 2006 pjqrcfbxafzdndzmbgane'
+             'data': 'RECORD 2006 pjqrcfbxafzdndzmbgane',
+             'recordId': '49597411459012285111935017621194032819223185658889633794'
            },
            {
              'explicitHashKey': '339606600942967391854603552402021847292',
              'partitionKey': '1562602074896',
-             'data': 'RECORD 2007 pjqrcfbxafzdndzmbgane'
+             'data': 'RECORD 2007 pjqrcfbxafzdndzmbgane',
+             'recordId': '49597411459012285111935017621194032819223185658889633794'
            },
            {
              'explicitHashKey': '339606600942967391854603552402021847292',
              'partitionKey': '1562602074896',
-             'data': 'RECORD 2008 pjqrcfbxafzdndzmbgane'
+             'data': 'RECORD 2008 pjqrcfbxafzdndzmbgane',
+             'recordId': '49597411459012285111935017621194032819223185658889633794'
            }
         ]
 
@@ -247,6 +251,9 @@ class RecordDeaggregatorTest(unittest.TestCase):
             self.assertEqual(generated_record['kinesis']['explicitHashKey'], actual_record['explicitHashKey'],
                              'Actual and generated explicit hash keys do not match for record %d' % i)
 
+            self.assertEqual(generated_record['kinesis']['recordId'], actual_record['recordId'],
+                             'Actual and generated recordIds keys do not match for record %d' % i)
+
             decoded_data = base64.b64decode(generated_record['kinesis']['data']).decode('utf-8')
             actual_data = actual_record['data']
 
@@ -259,7 +266,8 @@ class RecordDeaggregatorTest(unittest.TestCase):
         actual_user_records = [
            {
              'partitionKey': '1562602074896',
-             'data': 'RECORD 749 pjqrcfbxafzdndzmbgane'
+             'data': 'RECORD 749 pjqrcfbxafzdndzmbgane',
+             'recordId': '49597411459012285111935017620416693517210978893395132418'
            }
         ]
 
@@ -276,6 +284,9 @@ class RecordDeaggregatorTest(unittest.TestCase):
 
             self.assertEqual(generated_record['kinesis']['partitionKey'], actual_record['partitionKey'],
                              'Actual and generated partition keys do not match for record %d.' % i)
+
+            self.assertEqual(generated_record['kinesis']['recordId'], actual_record['recordId'],
+                             'Actual and generated recordIds keys do not match for record %d' % i)
 
             decoded_data = base64.b64decode(generated_record['kinesis']['data']).decode('utf-8')
             actual_data = actual_record['data']

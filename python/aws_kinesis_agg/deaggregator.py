@@ -61,6 +61,9 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
         if key != 'kinesis' and key != 'data':
             new_record[key] = value
 
+    if 'recordId' in r['kinesis']:
+        new_record['kinesis']['recordId'] = r['kinesis']['recordId']
+
     return new_record
 
 
