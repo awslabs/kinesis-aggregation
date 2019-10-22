@@ -13,6 +13,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+from io import open
 from setuptools import setup
 
 with open('README.md', encoding='utf-8') as f:
