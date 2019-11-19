@@ -29,6 +29,6 @@ declare module 'aws-kinesis-agg' {
         encodedRecordHandler: (encodedRecord: EncodedRecord, callback: (err?: Error, data?: Kinesis.Types.PutRecordOutput) => void) => void,
         afterPutAggregatedRecords: () => void, 
         errorCallback: (error: Error, data?: EncodedRecord) => void,
-        queueSize: number = 1
+        queueSize: number
     ): void;
 }
