@@ -125,6 +125,30 @@ def _convert_from_ka_format(record):
     return new_record
 
 
+def _convert_from_kf_format(record):
+    """Convert From Kinesis Firehose record format to Kinesis Stream record format.  Kinesis Firehose transformers
+    use a different format for aggregated Kinesis records than Kinesis Streams.
+
+    record - Raw Kinesis Firehose record to deaggregate. (dict)
+
+    return value - Each yield returns a single Kinesis user record. (dict)"""
+
+    new_record = {
+        'kinesis': {
+            # Kinesis Firehose doesn't pass along the kinesisSchemaVersion, so this is an educated guess
+            'kinesisSchemaVersion': '1.0',
+            'sequenceNumber': record['kinesisRecordMetadata']['sequenceNumber'],
+            'partitionKey': record['kinesisRecordMetadata']['partitionKey'],
+            'approximateArrivalTimestamp': record['kinesisRecordMetadata']['approximateArrivalTimestamp'],
+            'shardId': record['kinesisRecordMetadata']['shardId'],
+            'data': record['data'],
+            'recordId': record['recordId']
+        }
+    }
+
+    return new_record
+
+
 def deaggregate_records(records):
     """Given a set of Kinesis records, deaggregate any records that were packed using the
     Kinesis Producer Library into individual records.  This method will be a no-op for any
@@ -159,9 +183,14 @@ def iter_deaggregate_records(records):
         sub_seq_num = 0
 
         if 'kinesis' not in r and 'data' in r:
-            # Kinesis Analytics preprocessors use a different format for aggregated Kinesis Stream
-            # records, so we're going to convert KA style records to KS style records.
-            r = _convert_from_ka_format(r)
+            # Kinesis Analytics preprocessors & Firehose transformers use a different format for aggregated
+            # Kinesis Stream records, so we're going to convert KA / KF style records to KS style records.
+            if 'kinesisStreamRecordMetadata' in r:
+                # Kinesis Analytics style record
+                r = _convert_from_ka_format(r)
+            elif 'kinesisRecordMetadata' in r:
+                # Kinesis Firehose style record
+                r = _convert_from_kf_format(r)
 
         # Decode the incoming data
         raw_data = r['kinesis']['data']
@@ -220,3 +249,4 @@ def iter_deaggregate_records(records):
             yield r
     
     return
+
