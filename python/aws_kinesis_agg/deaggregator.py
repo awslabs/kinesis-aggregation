@@ -1,17 +1,18 @@
 # Kinesis Aggregation/Deaggregation Libraries for Python
-# 
-# Copyright 2014, Amazon.com, Inc. or its affiliates. All Rights Reserved. 
-# 
-# Licensed under the Amazon Software License (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-# 
-#  http://aws.amazon.com/asl/
-# 
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
+#
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
@@ -125,6 +126,30 @@ def _convert_from_ka_format(record):
     return new_record
 
 
+def _convert_from_kf_format(record):
+    """Convert From Kinesis Firehose record format to Kinesis Stream record format.  Kinesis Firehose transformers
+    use a different format for aggregated Kinesis records than Kinesis Streams.
+
+    record - Raw Kinesis Firehose record to deaggregate. (dict)
+
+    return value - Each yield returns a single Kinesis user record. (dict)"""
+
+    new_record = {
+        'kinesis': {
+            # Kinesis Firehose doesn't pass along the kinesisSchemaVersion, so this is an educated guess
+            'kinesisSchemaVersion': '1.0',
+            'sequenceNumber': record['kinesisRecordMetadata']['sequenceNumber'],
+            'partitionKey': record['kinesisRecordMetadata']['partitionKey'],
+            'approximateArrivalTimestamp': record['kinesisRecordMetadata']['approximateArrivalTimestamp'],
+            'shardId': record['kinesisRecordMetadata']['shardId'],
+            'data': record['data'],
+            'recordId': record['recordId']
+        }
+    }
+
+    return new_record
+
+
 def deaggregate_records(records):
     """Given a set of Kinesis records, deaggregate any records that were packed using the
     Kinesis Producer Library into individual records.  This method will be a no-op for any
@@ -159,9 +184,14 @@ def iter_deaggregate_records(records):
         sub_seq_num = 0
 
         if 'kinesis' not in r and 'data' in r:
-            # Kinesis Analytics preprocessors use a different format for aggregated Kinesis Stream
-            # records, so we're going to convert KA style records to KS style records.
-            r = _convert_from_ka_format(r)
+            # Kinesis Analytics preprocessors & Firehose transformers use a different format for aggregated
+            # Kinesis Stream records, so we're going to convert KA / KF style records to KS style records.
+            if 'kinesisStreamRecordMetadata' in r:
+                # Kinesis Analytics style record
+                r = _convert_from_ka_format(r)
+            elif 'kinesisRecordMetadata' in r:
+                # Kinesis Firehose style record
+                r = _convert_from_kf_format(r)
 
         # Decode the incoming data
         raw_data = r['kinesis']['data']
@@ -220,3 +250,4 @@ def iter_deaggregate_records(records):
             yield r
     
     return
+

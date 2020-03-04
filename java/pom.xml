@@ -31,7 +31,7 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<version>3.0</version>
 				<configuration>
-					<header>${basedir}/license/asl/header.txt</header>
+					<header>${basedir}/license/apache-2.0/header.txt</header>
 					<includes>
 						<include>**/*.java</include>
 					</includes>
