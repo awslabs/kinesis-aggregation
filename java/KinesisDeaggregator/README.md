@@ -1,32 +1,52 @@
 # Kinesis Java Record Deaggregator
 
-This library provides a set of convenience functions to perform in-memory record deaggregation that is compatible with the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) used by the Kinesis Producer Library (KPL) and the KinesisAggregator module.  This module can be used in any Java-based application that receives aggregated Kinesis records, including applications running on AWS Lambda.
+This library provides a set of convenience functions to perform in-memory record deaggregation that is compatible with the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) used by the Kinesis Producer Library (KPL) and the KinesisAggregator module. This module can be used in any Java-based application that receives aggregated Kinesis records, including applications running on AWS Lambda.
 
 ## Record Deaggregation
 
-The `RecordDeaggregator` is the class that does the work of extracting individual Kinesis user records from aggregated Kinesis Records.  The `RecordDeaggregator` provides multiple interfaces for deaggregating records: stream-based, list-based, batch-based and single record.
+The `RecordDeaggregator` is the class that does the work of extracting individual Kinesis user records from aggregated Kinesis Records received by AWS Lambda or directly through the Kinesis Java SDK. This class provide multiple ways to deaggregate records: stream-based, list-based, batch-based and single record.
+
+### Creating a Deaggregator
+
+There are two supported base classes that can be used for Deaggregation, `com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord` and `com.amazonaws.services.kinesis.model.Record`. These support Lambda based access, and Kinesis SDK access respectively. Use of any other base class will throw an `InvalidArgumentsException`.  
+
+This project uses Java Generics to handle these different types correctly. To create a Lambda compliant Deaggregator, use:
+
+```
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
+...
+RecordDeaggregator<KinesisEventRecord> deaggregator = new RecordDeaggregator<>();
+```
+
+and for the Kinesis SDK:
+
+```
+import com.amazonaws.services.kinesis.model.Record;
+...
+RecordDeaggregator<Record> deaggregator = new RecordDeaggregator<>();
+```
 
 ### Stream-based Deaggregation
 
-The following examples demonstrate functions to create a new instance of the `RecordDeaggregator` class and then provide it code to run on each extracted UserRecord. For example, using Java 8 Streams:
+The following examples demonstrate functions to create a new instance of the `LambdaRecordDeaggregator` class and then provide it code to run on each extracted UserRecord. For example, using Java 8 Streams:
 
 ```
-        deaggregator.stream(
-                event.getRecords().stream(),
-                userRecord -> {
-                    // Your User Record Processing Code Here!
-                    logger.log(String.format("Processing UserRecord %s (%s:%s)",
-                            userRecord.getPartitionKey(),
-                            userRecord.getSequenceNumber(),
-                            userRecord.getSubSequenceNumber()));
-                });
+deaggregator.stream(
+        event.getRecords().stream(),
+        userRecord -> {
+            // Your User Record Processing Code Here!
+            logger.log(String.format("Processing UserRecord %s (%s:%s)",
+                    userRecord.getPartitionKey(),
+                    userRecord.getSequenceNumber(),
+                    userRecord.getSubSequenceNumber()));
+        });
 ```
 
-In this invocation, we are extracting the Kinesis Records from the Event provided by AWS Lambda, and converting them to a Stream. We then provide a lambda function which iterates over the extracted user records.  You should provide your own application-specific logic in place of the provided `logger.log()` call.
+In this invocation, we are extracting the KinesisEventRecords from the Event provided by AWS Lambda, and converting them to a Stream. We then provide a lambda function which iterates over the extracted user records.  You should provide your own application-specific logic in place of the provided `logger.log()` call.
 
 ### List-based Deaggregation
 
-You can also achieve the same functionality using Lists rather than Java Streams via the `RecordDeaggregator.KinesisUserRecordProcessor` interface:
+You can also achieve the same functionality using Lists rather than Java Streams via the `LambdaRecordDeaggregator.KinesisUserRecordProcessor` interface:
 
 ```
         try {
@@ -87,7 +107,7 @@ In some cases, it can also be beneficial to be able to deaggregate a single Kine
 KinesisEventRecord singleRecord = ...;
 try
 {
-    List<UserRecord> userRecords = RecordDeaggregator.deaggregate(singleRecord);
+    List<UserRecord> userRecords = deaggregator.deaggregate(singleRecord);
     for (UserRecord userRecord : userRecords)
     {
         // Your User Record Processing Code Here!
