@@ -28,25 +28,26 @@ RecordDeaggregator<Record> deaggregator = new RecordDeaggregator<>();
 
 ### Stream-based Deaggregation
 
-The following examples demonstrate functions to create a new instance of the `LambdaRecordDeaggregator` class and then provide it code to run on each extracted UserRecord. For example, using Java 8 Streams:
+The following examples demonstrate functions to create a new instance of the `RecordDeaggregator` class and then provide it code to run on each extracted UserRecord. For example, using Java 8 Streams:
 
 ```
 deaggregator.stream(
-        event.getRecords().stream(),
-        userRecord -> {
-            // Your User Record Processing Code Here!
-            logger.log(String.format("Processing UserRecord %s (%s:%s)",
-                    userRecord.getPartitionKey(),
-                    userRecord.getSequenceNumber(),
-                    userRecord.getSubSequenceNumber()));
-        });
+    event.getRecords().stream(),
+    userRecord -> {
+        // Your User Record Processing Code Here!
+        logger.log(String.format("Processing UserRecord %s (%s:%s)",
+                userRecord.getPartitionKey(),
+                userRecord.getSequenceNumber(),
+                userRecord.getSubSequenceNumber()));
+    }
+);
 ```
 
 In this invocation, we are extracting the KinesisEventRecords from the Event provided by AWS Lambda, and converting them to a Stream. We then provide a lambda function which iterates over the extracted user records.  You should provide your own application-specific logic in place of the provided `logger.log()` call.
 
 ### List-based Deaggregation
 
-You can also achieve the same functionality using Lists rather than Java Streams via the `LambdaRecordDeaggregator.KinesisUserRecordProcessor` interface:
+You can also achieve the same functionality using Lists rather than Java Streams via the `RecordDeaggregator.KinesisUserRecordProcessor` interface:
 
 ```
         try {
@@ -79,20 +80,16 @@ As with the previous example, you should provide your own application-specific l
 For those whole prefer simple method call and response mechanisms, the `RecordDeaggregator` provides a single static `deaggregate` method that takes in a list of aggregated Kinesis records and deaggregates them synchronously in bulk. For example:
 
 ```
-try
-{
-    List<UserRecord> userRecords = RecordDeaggregator.deaggregate(event.getRecords());
-    for (UserRecord userRecord : userRecords)
-    {
+try {
+    List<UserRecord> userRecords = deaggregator.deaggregate(event.getRecords());
+    for (UserRecord userRecord : userRecords) {
         // Your User Record Processing Code Here!
         logger.log(String.format("Processing UserRecord %s (%s:%s)", 
                                     userRecord.getPartitionKey(), 
                                     userRecord.getSequenceNumber(),
                                     userRecord.getSubSequenceNumber()));
     }
-}
-catch (Exception e)
-{
+} catch (Exception e) {
     logger.log(e.getMessage());
 }
 ```
@@ -105,20 +102,16 @@ In some cases, it can also be beneficial to be able to deaggregate a single Kine
 
 ```
 KinesisEventRecord singleRecord = ...;
-try
-{
+try {
     List<UserRecord> userRecords = deaggregator.deaggregate(singleRecord);
-    for (UserRecord userRecord : userRecords)
-    {
+    for (UserRecord userRecord : userRecords) {
         // Your User Record Processing Code Here!
         logger.log(String.format("Processing UserRecord %s (%s:%s)", 
                                     userRecord.getPartitionKey(), 
                                     userRecord.getSequenceNumber(),
                                     userRecord.getSubSequenceNumber()));
     }
-}
-catch (Exception e)
-{
+} catch (Exception e) {
     logger.log(e.getMessage());
 }
 ```
