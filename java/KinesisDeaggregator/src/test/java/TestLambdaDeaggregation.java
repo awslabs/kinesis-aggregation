@@ -2,6 +2,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import com.amazonaws.kinesis.agg.RecordAggregator;
 import com.amazonaws.kinesis.deagg.RecordDeaggregator;
 import com.amazonaws.kinesis.deagg.RecordDeaggregator.KinesisUserRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
+import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
 
@@ -146,5 +148,23 @@ public class TestLambdaDeaggregation {
 
 		assertEquals("Deaggregated Count Matches", aggregated.getNumUserRecords(), userRecords.size());
 		verifyOneToOneMapping(userRecords);
+	}
+
+	@Test
+	public void testEmpty() {
+		// invoke deaggregation on the static records, returning a List of UserRecord
+		List<UserRecord> records = deaggregator.deaggregate(new ArrayList<KinesisEventRecord>());
+
+		assertEquals("Processed Record Count Correct", records.size(), 0);
+		verifyOneToOneMapping(records);
+	}
+
+	@Test
+	public void testOne() {
+		// invoke deaggregation on the static records, returning a List of UserRecord
+		List<UserRecord> records = deaggregator.deaggregate(recordList.get(0));
+
+		assertEquals("Processed Record Count Correct", records.size(), 1);
+		verifyOneToOneMapping(records);
 	}
 }
