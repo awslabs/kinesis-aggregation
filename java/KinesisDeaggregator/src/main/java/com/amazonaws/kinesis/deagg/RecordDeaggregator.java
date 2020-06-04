@@ -18,7 +18,6 @@
 package com.amazonaws.kinesis.deagg;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,6 +26,7 @@ import java.util.stream.Stream;
 
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
 
 /**
  * A Kinesis deaggregator convenience class. This class contains a number of
@@ -41,7 +41,8 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
  *
  */
 public class RecordDeaggregator {
-	private static com.amazonaws.services.kinesis.model.Record convertOne(KinesisEvent.Record r) {
+	private static com.amazonaws.services.kinesis.model.Record convertOne(KinesisEventRecord record) {
+		KinesisEvent.Record r = record.getKinesis();
 		com.amazonaws.services.kinesis.model.Record out = new com.amazonaws.services.kinesis.model.Record()
 				.withPartitionKey(r.getPartitionKey()).withEncryptionType(r.getEncryptionType())
 				.withApproximateArrivalTimestamp(r.getApproximateArrivalTimestamp())
@@ -52,7 +53,7 @@ public class RecordDeaggregator {
 	}
 
 	private static List<com.amazonaws.services.kinesis.model.Record> convertToKinesis(
-			List<KinesisEvent.Record> inputRecords) {
+			List<KinesisEventRecord> inputRecords) {
 		List<com.amazonaws.services.kinesis.model.Record> response = new ArrayList<>();
 
 		inputRecords.stream().forEachOrdered(record -> {
@@ -80,7 +81,7 @@ public class RecordDeaggregator {
 	 *                       the deaggregated UserRecords
 	 * @return Void
 	 */
-	public static Void stream(Stream<KinesisEvent.Record> inputStream, Consumer<UserRecord> streamConsumer) {
+	public static Void stream(Stream<KinesisEventRecord> inputStream, Consumer<UserRecord> streamConsumer) {
 		// deaggregate UserRecords from the Kinesis Records
 		List<UserRecord> deaggregatedRecords = UserRecord
 				.deaggregate(convertToKinesis(inputStream.collect(Collectors.toList())));
@@ -97,7 +98,7 @@ public class RecordDeaggregator {
 	 * @param processor    Instance implementing KinesisUserRecordProcessor
 	 * @return Void
 	 */
-	public static Void processRecords(List<KinesisEvent.Record> inputRecords, KinesisUserRecordProcessor processor) {
+	public static Void processRecords(List<KinesisEventRecord> inputRecords, KinesisUserRecordProcessor processor) {
 		// invoke provided processor
 		return processor.process(UserRecord.deaggregate(convertToKinesis(inputRecords)));
 	}
@@ -110,7 +111,7 @@ public class RecordDeaggregator {
 	 * @return A list of Kinesis UserRecord objects obtained by deaggregating the
 	 *         input list of KinesisEventRecords
 	 */
-	public static List<UserRecord> deaggregate(List<KinesisEvent.Record> inputRecords) {
+	public static List<UserRecord> deaggregate(List<KinesisEventRecord> inputRecords) {
 		List<UserRecord> outputRecords = new LinkedList<>();
 
 		outputRecords.addAll(UserRecord.deaggregate(convertToKinesis(inputRecords)));

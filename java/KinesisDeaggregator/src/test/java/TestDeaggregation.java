@@ -21,11 +21,12 @@ import com.amazonaws.kinesis.deagg.RecordDeaggregator;
 import com.amazonaws.kinesis.deagg.RecordDeaggregator.KinesisUserRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
 
 public class TestDeaggregation {
 	private static final int c = 10;
-	private static Map<String, KinesisEvent.Record> checkset = new HashMap<>();
-	private static List<KinesisEvent.Record> recordList = null;
+	private static Map<String, KinesisEventRecord> checkset = new HashMap<>();
+	private static List<KinesisEventRecord> recordList = null;
 	private static final RecordDeaggregator deaggregator = new RecordDeaggregator();
 	private static RecordAggregator aggregator = null;
 	private static AggRecord aggregated = null;
@@ -55,13 +56,13 @@ public class TestDeaggregation {
 	private void verifyOneToOneMapping(List<UserRecord> userRecords) {
 		userRecords.stream().forEachOrdered(userRecord -> {
 			// get the original checkset record by ID
-			KinesisEvent.Record toCheck = checkset.get(userRecord.getPartitionKey());
+			KinesisEventRecord toCheck = checkset.get(userRecord.getPartitionKey());
 
 			// confirm that toCheck is not null
 			assertNotNull("Found Original CheckSet Record", toCheck);
 
 			// confirm that the data is the same
-			assertEquals("Data Correct", userRecord.getData().toString(), toCheck.getData().toString());
+			assertEquals("Data Correct", userRecord.getData().toString(), toCheck.getKinesis().getData().toString());
 		});
 	}
 
@@ -82,10 +83,12 @@ public class TestDeaggregation {
 			KinesisEvent.Record r = new KinesisEvent.Record();
 			r.withPartitionKey(id).withApproximateArrivalTimestamp(new Date(System.currentTimeMillis()))
 					.withData(ByteBuffer.wrap(data));
-			recordList.add(r);
+			KinesisEventRecord ker = new KinesisEventRecord();
+			ker.setKinesis(r);
+			recordList.add(ker);
 
 			// add the record to the check set
-			checkset.put(id, r);
+			checkset.put(id, ker);
 
 			// add the record to the aggregated AggRecord // create an aggregated set of
 			aggregator.addUserRecord(id, data);
@@ -135,10 +138,12 @@ public class TestDeaggregation {
 		r.setApproximateArrivalTimestamp(new Date(System.currentTimeMillis()));
 		r.setData(ByteBuffer.wrap(aggregated.toRecordBytes()));
 		r.setKinesisSchemaVersion("1.0");
+		KinesisEventRecord ker = new KinesisEventRecord();
+		ker.setKinesis(r);
 
 		// deaggregate the record
-		List<UserRecord> userRecords = deaggregator.deaggregate(Arrays.asList(r));
-		
+		List<UserRecord> userRecords = deaggregator.deaggregate(Arrays.asList(ker));
+
 		assertEquals("Deaggregated Count Matches", aggregated.getNumUserRecords(), userRecords.size());
 		verifyOneToOneMapping(userRecords);
 	}
