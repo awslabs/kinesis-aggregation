@@ -18,6 +18,7 @@
 package com.amazonaws.kinesis.deagg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -98,7 +99,8 @@ public class RecordDeaggregator<T> {
 	 * Method to process a set of Kinesis user records from a Stream of Kinesis
 	 * Event Records using the Java 8 Streams API
 	 * 
-	 * @param inputStream    The Kinesis Event Records provided by AWS Lambda
+	 * @param inputStream    The Kinesis Records provided by AWS Lambda or the
+	 *                       Kinesis SDK
 	 * @param streamConsumer Instance implementing the Consumer interface to process
 	 *                       the deaggregated UserRecords
 	 * @return Void
@@ -114,10 +116,10 @@ public class RecordDeaggregator<T> {
 	}
 
 	/**
-	 * Method to process a set of Kinesis user records from a list of Kinesis Event
+	 * Method to process a set of Kinesis user records from a list of Kinesis
 	 * Records using pre-Streams style API
 	 * 
-	 * @param inputRecords The Kinesis Event Records provided by AWS Lambda
+	 * @param inputRecords The Kinesis Records provided by AWS Lambda
 	 * @param processor    Instance implementing KinesisUserRecordProcessor
 	 * @return Void
 	 */
@@ -130,7 +132,7 @@ public class RecordDeaggregator<T> {
 	 * Method to bulk deaggregate a set of Kinesis user records from a list of
 	 * Kinesis Event Records.
 	 * 
-	 * @param inputRecords The Kinesis Event Records provided by AWS Lambda
+	 * @param inputRecords The Kinesis Records provided by AWS Lambda
 	 * @return A list of Kinesis UserRecord objects obtained by deaggregating the
 	 *         input list of KinesisEventRecords
 	 */
@@ -139,5 +141,16 @@ public class RecordDeaggregator<T> {
 		outputRecords.addAll(UserRecord.deaggregate(convertType(inputRecords)));
 
 		return outputRecords;
+	}
+
+	/**
+	 * Method to deaggregate a single Kinesis record into a List of UserRecords
+	 * 
+	 * @param inputRecord The Kinesis Record provided by AWS Lambda or Kinesis SDK
+	 * @return A list of Kinesis UserRecord objects obtained by deaggregating the
+	 *         input list of KinesisEventRecords
+	 */
+	public List<UserRecord> deaggregate(T inputRecord) {
+		return UserRecord.deaggregate(convertType(Arrays.asList(inputRecord)));
 	}
 }

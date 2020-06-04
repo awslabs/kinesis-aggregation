@@ -50,34 +50,34 @@ In this invocation, we are extracting the KinesisEventRecords from the Event pro
 You can also achieve the same functionality using Lists rather than Java Streams via the `RecordDeaggregator.KinesisUserRecordProcessor` interface:
 
 ```
-        try {
-            // process the user records with an anonymous record processor
-            // instance
-            deaggregator.processRecords(event.getRecords(),
-                    new RecordDeaggregator.KinesisUserRecordProcessor() {
-                        public Void process(List<UserRecord> userRecords) {
-                            for (UserRecord userRecord : userRecords) {
-                                // Your User Record Processing Code Here!
-                                logger.log(String.format(
-                                        "Processing UserRecord %s (%s:%s)",
-                                        userRecord.getPartitionKey(),
-                                        userRecord.getSequenceNumber(),
-                                        userRecord.getSubSequenceNumber()));
-                            }
+try {
+    // process the user records with an anonymous record processor
+    // instance
+    deaggregator.processRecords(event.getRecords(),
+            new RecordDeaggregator.KinesisUserRecordProcessor() {
+                public Void process(List<UserRecord> userRecords) {
+                    for (UserRecord userRecord : userRecords) {
+                        // Your User Record Processing Code Here!
+                        logger.log(String.format(
+                                "Processing UserRecord %s (%s:%s)",
+                                userRecord.getPartitionKey(),
+                                userRecord.getSequenceNumber(),
+                                userRecord.getSubSequenceNumber()));
+                    }
 
-                            return null;
-                        }
-                    });
-        } catch (Exception e) {
-            logger.log(e.getMessage());
-        }
+                    return null;
+                }
+            });
+} catch (Exception e) {
+    logger.log(e.getMessage());
+}
 ```
 
 As with the previous example, you should provide your own application-specific logic in place of the provided `logger.log()` call.
 
 ### Batch-based Deaggregation
 
-For those whole prefer simple method call and response mechanisms, the `RecordDeaggregator` provides a single static `deaggregate` method that takes in a list of aggregated Kinesis records and deaggregates them synchronously in bulk. For example:
+For those whole prefer simple method call and response mechanisms, the `RecordDeaggregator` provides a `deaggregate` method that takes in a list of aggregated Kinesis records and deaggregates them synchronously in bulk. For example:
 
 ```
 try {

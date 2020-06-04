@@ -138,6 +138,15 @@ public class TestDirectDeaggregation {
 	}
 
 	@Test
+	public void testOne() {
+		// invoke deaggregation on the static records, returning a List of UserRecord
+		List<UserRecord> records = deaggregator.deaggregate(recordList.get(0));
+
+		assertEquals("Processed Record Count Correct", records.size(), 1);
+		verifyOneToOneMapping(records);
+	}
+
+	@Test
 	public void testAggregatedRecord() {
 		// create a new KinesisEvent.Record from the aggregated data
 		Record r = new Record();
