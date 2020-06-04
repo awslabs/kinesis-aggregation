@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
+import com.amazonaws.services.kinesis.model.Record;
+import com.amazonaws.services.kinesisfirehose.model.InvalidArgumentException;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
 
@@ -32,16 +34,26 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRec
  * A Kinesis deaggregator convenience class. This class contains a number of
  * static methods that provide different interfaces for deaggregating user
  * records from an existing aggregated Kinesis record. This class is oriented
- * towards deaggregating Kinesis records as provided by AWS Lambda (for other
- * applications, record deaggregation is handled transparently by the Kinesis
- * Consumer Library).
+ * towards deaggregating Kinesis records as provided by AWS Lambda, or through
+ * the Kinesis SDK. Parameterise the instance with the required types
+ * (supporting
+ * com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord
+ * or com.amazonaws.services.kinesis.model.Record only)
  * 
  * NOTE: Any non-aggregated records passed to any deaggregation methods will be
  * returned unchanged.
  *
  */
-public class RecordDeaggregator {
-	private static com.amazonaws.services.kinesis.model.Record convertOne(KinesisEventRecord record) {
+public class RecordDeaggregator<T> {
+	/**
+	 * Interface used by a calling method to call the process function
+	 *
+	 */
+	public interface KinesisUserRecordProcessor {
+		public Void process(List<UserRecord> userRecords);
+	}
+
+	private com.amazonaws.services.kinesis.model.Record convertOne(KinesisEventRecord record) {
 		KinesisEvent.Record r = record.getKinesis();
 		com.amazonaws.services.kinesis.model.Record out = new com.amazonaws.services.kinesis.model.Record()
 				.withPartitionKey(r.getPartitionKey()).withEncryptionType(r.getEncryptionType())
@@ -52,8 +64,7 @@ public class RecordDeaggregator {
 
 	}
 
-	private static List<com.amazonaws.services.kinesis.model.Record> convertToKinesis(
-			List<KinesisEventRecord> inputRecords) {
+	private List<com.amazonaws.services.kinesis.model.Record> convertToKinesis(List<KinesisEventRecord> inputRecords) {
 		List<com.amazonaws.services.kinesis.model.Record> response = new ArrayList<>();
 
 		inputRecords.stream().forEachOrdered(record -> {
@@ -64,12 +75,23 @@ public class RecordDeaggregator {
 
 	}
 
-	/**
-	 * Interface used by a calling method to call the process function
-	 *
-	 */
-	public interface KinesisUserRecordProcessor {
-		public Void process(List<UserRecord> userRecords);
+	@SuppressWarnings("unchecked")
+	private List<Record> convertType(List<T> inputRecords) {
+		List<Record> records = null;
+
+		if (inputRecords.size() > 0 && inputRecords.get(0) instanceof KinesisEventRecord) {
+			records = convertToKinesis((List<KinesisEventRecord>) inputRecords);
+		} else if (inputRecords.size() > 0 && inputRecords.get(0) instanceof Record) {
+			records = (List<Record>) inputRecords;
+		} else {
+			if (inputRecords.size() == 0) {
+				return new ArrayList<Record>();
+			} else {
+				throw new InvalidArgumentException("Input Types must be Kinesis Event or Model Records");
+			}
+		}
+
+		return records;
 	}
 
 	/**
@@ -81,10 +103,11 @@ public class RecordDeaggregator {
 	 *                       the deaggregated UserRecords
 	 * @return Void
 	 */
-	public static Void stream(Stream<KinesisEventRecord> inputStream, Consumer<UserRecord> streamConsumer) {
+	public Void stream(Stream<T> inputStream, Consumer<UserRecord> streamConsumer) {
 		// deaggregate UserRecords from the Kinesis Records
-		List<UserRecord> deaggregatedRecords = UserRecord
-				.deaggregate(convertToKinesis(inputStream.collect(Collectors.toList())));
+
+		List<T> streamList = inputStream.collect(Collectors.toList());
+		List<UserRecord> deaggregatedRecords = UserRecord.deaggregate(convertType(streamList));
 		deaggregatedRecords.stream().forEachOrdered(streamConsumer);
 
 		return null;
@@ -98,9 +121,9 @@ public class RecordDeaggregator {
 	 * @param processor    Instance implementing KinesisUserRecordProcessor
 	 * @return Void
 	 */
-	public static Void processRecords(List<KinesisEventRecord> inputRecords, KinesisUserRecordProcessor processor) {
+	public Void processRecords(List<T> inputRecords, KinesisUserRecordProcessor processor) {
 		// invoke provided processor
-		return processor.process(UserRecord.deaggregate(convertToKinesis(inputRecords)));
+		return processor.process(UserRecord.deaggregate(convertType(inputRecords)));
 	}
 
 	/**
@@ -111,10 +134,9 @@ public class RecordDeaggregator {
 	 * @return A list of Kinesis UserRecord objects obtained by deaggregating the
 	 *         input list of KinesisEventRecords
 	 */
-	public static List<UserRecord> deaggregate(List<KinesisEventRecord> inputRecords) {
+	public List<UserRecord> deaggregate(List<T> inputRecords) {
 		List<UserRecord> outputRecords = new LinkedList<>();
-
-		outputRecords.addAll(UserRecord.deaggregate(convertToKinesis(inputRecords)));
+		outputRecords.addAll(UserRecord.deaggregate(convertType(inputRecords)));
 
 		return outputRecords;
 	}
