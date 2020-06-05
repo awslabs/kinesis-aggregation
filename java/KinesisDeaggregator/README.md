@@ -122,6 +122,79 @@ As with the previous example, you should provide your own application-specific l
 
 The record deaggregation methods in `RecordDeaggregator` can handle both records in the standard Kinesis aggregated record format as well as Kinesis records in arbitrary user-defined formats.  If you pass records to the `RecordDeaggregator` that follow the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), they will be deaggregated into one or more Kinesis user records per the encoding rules.  If you pass records to the `RecordDeaggregator` that are not actually aggregated records, they will be returned unchanged as Kinesis user records.  You may also mix aggregated and non-aggregated records in the same deaggregation call.
 
+## Sample Code
+
+This project includes a set of sample code to help you create a Lambda function that leverages deaggregation. Both of the below contents are provided in the `src/sample/java` folder.
+
+### EchoHandler.java
+
+```
+import java.util.List;
+
+import com.amazonaws.kinesis.deagg.RecordDeaggregator;
+import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
+
+public class EchoHandler implements RequestHandler<KinesisEvent, Void> {
+
+	@Override
+	public Void handleRequest(KinesisEvent event, Context context) {
+		LambdaLogger logger = context.getLogger();
+
+		// extract the records from the event
+		List<KinesisEventRecord> records = event.getRecords();
+
+		logger.log(String.format("Recieved %s Raw Records", records.size()));
+
+		// now deaggregate the message contents
+		List<UserRecord> deaggregated = new RecordDeaggregator<KinesisEventRecord>().deaggregate(records);
+		logger.log(String.format("Received %s Deaggregated User Records", deaggregated.size()));
+		
+		deaggregated.stream().forEachOrdered(rec -> {
+			logger.log(rec.getPartitionKey());
+		});
+
+		return null;
+	}
+}
+
+```
+
+This class will output the size of the received batch from Kinesis, and then deaggregate the user records and output the count of those records, along with each Partition Key recieved.
+
+If you would like to test this functionality, create a new Java 8 Lambda function with the above code and required dependencies. You can then use the below TestEvent to show the functionality of the deaggregating Lambda:
+
+### SampleLambdaEvent.json
+
+```
+{
+  "Records": [
+    {
+      "kinesis": {
+        "partitionKey": "partitionKey-03",
+        "kinesisSchemaVersion": "1.0",
+        "data": "84mawgoDYWJjEicxOTE0MTU2NTgzNDQxNTg3NjYxNjgwMzE0NzMyNzc5MjI4MDM1NzAaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2Jh0I8WvwEDJiGD4YsiKIfUOw==",
+        "sequenceNumber": "49545115243490985018280067714973144582180062593244200961",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "eventVersion": "1.0",
+      "eventName": "aws:kinesis:record",
+      "eventSourceARN": "arn:aws:kinesis:EXAMPLE",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}
+```
+
+This file contains an event that simulates an Aggregated Kinesis Event enclosing 100 User Records. The payload of this message is alternating lower case alpha in forward, then backward order.
+
 ----
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
