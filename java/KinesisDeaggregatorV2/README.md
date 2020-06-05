@@ -1,8 +1,8 @@
-# Kinesis Java Record Deaggregator for AWS V1 SDK's
+# Kinesis Java Record Deaggregator for AWS V2 SDK's
 
 This library provides a set of convenience functions to perform in-memory record deaggregation that is compatible with the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) used by the Kinesis Producer Library (KPL) and the KinesisAggregator module. This module can be used in any Java-based application that receives aggregated Kinesis records, including applications running on AWS Lambda.
 
-This module is only compatible with version 1.x AWS SDK's.
+This module is compatible with the V2 AWS SDK's.
 
 ## Record Deaggregation
 
@@ -10,7 +10,7 @@ The `RecordDeaggregator` is the class that does the work of extracting individua
 
 ### Creating a Deaggregator
 
-There are two supported base classes that can be used for Deaggregation, `com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord` and `com.amazonaws.services.kinesis.model.Record`. These support Lambda based access, and Kinesis SDK access respectively. Use of any other base class will throw an `InvalidArgumentsException`.  
+There are two supported base classes that can be used for Deaggregation, `com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord` and `software.amazon.awssdk.services.kinesis.model.Record`. These support Lambda based access, and Kinesis V2 SDK access respectively. Use of any other base class will throw an `InvalidArgumentsException`.  
 
 This project uses Java Generics to handle these different types correctly. To create a Lambda compliant Deaggregator, use:
 
@@ -23,7 +23,7 @@ RecordDeaggregator<KinesisEventRecord> deaggregator = new RecordDeaggregator<>()
 and for the Kinesis SDK:
 
 ```
-import com.amazonaws.services.kinesis.model.Record;
+import software.amazon.awssdk.services.kinesis.model.Record;
 ...
 RecordDeaggregator<Record> deaggregator = new RecordDeaggregator<>();
 ```
@@ -38,9 +38,9 @@ deaggregator.stream(
     userRecord -> {
         // Your User Record Processing Code Here!
         logger.log(String.format("Processing UserRecord %s (%s:%s)",
-                userRecord.getPartitionKey(),
-                userRecord.getSequenceNumber(),
-                userRecord.getSubSequenceNumber()));
+                userRecord.partitionKey(),
+                userRecord.sequenceNumber(),
+                userRecord.subSequenceNumber()));
     }
 );
 ```
@@ -57,14 +57,14 @@ try {
     // instance
     deaggregator.processRecords(event.getRecords(),
             new RecordDeaggregator.KinesisUserRecordProcessor() {
-                public Void process(List<UserRecord> userRecords) {
-                    for (UserRecord userRecord : userRecords) {
+                public Void process(List<KinesisClientRecord> userRecords) {
+                    for (KinesisClientRecord userRecord : userRecords) {
                         // Your User Record Processing Code Here!
                         logger.log(String.format(
                                 "Processing UserRecord %s (%s:%s)",
-                                userRecord.getPartitionKey(),
-                                userRecord.getSequenceNumber(),
-                                userRecord.getSubSequenceNumber()));
+                                userRecord.partitionKey(),
+                                userRecord.sequenceNumber(),
+                                userRecord.subSequenceNumber()));
                     }
 
                     return null;
@@ -83,13 +83,13 @@ For those whole prefer simple method call and response mechanisms, the `RecordDe
 
 ```
 try {
-    List<UserRecord> userRecords = deaggregator.deaggregate(event.getRecords());
-    for (UserRecord userRecord : userRecords) {
+    List<KinesisClientRecord> userRecords = deaggregator.deaggregate(event.getRecords());
+    for (KinesisClientRecord userRecord : userRecords) {
         // Your User Record Processing Code Here!
-        logger.log(String.format("Processing UserRecord %s (%s:%s)", 
-                                    userRecord.getPartitionKey(), 
-                                    userRecord.getSequenceNumber(),
-                                    userRecord.getSubSequenceNumber()));
+        logger.log(String.format("Processing KinesisClientRecord %s (%s:%s)", 
+                                    userRecord.partitionKey(), 
+                                    userRecord.sequenceNumber(),
+                                    userRecord.subSequenceNumber()));
     }
 } catch (Exception e) {
     logger.log(e.getMessage());
@@ -105,13 +105,13 @@ In some cases, it can also be beneficial to be able to deaggregate a single Kine
 ```
 KinesisEventRecord singleRecord = ...;
 try {
-    List<UserRecord> userRecords = deaggregator.deaggregate(singleRecord);
-    for (UserRecord userRecord : userRecords) {
+    List<KinesisClientRecord> userRecords = deaggregator.deaggregate(singleRecord);
+    for (KinesisClientRecord userRecord : userRecords) {
         // Your User Record Processing Code Here!
         logger.log(String.format("Processing UserRecord %s (%s:%s)", 
-                                    userRecord.getPartitionKey(), 
-                                    userRecord.getSequenceNumber(),
-                                    userRecord.getSubSequenceNumber()));
+                                    userRecord.partitionKey(), 
+                                    userRecord.pequenceNumber(),
+                                    userRecord.subSequenceNumber()));
     }
 } catch (Exception e) {
     logger.log(e.getMessage());
@@ -131,15 +131,17 @@ This project includes a set of sample code to help you create a Lambda function 
 ### EchoHandler.java
 
 ```
+package com.amazonaws.kinesis.deagg;
+
 import java.util.List;
 
-import com.amazonaws.kinesis.deagg.RecordDeaggregator;
-import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent.KinesisEventRecord;
+
+import software.amazon.kinesis.retrieval.KinesisClientRecord;
 
 public class EchoHandler implements RequestHandler<KinesisEvent, Void> {
 
@@ -152,18 +154,21 @@ public class EchoHandler implements RequestHandler<KinesisEvent, Void> {
 
 		logger.log(String.format("Recieved %s Raw Records", records.size()));
 
-		// now deaggregate the message contents
-		List<UserRecord> deaggregated = new RecordDeaggregator<KinesisEventRecord>().deaggregate(records);
-		logger.log(String.format("Received %s Deaggregated User Records", deaggregated.size()));
-		
-		deaggregated.stream().forEachOrdered(rec -> {
-			logger.log(rec.getPartitionKey());
-		});
+		try {
+			// now deaggregate the message contents
+			List<KinesisClientRecord> deaggregated = new RecordDeaggregator<KinesisEventRecord>().deaggregate(records);
+			logger.log(String.format("Received %s Deaggregated User Records", deaggregated.size()));
+
+			deaggregated.stream().forEachOrdered(rec -> {
+				logger.log(rec.partitionKey());
+			});
+		} catch (Exception e) {
+			logger.log(e.getMessage());
+		}
 
 		return null;
 	}
 }
-
 ```
 
 This class will output the size of the received batch from Kinesis, and then deaggregate the user records and output the count of those records, along with each Partition Key recieved.

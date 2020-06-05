@@ -18,37 +18,55 @@
 package com.amazonaws.kinesis.agg;
 
 import java.nio.charset.StandardCharsets;
-import com.amazonaws.kinesis.agg.RecordAggregator;
-import com.amazonaws.kinesis.agg.AggRecord;
+import java.util.Base64;
+import java.util.Random;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-public class RecordAggregatorTest
-{
-    protected final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-    
-    @Test
-    public void testSingleUserRecord()
-    {
-        RecordAggregator aggregator = new RecordAggregator();
-        
-        Assert.assertEquals(0, aggregator.getNumUserRecords());
-        
-        try
-        {
-            aggregator.addUserRecord("partition_key", ALPHABET.getBytes(StandardCharsets.UTF_8));
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("Encountered unexpected exception: " + e.getMessage());
-        }        
-        Assert.assertEquals(1, aggregator.getNumUserRecords());
-        
-        AggRecord record = aggregator.clearAndGet();
-        Assert.assertNotNull(record);
-        Assert.assertEquals(0, aggregator.getNumUserRecords());
-        
-        Assert.assertEquals(1, record.getNumUserRecords());
-    }
+public class RecordAggregatorTest {
+	protected final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+
+	@Test
+	public void testSingleUserRecord() {
+		RecordAggregator aggregator = new RecordAggregator();
+
+		Assert.assertEquals(0, aggregator.getNumUserRecords());
+
+		try {
+			aggregator.addUserRecord("partition_key", ALPHABET.getBytes(StandardCharsets.UTF_8));
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail("Encountered unexpected exception: " + e.getMessage());
+		}
+		Assert.assertEquals(1, aggregator.getNumUserRecords());
+
+		AggRecord record = aggregator.clearAndGet();
+		Assert.assertNotNull(record);
+		Assert.assertEquals(0, aggregator.getNumUserRecords());
+
+		Assert.assertEquals(1, record.getNumUserRecords());
+	}
+
+	@Test
+	public void testMultiRecord() throws Exception {
+		RecordAggregator aggregator = new RecordAggregator();
+		Random rand = new Random();
+		String key = "abc";
+		int c = 100;
+		String encodedTargetValue = "84mawgoDYWJjEicxOTE0MTU2NTgzNDQxNTg3NjYxNjgwMzE0NzMyNzc5MjI4MDM1NzAaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhGiAIABAAGhphYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ehogCAAQABoaenl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmEaIAgAEAAaGmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6GiAIABAAGhp6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYRogCAAQABoaYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoaIAgAEAAaGnp5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2Jh0I8WvwEDJiGD4YsiKIfUOw==";
+		Assert.assertEquals(0, aggregator.getNumUserRecords());
+		String flip = new StringBuilder(ALPHABET).reverse().toString();
+
+		// add 100 random records all with the same partition key
+		for (int i = 0; i < c; i++) {
+			String pattern = i % 2 == 0 ? ALPHABET : flip;
+			aggregator.addUserRecord(key, pattern.getBytes(StandardCharsets.UTF_8));
+		}
+
+		AggRecord r = aggregator.clearAndGet();
+		Assert.assertEquals(c, r.getNumUserRecords());
+		String encodedString = Base64.getEncoder().encodeToString(r.toRecordBytes());
+		Assert.assertEquals(encodedTargetValue, encodedString);
+	}
 }
