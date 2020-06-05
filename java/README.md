@@ -8,7 +8,14 @@ The [KinesisAggregator](KinesisAggregator) subproject contains Java classes that
 
 ## KinesisDeaggregator
 
-The [KinesisDeaggregator](KinesisDeaggregator) subproject contains Java classes that allow you to deaggregate records that were transmitted using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), including those transmitted by the Kinesis Producer Library.  This library will allow you to deaggregate aggregated records in any Java environment, including AWS Lambda.
+The Deaggregation subprojects contain Java classes that allow you to deaggregate records that were transmitted using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md), including those transmitted by the Kinesis Producer Library.  This library will allow you to deaggregate aggregated records in any Java environment, including AWS Lambda.
+
+There are 2 versions of Deaggregator modules, based upon the AWS SDK version you are using:
+
+| SDK | Project |
+| --- | ------- |
+|Version 1 | [KinesisDeaggregator](KinesisDeaggregator) |
+|Version 2 | [KinesisDeaggregatorV2](KinesisDeaggregatorV2) |
 
 ## KinesisTestConsumers
 
