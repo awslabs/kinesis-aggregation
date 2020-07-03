@@ -40,7 +40,7 @@ const loadBuilder = () => {
 
 	// create the builder from the proto file
 	const builder = ProtoBuf.Root.fromJSON(kplProto);
-	return builder.build(constants.kplConfig[constants.useKplVersion].messageName);
+	return builder.lookupType(constants.kplConfig[constants.useKplVersion].messageName);
 };
 module.exports.loadBuilder = loadBuilder;
 

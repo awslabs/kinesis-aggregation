@@ -26,7 +26,7 @@ describe('#common', () => {
     })
 
     it('AggregatedRecord is an object which will hold the protocol buffer model', () => {
-        common.AggregatedRecord.should.be.Function()
+        common.AggregatedRecord.should.be.Object()
         common.AggregatedRecord.encode.should.be.Function()
         common.AggregatedRecord.decode.should.be.Function()
     })

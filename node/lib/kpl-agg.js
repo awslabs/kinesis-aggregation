@@ -153,7 +153,7 @@ function aggregateRecord(records) {
 		}));
 	}
 
-	const bufferData = protoData.toBuffer();
+	const bufferData = protoData.finish();
 
 	// get the md5 for the encoded data
 	const md5 = crypto.createHash('md5');
@@ -205,7 +205,7 @@ function generateEncodedRecord(records) {
 	if(ehk !== undefined) {
 		encodedRecord["ExplicitHashKey"] = ehk
 	}
-	// return encoded record 
+	// return encoded record
 	return encodedRecord
 }
 
@@ -222,7 +222,7 @@ function callOnReadyCallback(err, records, onReadyCallback) {
 
 /**
  * RecordAggregator build an object which aggregate records with a max size of 1Mo.
- * @param {*} onReadyCallback 
+ * @param {*} onReadyCallback
  */
 function RecordAggregator(onReadyCallback) {
 
