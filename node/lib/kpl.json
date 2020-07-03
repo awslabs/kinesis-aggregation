@@ -1,0 +1,61 @@
+{
+  "nested": {
+    "Tag": {
+      "fields": {
+        "key": {
+          "rule": "required",
+          "type": "string",
+          "id": 1
+        },
+        "value": {
+          "rule": "optional",
+          "type": "string",
+          "id": 2
+        }
+      }
+    },
+    "Record": {
+      "fields": {
+        "partition_key_index": {
+          "rule": "required",
+          "type": "uint64",
+          "id": 1
+        },
+        "explicit_hash_key_index": {
+          "rule": "optional",
+          "type": "uint64",
+          "id": 2
+        },
+        "data": {
+          "rule": "required",
+          "type": "bytes",
+          "id": 3
+        },
+        "tags": {
+          "rule": "repeated",
+          "type": "Tag",
+          "id": 4
+        }
+      }
+    },
+    "AggregatedRecord": {
+      "fields": {
+        "partition_key_table": {
+          "rule": "repeated",
+          "type": "string",
+          "id": 1
+        },
+        "explicit_hash_key_table": {
+          "rule": "repeated",
+          "type": "string",
+          "id": 2
+        },
+        "records": {
+          "rule": "repeated",
+          "type": "Record",
+          "id": 3
+        }
+      }
+    }
+  }
+}
