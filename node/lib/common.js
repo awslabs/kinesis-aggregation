@@ -3,14 +3,14 @@
  * Common methods.
  */
 const ProtoBuf = require("protobufjs");
-const Path = require('path');
+const kplProto = require('./kpl.json');
 
 /**
  * Define some constant.
  */
 const constants = {
 	debug: false, // enable debug log message
-	protofile: "kpl.proto", // protbuf definition file
+	protofile: "kpl.json", // protbuf definition file
 	useKplVersion: "0.9.0",
 	kplConfig: {
 		"0.9.0": {
@@ -39,7 +39,7 @@ const loadBuilder = () => {
 	}
 
 	// create the builder from the proto file
-	const builder = ProtoBuf.loadProtoFile(Path.resolve(__dirname, constants.protofile));
+	const builder = ProtoBuf.Root.fromJSON(kplProto);
 	return builder.build(constants.kplConfig[constants.useKplVersion].messageName);
 };
 module.exports.loadBuilder = loadBuilder;

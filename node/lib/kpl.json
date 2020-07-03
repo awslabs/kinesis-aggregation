@@ -1,0 +1,52 @@
+{
+  "nested": {
+    "Tag": {
+      "fields": {
+        "key": {
+          "type": "string",
+          "id": 1
+        },
+        "value": {
+          "type": "string",
+          "id": 2
+        }
+      }
+    },
+    "Record": {
+      "fields": {
+        "partition_key_index": {
+          "type": "uint64",
+          "id": 1
+        },
+        "explicit_hash_key_index": {
+          "type": "uint64",
+          "id": 2
+        },
+        "data": {
+          "type": "bytes",
+          "id": 3
+        },
+        "tags": {
+          "type": "Tag",
+          "id": 4
+        }
+      }
+    },
+    "AggregatedRecord": {
+      "fields": {
+        "partition_key_table": {
+          "type": "string",
+          "id": 1
+        },
+        "explicit_hash_key_table": {
+          "type": "string",
+          "id": 2
+        },
+        "records": {
+          "type": "Record",
+          "id": 3
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@
     },
     "dependencies": {
         "async": "2.6.1",
-        "protobufjs": "5.0.3"
+        "protobufjs": "6.9.0"
     },
     "keywords": [
         "amazon",
