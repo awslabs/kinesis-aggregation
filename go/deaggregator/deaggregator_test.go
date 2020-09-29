@@ -40,7 +40,7 @@ func generateAggregateRecord(numRecords int) []byte {
 		}
 
 		aggr.Records = append(aggr.Records, r)
-		partKeyVal := "test" + string(i)
+		partKeyVal := "test" + fmt.Sprint(i)
 		partKeyTable = append(partKeyTable, partKeyVal)
 	}
 
