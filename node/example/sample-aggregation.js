@@ -37,7 +37,7 @@ var handleNoProcess = function (event, callback) {
 		noProcessReason = "Event contains no Data";
 	}
 	if (event.Records[0].eventSource !== "aws:kinesis") {
-		noProcessReason = "Invalid Event Source " + event.eventSource;
+		noProcessReason = "Invalid Event Source " + event.Records[0].eventSource;
 	}
 	if (event.Records[0].kinesis.kinesisSchemaVersion !== "1.0") {
 		noProcessReason = "Unsupported Event Schema Version " +
