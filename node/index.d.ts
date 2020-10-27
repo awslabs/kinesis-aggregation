@@ -6,7 +6,7 @@ declare module 'aws-kinesis-agg' {
         explicitPartitionKey: string;
         sequencenumber: string;
         subSequencenumber: number;
-        data: Buffer;
+        data: string;
     }
 
     export interface EncodedRecord {
