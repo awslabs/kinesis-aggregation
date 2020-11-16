@@ -176,7 +176,7 @@ def iter_deaggregate_records(records):
     return value - Each yield returns a single Kinesis user record. (dict)"""
     
     # We got a single record...try to coerce it to a list
-    if isinstance(records, collections.Mapping):
+    if isinstance(records, collections.abc.Mapping):
         records = [records]
         
     for r in records:
