@@ -17,7 +17,7 @@ const generateUserRecordsWithoutEHKs = function() {
         var record = {
             partitionKey : u,
             // random payload
-            data : new Buffer(crypto.randomBytes(100).toString('base64'))
+            data : Buffer.from(crypto.randomBytes(100).toString('base64'))
         };
     
         records.push(record)
