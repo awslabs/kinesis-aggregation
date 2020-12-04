@@ -1,4 +1,5 @@
 import {Kinesis} from 'aws-sdk';
+import {KinesisStreamRecordPayload} from 'aws-lambda/trigger/kinesis-stream';
 
 declare module 'aws-kinesis-agg' {
     export interface UserRecord {
@@ -14,13 +15,13 @@ declare module 'aws-kinesis-agg' {
         data: Buffer;
     }
 
-    export function deaggregate(kinesisRecord: Kinesis.Types.Record, 
+    export function deaggregate(kinesisRecord: KinesisStreamRecordPayload, 
         computeChecksums: boolean,
         perRecordCallback: (err: Error, userRecords?: UserRecord) => void,
         afterRecordCallback: (err?: Error, errorUserRecord?: UserRecord) => void
     ): void;
 
-    export function deaggregateSync(kinesisRecord: Kinesis.Types.Record, 
+    export function deaggregateSync(kinesisRecord: KinesisStreamRecordPayload, 
         computeChecksums: boolean,
         afterRecordCallback: (err: Error, userRecords?: UserRecord[]) => void
     ): void;

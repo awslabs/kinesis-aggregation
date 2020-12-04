@@ -44,6 +44,7 @@
         "test": "export NODE_ENV=test && mocha --recursive --timeout 4000"
     },
     "devDependencies": {
+        "@types/aws-lambda": "^8.10.64",
         "aws-sdk": "^2.339.0",
         "jshint": "^2.11.0",
         "mocha": "^8.1.1",
