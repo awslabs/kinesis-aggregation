@@ -4,7 +4,7 @@ import {KinesisStreamRecordPayload} from 'aws-lambda/trigger/kinesis-stream';
 declare module 'aws-kinesis-agg' {
     export interface UserRecord {
         partitionKey: string;
-        explicitPartitionKey: string;
+        explicitPartitionKey?: string;
         sequencenumber: string;
         subSequencenumber: number;
         data: string;
