@@ -5,8 +5,8 @@ declare module 'aws-kinesis-agg' {
     export interface UserRecord {
         partitionKey: string;
         explicitPartitionKey?: string;
-        sequencenumber: string;
-        subSequencenumber: number;
+        sequenceNumber: string;
+        subSequenceNumber: number;
         data: string;
     }
 
