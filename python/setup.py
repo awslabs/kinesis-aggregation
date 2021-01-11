@@ -23,13 +23,13 @@ with open('README.md', encoding='utf-8') as f:
 setup(
   name='aws_kinesis_agg',
   packages=['aws_kinesis_agg'],
-  version='1.1.3',
+  version='1.1.4',
   description='Python module to assist in taking advantage of the Kinesis message aggregation '
               'format for both aggregation and deaggregation.',
   long_description=long_description,
   long_description_content_type='text/markdown',
-  author='Brent Nash',
-  author_email='brenash@amazon.com',
+  author='Ian Meyers',
+  author_email='meyersi@amazon.com',
   license="Apache-2.0",
   url='http://github.com/awslabs/kinesis-aggregation',
   keywords=['aws', 'kinesis', 'aggregation', 'deaggregation', 'kpl'],

@@ -1,12 +1,11 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: aws-kinesis-agg
-Version: 1.1.3
+Version: 1.1.4
 Summary: Python module to assist in taking advantage of the Kinesis message aggregation format for both aggregation and deaggregation.
 Home-page: http://github.com/awslabs/kinesis-aggregation
-Author: Brent Nash
-Author-email: brenash@amazon.com
+Author: Ian Meyers
+Author-email: meyersi@amazon.com
 License: Apache-2.0
-Description-Content-Type: text/markdown
 Description: # Python Kinesis Aggregation & Deaggregation Modules
         
         The Kinesis Aggregation/Deaggregation Modules for Python provide the ability to do in-memory aggregation and deaggregation of standard Kinesis user records using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md) to allow for more efficient transmission of records.
@@ -277,3 +276,4 @@ Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Utilities
+Description-Content-Type: text/markdown

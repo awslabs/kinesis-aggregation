@@ -21,7 +21,7 @@ import aws_kinesis_agg.kpl_pb2
 import hashlib
 import six
 import threading
-
+import copy
 
 def _calculate_varint_size(value):
     """For an integral value represented by a varint, calculate how many bytes 
@@ -212,7 +212,7 @@ class RecordAggregator(object):
         
         # If we hit this point, aggregated record is full
         # Call all the callbacks (potentially on a separate thread)
-        out_record = self.current_record
+        out_record = copy.deepcopy(self.current_record)
         for (callback, execute_on_new_thread) in self.callbacks:
             if execute_on_new_thread:
                 threading.Thread(target=callback, args=(out_record,)).start()

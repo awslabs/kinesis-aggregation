@@ -30,11 +30,12 @@ IGNORE_DIRS = [BUILD_DIR_NAME, TEST_DIR_NAME]
 cur_dir = None
 proj_dir = None
 build_dir = None
+version = "1.1.4"
 
 
 def is_python_file(filename):
-    """Returns True if the input flie path has a .py extension. False otherwise."""
-    
+    """Returns True if the input file path has a .py extension. False otherwise."""
+
     return os.path.isfile(filename) and os.path.splitext(filename)[-1] == '.py'
 
 
@@ -45,32 +46,32 @@ def initialize_current_working_dir():
     global cur_dir, proj_dir
 
     cur_dir = os.path.normpath(os.getcwd())
-    print('Current Working Directory = {}'.format(os.getcwd()))
-    
+    print(f'Current Working Directory = {cur_dir}')
+
     proj_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
-    print('Project Directory = {}'.format(proj_dir))
-    
+    print(f'Project Directory = {proj_dir}')
+
     if cur_dir != proj_dir:
         print('Changing CWD to script directory...')
-        os.chdir(proj_dir)        
-    print('Current Working Directory = {}'.format(os.getcwd()))
+        os.chdir(proj_dir)
+    print(f'Current Working Directory = {proj_dir}')
 
-    
+
 def setup_build_dir():
     """Removes any existing build directories and creates a new one.  Due to issues with
-    running "pip install <foo> -t <build_dir>" multiple times to the same directory, it's
+    running "pip3 install <foo> -t <build_dir>" multiple times to the same directory, it's
     easier to just create a new build dir every time."""
 
     global build_dir
 
     print('')
     build_dir = os.path.join(os.getcwd(), BUILD_DIR_NAME)
-    print('Setting up build directory: {}'.format(build_dir))
+    print(f'Setting up build directory: {build_dir}')
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir, True)
     os.mkdir(build_dir)
 
-    
+
 def copy_source_to_build_dir():
     """Copy all Python source files to the build directory."""
 
@@ -80,25 +81,25 @@ def copy_source_to_build_dir():
     print('Looking for Python source files...')
     for source in os.listdir(os.getcwd()):
         if is_python_file(source) and source != __file__:
-            print('Copy file {} to build directory...'.format(source))
+            print(f'Copy file {source} to build directory...')
             shutil.copy(source, build_dir)
         elif os.path.isdir(source) and source not in IGNORE_DIRS:
-            print('Copy folder {} to build directory...'.format(source))
+            print(f'Copy folder {source} to build directory...')
             shutil.copytree(source, os.path.join(build_dir, source))
-            
-            
+
+
 def install_dependencies():
     """Using PIP, install all dependencies to the build directory."""
 
     global proj_dir, build_dir
 
     print('')
-    
+
     #  Install PIP dependencies to the build directory
     print('')
     print('Installing necessary modules from pip...')
     requirements_file = os.path.join(proj_dir, REQUIREMENTS_FILE_NAME)
-    pip_install_cmd = '{} -m pip install -r {} -t "{}"'.format(sys.executable, requirements_file, build_dir)
+    pip_install_cmd = f'pip3 install -r {requirements_file} -t "{build_dir}"'
     print(pip_install_cmd)
     pip_install_cmd_line_result = subprocess.call(pip_install_cmd, shell=True)
     if pip_install_cmd_line_result != 0:
@@ -113,44 +114,43 @@ def install_dependencies():
     if os.path.exists(protobuf_install_dir) and not os.path.exists(protobuf_init_file):
         open(protobuf_init_file, 'a').close()
 
-        
+
 def create_zip():
     """Zip up the contents of the build directory into a zip file that can be deployed
     to AWS Lambda."""
 
     global build_dir
-    
+
     print('')
     print('Building zip file for AWS Lambda...')
-    zip_path = os.path.join(os.getcwd(), 'python_lambda_build.zip')
+    zip_path = os.path.join(os.getcwd(), f'python_lambda_build-{version}.zip')
     os.chdir(build_dir)
-    with zipfile.PyZipFile(zip_path, 'w') as output_zip:
+    with zipfile.ZipFile(zip_path, 'w') as output_zip:
         for item in os.listdir(build_dir):
             if os.path.isdir(item) or is_python_file(item):
-                print('Adding {} to zip...'.format(item))
-                output_zip.writepy(item)
-    
+                print(f'Adding {item} to zip...')
+                output_zip.write(item)
+
     return zip_path
 
-    
+
 if __name__ == '__main__':
-    
     print('')
     print('Creating build for AWS Lambda...')
     print('')
-    
+
     initialize_current_working_dir()
-    
+
     setup_build_dir()
-    
+
     copy_source_to_build_dir()
-    
+
     install_dependencies()
-    
+
     zip_file_path = create_zip()
-        
+
     print('')
     print('Successfully created Lambda build zip file: {}'.format(zip_file_path))
     print('')
-    
+
     sys.exit(0)
