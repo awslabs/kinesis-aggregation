@@ -155,6 +155,30 @@ class RecordAggregatorTest(unittest.TestCase):
         self.assertEqual(expected_agg_record_no_ehks, base64.b64encode(data).decode('utf-8'),
                          'Agg record data does not match aggregated data from KPL (it should).')
 
+    def test_single_record_too_big(self):
+        aggregator = agg.RecordAggregator()
+        # 2MB exceeds default of 1MB in aws_kinesis_agg.MAX_BYTES_PER_RECORD
+        with self.assertRaises(ValueError):
+            aggregator.add_user_record(partition_key='pk', data=bytes(2*1024*1024))
+
+        # 600KB exceeds configured max_size of 500KB
+        aggregator = agg.RecordAggregator(max_size=500*1024)
+        with self.assertRaises(ValueError):
+            aggregator.add_user_record(partition_key='pk', data=bytes(600*1024))
+
+    def test_max_size(self):
+        aggregator = agg.RecordAggregator(max_size=500*1024)
+        # first 300K fits
+        result = aggregator.add_user_record(partition_key='pk', data=bytes(300*1024))
+        if result:
+            self.fail('Unexpectedly received a full agg record.')
+        self.assertEqual(1, aggregator.get_num_user_records(), 'Aggregator reported improper number of records.')
+
+        # another 300K triggers full record
+        result = aggregator.add_user_record(partition_key='pk', data=bytes(300*1024))
+        if not result:
+            self.fail('Unexpectedly failed to receive a full agg record.')
+
 
 if __name__ == '__main__':
 
