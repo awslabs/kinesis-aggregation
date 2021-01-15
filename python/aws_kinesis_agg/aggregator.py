@@ -127,6 +127,10 @@ class RecordAggregator(object):
     def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
         """Create a new empty aggregator."""
 
+        if max_size > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+            raise ValueError('Invalid max_size %d exceeds maximum value %d' %
+                             (max_size, aws_kinesis_agg.MAX_BYTES_PER_RECORD))
+
         self.max_size = max_size
         self.current_record = AggRecord(self.max_size)
         self.callbacks = []
