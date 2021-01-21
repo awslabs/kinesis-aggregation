@@ -124,10 +124,15 @@ class RecordAggregator(object):
     
     NOTE: This object is not thread-safe."""
     
-    def __init__(self):
+    def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
         """Create a new empty aggregator."""
-        
-        self.current_record = AggRecord()
+
+        if max_size > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+            raise ValueError('Invalid max_size %d exceeds maximum value %d' %
+                             (max_size, aws_kinesis_agg.MAX_BYTES_PER_RECORD))
+
+        self.max_size = max_size
+        self.current_record = AggRecord(self.max_size)
         self.callbacks = []
 
     def on_record_complete(self, callback, execute_on_new_thread=True):
@@ -163,7 +168,7 @@ class RecordAggregator(object):
         """Clear all the user records from this aggregated record and reset it to an
         empty state."""
         
-        self.current_record = AggRecord()
+        self.current_record = AggRecord(self.max_size)
 
     def clear_callbacks(self):
         """Clear all the callbacks from this object that were registered with the
@@ -237,7 +242,7 @@ class AggRecord(object):
     For more details on the Kinesis aggregated record format, see:
     https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md"""
     
-    def __init__(self):
+    def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
         """Create a new empty aggregated record."""
         
         self.agg_record = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
@@ -246,6 +251,7 @@ class AggRecord(object):
         self._agg_size_bytes = 0
         self.partition_keys = KeySet()
         self.explicit_hash_keys = KeySet()
+        self.max_size = max_size
 
     def get_num_user_records(self):
         """Returns:
@@ -406,10 +412,10 @@ class AggRecord(object):
 
         # Validate new record size won't overflow max size for a PutRecordRequest
         size_of_new_record = self._calculate_record_size(partition_key_bytes, data_bytes, explicit_hash_key_bytes)
-        if size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+        if size_of_new_record > self.max_size:
             raise ValueError('Input record (PK=%s, EHK=%s, SizeBytes=%d) too big to fit inside a single agg record.' %
                              (partition_key, explicit_hash_key, size_of_new_record))
-        elif self.get_size_bytes() + size_of_new_record > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+        elif self.get_size_bytes() + size_of_new_record > self.max_size:
             return False
         
         record = self.agg_record.records.add()

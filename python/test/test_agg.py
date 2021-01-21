@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+from aws_kinesis_agg import MAX_BYTES_PER_RECORD
 import aws_kinesis_agg.aggregator as agg
 import base64
 import unittest
@@ -154,6 +155,34 @@ class RecordAggregatorTest(unittest.TestCase):
         self.assertIsNone(ehk, 'Agg record explicit hash key should be None.')
         self.assertEqual(expected_agg_record_no_ehks, base64.b64encode(data).decode('utf-8'),
                          'Agg record data does not match aggregated data from KPL (it should).')
+
+    def test_single_record_too_big(self):
+        aggregator = agg.RecordAggregator()
+        with self.assertRaises(ValueError):
+            aggregator.add_user_record(partition_key='pk', data=bytes(2*MAX_BYTES_PER_RECORD))
+
+        # 200 KB exceeds configured max_size of 100 KB
+        aggregator = agg.RecordAggregator(max_size=100*1024)
+        with self.assertRaises(ValueError):
+            aggregator.add_user_record(partition_key='pk', data=bytes(200*1024))
+
+    def test_max_size(self):
+        aggregator = agg.RecordAggregator(max_size=300*1024)
+        # first 200K fits
+        result = aggregator.add_user_record(partition_key='pk', data=bytes(200*1024))
+        if result:
+            self.fail('Unexpectedly received a full agg record.')
+        self.assertEqual(1, aggregator.get_num_user_records(), 'Aggregator reported improper number of records.')
+
+        # another 200K triggers full record
+        result = aggregator.add_user_record(partition_key='pk', data=bytes(200*1024))
+        if not result:
+            self.fail('Unexpectedly failed to receive a full agg record.')
+        self.assertEqual(1, aggregator.get_num_user_records(), 'Aggregator reported improper number of records.')
+
+    def test_invalid_max_size(self):
+        with self.assertRaises(ValueError):
+            agg.RecordAggregator(max_size=2*MAX_BYTES_PER_RECORD)
 
 
 if __name__ == '__main__':
