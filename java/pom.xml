@@ -11,7 +11,9 @@
 	<modules>
 		<module>KinesisTestProducers</module>
 		<module>KinesisAggregator</module>
+		<module>KinesisAggregatorV2</module>
 		<module>KinesisDeaggregator</module>
+		<module>KinesisDeaggregatorV2</module>
 		<module>KinesisTestConsumers</module>
 		<module>KinesisLambdaForwarder</module>
 		<module>pom-aggregate</module>

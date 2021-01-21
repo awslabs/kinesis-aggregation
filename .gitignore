@@ -6,3 +6,4 @@ python/.pydevproject
 node/.idea/*
 python/dist/*
 python/aws_kinesis_agg.egg-info/*
+.*
