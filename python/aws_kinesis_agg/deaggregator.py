@@ -219,7 +219,7 @@ def iter_deaggregate_records(records, data_format=None):
         # Decode the incoming data
         raw_data = r['kinesis']['data']
 
-        decoded_data = base64.b64decode(raw_data) #if data_format != 'Boto3' else raw_data
+        decoded_data = base64.b64decode(raw_data) if data_format != 'Boto3' else raw_data
         
         # Verify the magic header
         data_magic = None
