@@ -8,7 +8,7 @@
 
 	<groupId>com.amazonaws</groupId>
 	<artifactId>amazon-kinesis-aggregator</artifactId>
-	<version>2.0.2</version>
+	<version>2.0.3</version>
 
 	<packaging>jar</packaging>
 
@@ -43,7 +43,7 @@
 	</developers>
 
 	<build>
-		<defaultGoal>clean compile</defaultGoal>
+		<defaultGoal>clean compile package assembly:assembly</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
@@ -139,7 +139,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.10.2</version>
+			<version>[2.10.5.1,)</version>
 		</dependency>
 
 		<dependency>

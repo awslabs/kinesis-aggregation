@@ -7,3 +7,8 @@ node/.idea/*
 python/dist/*
 python/aws_kinesis_agg.egg-info/*
 .*
+java/KinesisDeaggregator/.classpath
+java/.project
+java/KinesisDeaggregator/.classpath
+java/KinesisAggregator/.classpath
+java/.project
