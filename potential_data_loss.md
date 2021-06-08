@@ -1,0 +1,11 @@
+# Why can using Kinesis Aggregation result in data loss?
+
+All Kinesis Streams are divided into Shards, which are indexed using an 128bit integer (range 0 to 340282366920938463463374607431768211455). Each Shard contains messages whose Explicit Hash Key or MD5 checksum of the provided Partition Key is between two values - the Start and End Hash.
+
+When Kinesis Aggregation is used, multiple messages are aggregated into one, which are placed onto a Single Shard based upon the first Partition or Explicit Hash Key. This means that messages that could target multiple Shards are stored within a single Protobuf messages. In v1.x versions of KCL processing applications, these messages were passed directly to the consumer, regardless of which Shard that consumer was 'assigned' to. However, in v2.x KCL consumers, all messages which are not destined for the 'assigned' consumer are dropped silently by the KCL, and not delivered to the Consumer. This can result in data loss unless Kinesis Aggregation is carefully designed.
+
+To address this issue, Kinesis Aggregation for Python version `1.2.0+` (coming soon for Node.js and Java) provides a new `AggregationManager` functionality. The `AggregationManager` maintains a record of the Stream's Shard topology, and creates separate `RecordAggregator` objects per destination Shard. When `add_user_record` methods are called, the destination Shard is calculated, and only the `RecordAggregator` for that Shard is used. Every `N` aggregation requests will result in the Stream topology being refreshed.
+
+While this is a significant improvement on using the base `RecordAggregator`, there is still the possibility of data loss, in that the Shard topology may change while records are being aggregated. `AggregationManager` minimises the amount of time that this inconsistent aggregation may be occuring, but cannot eliminate it completely.
+
+Therefore, for any use cases where guaranteed delivery is required, __DO NOT USE KINESIS AGGREGATION__, and instead use the base Kinesis client `PutRecords` API.

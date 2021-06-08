@@ -16,7 +16,7 @@ One of the main advantages of the KPL is its ability to use record aggregation t
 
 ![Processing Model](aggregation.png)
 
-### Caution - this module is only suitable for low-value messages which are processed in aggregate. Do not use Kinesis Aggregation for data which is sensitive or where every message must be delivered, and where the KCL (including with AWS Lambda) is used for processing. DATA LOSS CAN OCCUR.
+### Caution - this module is only suitable for low-value messages which are processed in aggregate. Do not use Kinesis Aggregation for data which is sensitive or where every message must be delivered, and where the KCL (including with AWS Lambda) is used for processing. [DATA LOSS CAN OCCUR.](../potential_data_loss.md)
 
 ## Deaggregation
 
