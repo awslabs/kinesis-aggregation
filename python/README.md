@@ -16,6 +16,8 @@ Alternately, you can simply copy the aws_kinesis_agg module from this repository
 
 The [aggregator.py](aggregator.py) module contains Python classes that allow you to aggregate records using the [Kinesis Aggregated Record Format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md).  Using record aggregation improves throughput and reduces costs when writing producer applications that publish data to Amazon Kinesis.
 
+### Caution - this module is only suitable for low-value messages which are processed in aggregate. Do not use Kinesis Aggregation for data which is sensitive or where every message must be delivered, and where the KCL (including with AWS Lambda) is used for processing. DATA LOSS CAN OCCUR.
+
 ### Usage
 
 The record aggregation module provides a simple interface for creating protocol buffers encoded data in a producer application. The `aws_kinesis_agg` module provides methods for efficiently packing individual records into larger aggregated records.
