@@ -389,8 +389,15 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		return PutRecordsRequestEntry.builder().explicitHashKey(getExplicitHashKey()).partitionKey(getPartitionKey())
-				.data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(toRecordBytes()))).build();
+		PutRecordsRequestEntry.Builder prre = PutRecordsRequestEntry.builder().partitionKey(getPartitionKey())
+				.data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(toRecordBytes())));
+
+		String ehk = getExplicitHashKey();
+		if (ehk != null) {
+			prre.explicitHashKey(getExplicitHashKey());
+		}
+
+		return prre.build();
 	}
 
 	/**

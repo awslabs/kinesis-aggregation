@@ -207,12 +207,10 @@ public class AggRecord {
 	 * more user records). This calculation is highly dependent on the Kinesis
 	 * aggregated message format.
 	 * 
-	 * @param partitionKey
-	 *            The partition key of the new record to simulate adding
-	 * @param explicitHashKey
-	 *            The explicit hash key of the new record to simulate adding
-	 * @param data
-	 *            The raw data of the new record to simulate adding
+	 * @param partitionKey    The partition key of the new record to simulate adding
+	 * @param explicitHashKey The explicit hash key of the new record to simulate
+	 *                        adding
+	 * @param data            The raw data of the new record to simulate adding
 	 * @return The new size of this existing record in bytes if a new user record
 	 *         with the specified parameters was added.
 	 * @see https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
@@ -271,8 +269,7 @@ public class AggRecord {
 	 * For an integral value represented by a varint, calculate how many bytes are
 	 * necessary to represent the value in a protobuf message.
 	 * 
-	 * @param value
-	 *            The value whose varint size will be calculated
+	 * @param value The value whose varint size will be calculated
 	 * @return The number of bytes necessary to represent the input value as a
 	 *         varint.
 	 * @see https://developers.google.com/protocol-buffers/docs/encoding#varints
@@ -308,12 +305,9 @@ public class AggRecord {
 	 * Add a new user record to this existing aggregated record if there is enough
 	 * space (based on the defined Kinesis limits for a PutRecord call).
 	 * 
-	 * @param partitionKey
-	 *            The partition key of the new user record to add
-	 * @param explicitHashKey
-	 *            The explicit hash key of the new user record to add
-	 * @param data
-	 *            The raw data of the new user record to add
+	 * @param partitionKey    The partition key of the new user record to add
+	 * @param explicitHashKey The explicit hash key of the new user record to add
+	 * @param data            The raw data of the new user record to add
 	 * @return True if the new user record was successfully added to this aggregated
 	 *         record or false if this aggregated record is too full.
 	 */
@@ -372,16 +366,21 @@ public class AggRecord {
 	 * This method has no side effects (i.e. it will not clear the current contents
 	 * of the aggregated record).
 	 * 
-	 * @param streamName
-	 *            The Kinesis stream name where this PutRecordRequest will be sent.
+	 * @param streamName The Kinesis stream name where this PutRecordRequest will be
+	 *                   sent.
 	 * @return A PutRecordRequest containing all the current data in this aggregated
 	 *         record.
 	 */
 	public PutRecordRequest toPutRecordRequest(String streamName) {
 		byte[] recordBytes = toRecordBytes();
 		ByteBuffer bb = ByteBuffer.wrap(recordBytes);
-		return new PutRecordRequest().withStreamName(streamName).withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey()).withData(bb);
+		PutRecordRequest prr = new PutRecordRequest().withStreamName(streamName).withPartitionKey(getPartitionKey())
+				.withData(bb);
+		String ehk = getExplicitHashKey();
+		if (ehk != null) {
+			prr.withExplicitHashKey(ehk);
+		}
+		return prr;
 	}
 
 	/**
@@ -394,15 +393,19 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		return new PutRecordsRequestEntry().withExplicitHashKey(getExplicitHashKey())
-				.withPartitionKey(getPartitionKey()).withData(ByteBuffer.wrap(toRecordBytes()));
+		PutRecordsRequestEntry prre = new PutRecordsRequestEntry().withPartitionKey(getPartitionKey())
+				.withData(ByteBuffer.wrap(toRecordBytes()));
+		String ehk = getExplicitHashKey();
+		if (ehk != null) {
+			prre.withExplicitHashKey(ehk);
+		}
+		return prre;
 	}
 
 	/**
 	 * Validate the data portion of an input Kinesis user record.
 	 * 
-	 * @param data
-	 *            A byte array containing Kinesis user record data.
+	 * @param data A byte array containing Kinesis user record data.
 	 */
 	private void validateData(final byte[] data) {
 		final int maxAllowableDataLength = MAX_BYTES_PER_RECORD - AGGREGATED_RECORD_MAGIC.length
@@ -416,8 +419,8 @@ public class AggRecord {
 	/**
 	 * Validate the partition key of an input Kinesis user record.
 	 * 
-	 * @param partitionKey
-	 *            The string containing the input partition key to validate.
+	 * @param partitionKey The string containing the input partition key to
+	 *                     validate.
 	 */
 	private void validatePartitionKey(final String partitionKey) {
 		if (partitionKey == null) {
@@ -441,8 +444,8 @@ public class AggRecord {
 	/**
 	 * Validate the explicit hash key of an input Kinesis user record.
 	 * 
-	 * @param explicitHashKey
-	 *            The string containing the input explicit hash key to validate.
+	 * @param explicitHashKey The string containing the input explicit hash key to
+	 *                        validate.
 	 */
 	private void validateExplicitHashKey(final String explicitHashKey) {
 		if (explicitHashKey == null) {
@@ -466,8 +469,7 @@ public class AggRecord {
 	 * Calculate a new explicit hash key based on the input partition key (following
 	 * the algorithm from the original KPL).
 	 * 
-	 * @param partitionKey
-	 *            The partition key to seed the new explicit hash key with
+	 * @param partitionKey The partition key to seed the new explicit hash key with
 	 * @return An explicit hash key based on the input partition key generated using
 	 *         an algorithm from the original KPL.
 	 */
@@ -512,8 +514,7 @@ public class AggRecord {
 		 * If the input key were added to this KeySet, determine what its resulting
 		 * index would be.
 		 * 
-		 * @param s
-		 *            The input string to potentially add to the KeySet
+		 * @param s The input string to potentially add to the KeySet
 		 * 
 		 * @return The table index that this string would occupy if it were added to
 		 *         this KeySet.
@@ -530,8 +531,7 @@ public class AggRecord {
 		/**
 		 * Add a new key to this keyset.
 		 * 
-		 * @param s
-		 *            The key to add to the keyset.
+		 * @param s The key to add to the keyset.
 		 * 
 		 * @return A pair of <boolean,long>. The boolean is true if this key is not
 		 *         already in this keyset, false otherwise. The long indicates the index
