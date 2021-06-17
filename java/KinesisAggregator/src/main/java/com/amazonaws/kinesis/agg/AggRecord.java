@@ -324,13 +324,13 @@ public class AggRecord {
 		// Validate new record size won't overflow max size for a
 		// PutRecordRequest
 		int sizeOfNewRecord = calculateRecordSize(partitionKey, explicitHashKey, data);
-		if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
-			return false;
-		} else if (sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
+		if (sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
 			throw new IllegalArgumentException(
 					"Input record (PK=" + partitionKey + ", EHK=" + explicitHashKey + ", SizeBytes=" + sizeOfNewRecord
 							+ ") is larger than the maximum size before Aggregation encoding of "
 							+ (MAX_BYTES_PER_RECORD - AGGREGATION_OVERHEAD_BYTES) + " bytes");
+		} else if (getSizeBytes() + sizeOfNewRecord > MAX_BYTES_PER_RECORD) {
+			return false;
 		}
 
 		Record.Builder newRecord = Record.newBuilder()
