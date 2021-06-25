@@ -35,8 +35,8 @@ def _create_user_record(ehks, pks, mr, r, sub_seq_num):
     sub_seq_num - The current subsequence number within the aggregated protobuf message (int)
     
     return value - A Kinesis user record created from a message record in the protobuf message (dict)"""
-    
-    explicit_hash_key = None                            
+
+    explicit_hash_key = None
     if ehks and ehks[mr.explicit_hash_key_index] is not None:
         explicit_hash_key = ehks[mr.explicit_hash_key_index]
     partition_key = pks[mr.partition_key_index]
@@ -78,9 +78,9 @@ def _get_error_string(r, message_data, ehks, pks, ar):
     ar - The protobuf aggregated record that was being parsed when the error occurred (dict)
     
     return value - A detailed error string (str)"""
-    
+
     error_buffer = six.StringIO()
-    
+
     error_buffer.write('Unexpected exception during deaggregation, record was:\n')
     error_buffer.write('PKS:\n')
     for pk in pks:
@@ -95,10 +95,11 @@ def _get_error_string(r, message_data, ehks, pks, ar):
                             mr.partition_key_index,
                             len(mr.data)))
 
-    error_buffer.write('Sequence number: %s\n' % (r['kinesis']['sequenceNumber']))
+    if r is not None:
+        error_buffer.write('Sequence number: %s\n' % (r['kinesis']['sequenceNumber']))
 
     error_buffer.write('Raw data: %s\n' % (base64.b64encode(message_data)))
-    
+
     return error_buffer.getvalue()
 
 
@@ -150,6 +151,26 @@ def _convert_from_kf_format(record):
     return new_record
 
 
+def _convert_from_boto3_format(record):
+    """Convert From Boto3 Kinesis client record format to Kinesis Stream record format.
+
+    record - Raw Boto3 Kinesis client record to deaggregate. (dict)
+
+    return value - Each yield returns a single Kinesis user record. (dict)"""
+
+    new_record = {
+        'kinesis': {
+            'kinesisSchemaVersion': '1.0',
+            'sequenceNumber': record['SequenceNumber'],
+            'partitionKey': record['PartitionKey'],
+            'approximateArrivalTimestamp': record['ApproximateArrivalTimestamp'],
+            'data': record['Data']
+        }
+    }
+
+    return new_record
+
+
 def deaggregate_records(records):
     """Given a set of Kinesis records, deaggregate any records that were packed using the
     Kinesis Producer Library into individual records.  This method will be a no-op for any
@@ -159,14 +180,14 @@ def deaggregate_records(records):
     
     return value - A list of Kinesis user records greater than or equal to the size of the 
     input record list. (list of dict)"""
-    
+
     # Use the existing generator function to deaggregate all the records
     return_records = []
-    return_records.extend(iter_deaggregate_records(records))        
+    return_records.extend(iter_deaggregate_records(records))
     return return_records
 
 
-def iter_deaggregate_records(records):
+def iter_deaggregate_records(records, data_format=None):
     """Generator function - Given a set of Kinesis records, deaggregate them one at a time
     using the Kinesis aggregated message format.  This method will not affect any
     records that are not aggregated (but will still return them).
@@ -174,16 +195,16 @@ def iter_deaggregate_records(records):
     records - The list of raw Kinesis records to deaggregate. (list of dict)
     
     return value - Each yield returns a single Kinesis user record. (dict)"""
-    
+
     # We got a single record...try to coerce it to a list
-    if isinstance(records, collections.Mapping):
+    if isinstance(records, collections.abc.Mapping):
         records = [records]
-        
+
     for r in records:
         is_aggregated = True
         sub_seq_num = 0
 
-        if 'kinesis' not in r and 'data' in r:
+        if 'kinesis' not in r and 'data' in r or 'Data' in r:
             # Kinesis Analytics preprocessors & Firehose transformers use a different format for aggregated
             # Kinesis Stream records, so we're going to convert KA / KF style records to KS style records.
             if 'kinesisStreamRecordMetadata' in r:
@@ -192,26 +213,29 @@ def iter_deaggregate_records(records):
             elif 'kinesisRecordMetadata' in r:
                 # Kinesis Firehose style record
                 r = _convert_from_kf_format(r)
+            elif data_format == 'Boto3':
+                # Boto3 Kinesis client style record
+                r = _convert_from_boto3_format(r)
 
         # Decode the incoming data
         raw_data = r['kinesis']['data']
 
-        decoded_data = base64.b64decode(raw_data)
-        
+        decoded_data = base64.b64decode(raw_data) if data_format != 'Boto3' else raw_data
+
         # Verify the magic header
         data_magic = None
         if len(decoded_data) >= len(aws_kinesis_agg.MAGIC):
             data_magic = decoded_data[:len(aws_kinesis_agg.MAGIC)]
         else:
             is_aggregated = False
-        
+
         decoded_data_no_magic = decoded_data[len(aws_kinesis_agg.MAGIC):]
-        
+
         if aws_kinesis_agg.MAGIC != data_magic or len(decoded_data_no_magic) <= aws_kinesis_agg.DIGEST_SIZE:
             is_aggregated = False
-            
-        if is_aggregated:            
-            
+
+        if is_aggregated:
+
             # verify the MD5 digest
             message_digest = decoded_data_no_magic[-aws_kinesis_agg.DIGEST_SIZE:]
             message_data = decoded_data_no_magic[:-aws_kinesis_agg.DIGEST_SIZE]
@@ -219,35 +243,62 @@ def iter_deaggregate_records(records):
             md5_calc = hashlib.md5()
             md5_calc.update(message_data)
             calculated_digest = md5_calc.digest()
-            
-            if message_digest != calculated_digest:            
-                is_aggregated = False            
-            else:                            
+
+            if message_digest != calculated_digest:
+                is_aggregated = False
+            else:
                 # Extract the protobuf message
-                try:    
+                try:
+                    for user_record in decompress_protobuf(message_data):
+                        new_record = _create_user_record(ehks, pks, mr, r, sub_seq_num)
+                        yield new_record
+                        
                     ar = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
                     ar.ParseFromString(message_data)
-                    
+
                     pks = ar.partition_key_table
                     ehks = ar.explicit_hash_key_table
-                    
-                    try:                    
-                        # Split out all the aggregated records into individual records    
-                        for mr in ar.records:                                                    
-                            new_record = _create_user_record(ehks, pks, mr, r, sub_seq_num)
+
+                    try:
+                        # Split out all the aggregated records into individual records
+                        for mr in ar.records:
+
                             sub_seq_num += 1
                             yield new_record
-                        
-                    except Exception as e:        
-                        
+
+                    except Exception as e:
+
                         error_string = _get_error_string(r, message_data, ehks, pks, ar)
                         print('ERROR: %s\n%s' % (str(e), error_string), file=sys.stderr)
-                    
-                except google.protobuf.message.DecodeError:                    
+
+                except google.protobuf.message.DecodeError:
                     is_aggregated = False
-        
+
         if not is_aggregated:
             yield r
-    
+
     return
+
+
+def decompress_protobuf(aggregate_record):
+    ar = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
+    ar.ParseFromString(aggregate_record)
+
+    pks = ar.partition_key_table
+    ehks = ar.explicit_hash_key_table
+
+    sub_seq_num = 0
+    try:
+        # Split out all the aggregated records into individual records
+        for mr in ar.records:
+            explicit_hash_key = None
+            if ehks and ehks[mr.explicit_hash_key_index] is not None:
+                explicit_hash_key = ehks[mr.explicit_hash_key_index]
+            partition_key = pks[mr.partition_key_index]
+            sub_seq_num += 1
+            yield partition_key, explicit_hash_key, mr.data
+
+    except Exception as e:
+        error_string = _get_error_string(None, mr.data, ehks, pks, ar)
+        print('ERROR: %s\n%s' % (str(e), error_string), file=sys.stderr)
 
