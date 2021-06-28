@@ -389,15 +389,19 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		PutRecordsRequestEntry.Builder prre = PutRecordsRequestEntry.builder().partitionKey(getPartitionKey())
-				.data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(toRecordBytes())));
+		if (this.getNumUserRecords() > 0) {
+			PutRecordsRequestEntry.Builder prre = PutRecordsRequestEntry.builder().partitionKey(this.getPartitionKey())
+					.data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(this.toRecordBytes())));
 
-		String ehk = getExplicitHashKey();
-		if (ehk != null) {
-			prre.explicitHashKey(getExplicitHashKey());
+			String ehk = this.getExplicitHashKey();
+			if (ehk != null) {
+				prre.explicitHashKey(ehk);
+			}
+
+			return prre.build();
+		} else {
+			return null;
 		}
-
-		return prre.build();
 	}
 
 	/**
@@ -471,7 +475,7 @@ public class AggRecord {
 	 * @return An explicit hash key based on the input partition key generated using
 	 *         an algorithm from the original KPL.
 	 */
-	private String createExplicitHashKey(final String partitionKey) {
+	protected String createExplicitHashKey(final String partitionKey) {
 		BigInteger hashKey = BigInteger.ZERO;
 
 		this.md5.reset();

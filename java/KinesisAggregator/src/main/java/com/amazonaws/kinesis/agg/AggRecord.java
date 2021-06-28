@@ -372,15 +372,19 @@ public class AggRecord {
 	 *         record.
 	 */
 	public PutRecordRequest toPutRecordRequest(String streamName) {
-		byte[] recordBytes = toRecordBytes();
-		ByteBuffer bb = ByteBuffer.wrap(recordBytes);
-		PutRecordRequest prr = new PutRecordRequest().withStreamName(streamName).withPartitionKey(getPartitionKey())
-				.withData(bb);
-		String ehk = getExplicitHashKey();
-		if (ehk != null) {
-			prr.withExplicitHashKey(ehk);
+		if (this.getNumUserRecords() > 0) {
+			byte[] recordBytes = toRecordBytes();
+			ByteBuffer bb = ByteBuffer.wrap(recordBytes);
+			PutRecordRequest prr = new PutRecordRequest().withStreamName(streamName).withPartitionKey(getPartitionKey())
+					.withData(bb);
+			String ehk = getExplicitHashKey();
+			if (ehk != null) {
+				prr.withExplicitHashKey(ehk);
+			}
+			return prr;
+		} else {
+			return null;
 		}
-		return prr;
 	}
 
 	/**
@@ -393,13 +397,17 @@ public class AggRecord {
 	 *         PutRecordsRequest.
 	 */
 	public PutRecordsRequestEntry toPutRecordsRequestEntry() {
-		PutRecordsRequestEntry prre = new PutRecordsRequestEntry().withPartitionKey(getPartitionKey())
-				.withData(ByteBuffer.wrap(toRecordBytes()));
-		String ehk = getExplicitHashKey();
-		if (ehk != null) {
-			prre.withExplicitHashKey(ehk);
+		if (this.getNumUserRecords() > 0) {
+			PutRecordsRequestEntry prre = new PutRecordsRequestEntry().withPartitionKey(getPartitionKey())
+					.withData(ByteBuffer.wrap(toRecordBytes()));
+			String ehk = getExplicitHashKey();
+			if (ehk != null) {
+				prre.withExplicitHashKey(ehk);
+			}
+			return prre;
+		} else {
+			return null;
 		}
-		return prre;
 	}
 
 	/**
