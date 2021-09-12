@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 
 	deagg "github.com/awslabs/kinesis-aggregation/go/deaggregator"
-	rec "github.com/awslabs/kinesis-aggregation/go/records"
+	rec "github.com/awslabs/kinesis-aggregation/go/records"	
 )
 
 // Generate an aggregate record in the correct AWS-specified format
 // https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-func generateAggregateRecord(numRecords int) []byte {
+func generateAggregateRecord(numRecords int) []byte { 
 
 	aggr := &rec.AggregatedRecord{}
 	// Start with the magic header
@@ -33,10 +33,10 @@ func generateAggregateRecord(numRecords int) []byte {
 		partKey = uint64(i)
 		hashKey = uint64(i) * uint64(10)
 		r := &rec.Record{
-			PartitionKeyIndex:    &partKey,
+			PartitionKeyIndex: &partKey,
 			ExplicitHashKeyIndex: &hashKey,
-			Data:                 []byte("Some test data string"),
-			Tags:                 make([]*rec.Tag, 0),
+			Data: []byte("Some test data string"),
+			Tags: make([]*rec.Tag, 0),
 		}
 
 		aggr.Records = append(aggr.Records, r)
@@ -56,17 +56,17 @@ func generateAggregateRecord(numRecords int) []byte {
 
 // Generate a generic kinesis.Record using whatever []byte
 // is passed in as the data (can be normal []byte or proto record)
-func generateKinesisRecord(data []byte) *types.Record {
+func generateKinesisRecord(data []byte) *kinesis.Record {
 	currentTime := time.Now()
-	encryptionType := types.EncryptionTypeNone
+	encryptionType := "NONE"
 	partitionKey := "1234"
 	sequenceNumber := "21269319989900637946712965403778482371"
-	return &types.Record{
+	return &kinesis.Record{
 		ApproximateArrivalTimestamp: &currentTime,
-		Data:                        data,
-		EncryptionType:              encryptionType,
-		PartitionKey:                &partitionKey,
-		SequenceNumber:              &sequenceNumber,
+		Data: data,
+		EncryptionType: &encryptionType,
+		PartitionKey: &partitionKey,
+		SequenceNumber: &sequenceNumber,
 	}
 }
 
@@ -74,18 +74,19 @@ func generateKinesisRecord(data []byte) *types.Record {
 // of the magic header to do some array slicing with index out of bounds
 func TestSmallLengthReturnsCorrectNumberOfDeaggregatedRecords(t *testing.T) {
 	var err error
-	var kr *types.Record
+	var kr *kinesis.Record
 
-	krs := make([]*types.Record, 0, 1)
-
+	krs := make([]*kinesis.Record, 0)
+	dars := make([]*kinesis.Record, 0)
+	
 	smallByte := []byte("No")
 	kr = generateKinesisRecord(smallByte)
 	krs = append(krs, kr)
-	dars, err := deagg.DeaggregateRecords(krs)
+	dars, err = deagg.DeaggregateRecords(krs)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	// Small byte test, since this is not a deaggregated record, should return 1
 	// record in the array.
 	assert.Equal(t, 1, len(dars), "Small Byte test should return length of 1.")
@@ -95,20 +96,21 @@ func TestSmallLengthReturnsCorrectNumberOfDeaggregatedRecords(t *testing.T) {
 // according to KPL aggregate documentation.
 func TestNonMatchingMagicHeaderReturnsSingleRecord(t *testing.T) {
 	var err error
-	var kr *types.Record
+	var kr *kinesis.Record
 
-	krs := make([]*types.Record, 0, 1)
+	krs := make([]*kinesis.Record, 0)
+	dars := make([]*kinesis.Record, 0)
 
 	min := 1
 	max := 10
-	n := rand.Intn(max-min) + min
+	n := rand.Intn(max - min) + min
 	aggData := generateAggregateRecord(n)
 	mismatchAggData := aggData[1:]
 	kr = generateKinesisRecord(mismatchAggData)
 
 	krs = append(krs, kr)
 
-	dars, err := deagg.DeaggregateRecords(krs)
+	dars, err = deagg.DeaggregateRecords(krs)
 	if err != nil {
 		panic(err)
 	}
@@ -122,18 +124,19 @@ func TestNonMatchingMagicHeaderReturnsSingleRecord(t *testing.T) {
 // deaggregated records from a single aggregated record.
 func TestVariableLengthRecordsReturnsCorrectNumberOfDeaggregatedRecords(t *testing.T) {
 	var err error
-	var kr *types.Record
+	var kr *kinesis.Record
 
-	krs := make([]*types.Record, 0, 1)
+	krs := make([]*kinesis.Record, 0)
+	dars := make([]*kinesis.Record, 0)
 
 	min := 1
 	max := 10
-	n := rand.Intn(max-min) + min
+	n := rand.Intn(max - min) + min
 	aggData := generateAggregateRecord(n)
 	kr = generateKinesisRecord(aggData)
 	krs = append(krs, kr)
 
-	dars, err := deagg.DeaggregateRecords(krs)
+	dars, err = deagg.DeaggregateRecords(krs)
 	if err != nil {
 		panic(err)
 	}
@@ -148,13 +151,14 @@ func TestVariableLengthRecordsReturnsCorrectNumberOfDeaggregatedRecords(t *testi
 // the digest size (16 bytes), it is not an aggregated record.
 func TestRecordAfterMagicHeaderWithLengthLessThanDigestSizeReturnsSingleRecord(t *testing.T) {
 	var err error
-	var kr *types.Record
+	var kr *kinesis.Record
 
-	krs := make([]*types.Record, 0, 1)
+	krs := make([]*kinesis.Record, 0)
+	dars := make([]*kinesis.Record, 0)
 
 	min := 1
 	max := 10
-	n := rand.Intn(max-min) + min
+	n := rand.Intn(max - min) + min
 	aggData := generateAggregateRecord(n)
 	// Change size of proto message to 15
 	reducedAggData := aggData[:19]
@@ -162,7 +166,7 @@ func TestRecordAfterMagicHeaderWithLengthLessThanDigestSizeReturnsSingleRecord(t
 
 	krs = append(krs, kr)
 
-	dars, err := deagg.DeaggregateRecords(krs)
+	dars, err = deagg.DeaggregateRecords(krs)
 	if err != nil {
 		panic(err)
 	}
@@ -177,13 +181,14 @@ func TestRecordAfterMagicHeaderWithLengthLessThanDigestSizeReturnsSingleRecord(t
 // it is not an aggregated record.
 func TestRecordWithMismatchMd5SumReturnsSingleRecord(t *testing.T) {
 	var err error
-	var kr *types.Record
+	var kr *kinesis.Record
 
-	krs := make([]*types.Record, 0, 1)
+	krs := make([]*kinesis.Record, 0)
+	dars := make([]*kinesis.Record, 0)
 
 	min := 1
 	max := 10
-	n := rand.Intn(max-min) + min
+	n := rand.Intn(max - min) + min
 	aggData := generateAggregateRecord(n)
 	// Remove last byte from array to mismatch the MD5 sums
 	mismatchAggData := aggData[:len(aggData)-1]
@@ -191,7 +196,7 @@ func TestRecordWithMismatchMd5SumReturnsSingleRecord(t *testing.T) {
 
 	krs = append(krs, kr)
 
-	dars, err := deagg.DeaggregateRecords(krs)
+	dars, err = deagg.DeaggregateRecords(krs)
 	if err != nil {
 		panic(err)
 	}

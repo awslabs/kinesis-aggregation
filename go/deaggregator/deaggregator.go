@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/golang/protobuf/proto"
 
 	rec "github.com/awslabs/kinesis-aggregation/go/records"
@@ -22,9 +22,9 @@ const (
 
 // DeaggregateRecords takes an array of Kinesis records and expands any Protobuf
 // records within that array, returning an array of all records
-func DeaggregateRecords(records []*types.Record) ([]*types.Record, error) {
+func DeaggregateRecords(records []*kinesis.Record) ([]*kinesis.Record, error) {
 	var isAggregated bool
-	allRecords := make([]*types.Record, 0)
+	allRecords := make([]*kinesis.Record, 0)
 	for _, record := range records {
 		isAggregated = true
 
@@ -81,14 +81,14 @@ func DeaggregateRecords(records []*types.Record) ([]*types.Record, error) {
 // createUserRecord takes in the partitionKeys of the aggregated record, the individual
 // deaggregated record, and the original aggregated record builds a kinesis.Record and
 // returns it
-func createUserRecord(partitionKeys []string, aggRec *rec.Record, record *types.Record) *types.Record {
+func createUserRecord(partitionKeys []string, aggRec *rec.Record, record *kinesis.Record) (*kinesis.Record) {
 	partitionKey := partitionKeys[*aggRec.PartitionKeyIndex]
 
-	return &types.Record{
+	return &kinesis.Record{
 		ApproximateArrivalTimestamp: record.ApproximateArrivalTimestamp,
-		Data:                        aggRec.Data,
-		EncryptionType:              record.EncryptionType,
-		PartitionKey:                &partitionKey,
-		SequenceNumber:              record.SequenceNumber,
+		Data: aggRec.Data,
+		EncryptionType: record.EncryptionType,
+		PartitionKey: &partitionKey,
+		SequenceNumber: record.SequenceNumber,
 	}
 }
