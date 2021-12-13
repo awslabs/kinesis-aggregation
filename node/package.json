@@ -8,9 +8,10 @@
         "email": "meyersi@amazon.com"
     },
     "dependencies": {
+        "ansi-regex": ">=5.0.1",
         "async": "2.6.1",
-        "protobufjs": "6.9.0",
-        "minimist": ">=0.2.1"
+        "minimist": ">=0.2.1",
+        "protobufjs": "6.9.0"
     },
     "keywords": [
         "amazon",
@@ -45,7 +46,7 @@
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.64",
-        "aws-sdk": "^2.339.0",
+        "aws-sdk": ">=2.814.0",
         "jshint": "^2.11.0",
         "mocha": "^8.1.1",
         "node-uuid": "^1.4.8",
