@@ -26,13 +26,14 @@ The components in this library allow you to efficiently deaggregate protocol buf
 
 ### Language Specific Implementations
 
-AWS Lambda supports Java, Node.js and Python as programming languages. We have included support for those languages so that you can create and process UserRecords via standalone modules. Documentation is provided for each language:
+AWS Lambda supports Java, Node.js, Python and Go as programming languages. We have included support for those languages so that you can create and process UserRecords via standalone modules. Documentation is provided for each language:
 
 | Language | Location |
 :--- | :--- 
 | Java | [java](java/) |
 | Node.js Javascript | [node.js](node/) |
 | Python | [python](python/) |
+| Go | [go](go/) |
 
 ----
 
