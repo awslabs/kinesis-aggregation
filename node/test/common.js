@@ -36,4 +36,26 @@ describe('#common', () => {
         common.randomPartitionKey().should.be.String()
         common.randomPartitionKey().should.not.equal(common.randomPartitionKey())
     })
+
+    it('v3FormatToV2Format should return object with property name converted to first letter lowercase', () => {
+        common.v3FormatToV2Format.should.be.Function()
+        common.v3FormatToV2Format({
+            Data: 1,
+            SequenceNumber: 1234
+        }).should.deepEqual({
+            data: 1,
+            sequenceNumber: 1234
+        })
+    })
+
+    it('v2FormatToV3Format should return object with property name converted to first letter uppercase', () => {
+        common.v2FormatToV3Format.should.be.Function()
+        common.v2FormatToV3Format({
+            data: 1,
+            sequenceNumber: 1234
+        }).should.deepEqual({
+            Data: 1,
+            SequenceNumber: 1234
+        })
+    })
 })
