@@ -1,16 +1,18 @@
 {
     "name": "aws-kinesis-agg",
     "description": "Node.js module to simplify working with Amazon Kinesis Records using Protcol Buffers encoding",
-    "version": "4.1.4",
+    "version": "4.2.0",
     "homepage": "http://github.com/awslabs/kinesis-aggregation",
     "bugs": {
         "url": "http://github.com/awslabs/kinesis-aggregation",
         "email": "meyersi@amazon.com"
     },
     "dependencies": {
+        "agentkeepalive": "^4.1.4",
         "ansi-regex": ">=5.0.1",
         "async": "2.6.1",
         "minimist": ">=0.2.1",
+        "npm": "^8.3.0",
         "protobufjs": "6.9.0"
     },
     "keywords": [
