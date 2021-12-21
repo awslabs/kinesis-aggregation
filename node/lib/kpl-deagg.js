@@ -36,6 +36,9 @@ module.exports.deaggregate = function(kinesisRecord, computeChecksums,
 	// underscores in protobuf model)
 	//
 	// we receive the record data as a base64 encoded string
+	const isV3DataFormat = typeof kinesisRecord.Data !== 'undefined';
+	kinesisRecord = isV3DataFormat ? common.v3FormatToV2Format(kinesisRecord) : kinesisRecord;
+
 	var recordBuffer = Buffer.from(kinesisRecord.data, 'base64');
 
 	// first 4 bytes are the kpl assigned magic number
@@ -87,28 +90,32 @@ module.exports.deaggregate = function(kinesisRecord, computeChecksums,
 
 					// emit the per-record callback with the extracted partition
 					// keys and sequence information
+					const newRecord = {
+						partitionKey : protobufMessage["partition_key_table"][item["partition_key_index"]],
+						explicitPartitionKey : protobufMessage["explicit_hash_key_table"][item["explicit_hash_key_index"]],
+						sequenceNumber : kinesisRecord.sequenceNumber,
+						subSequenceNumber : i,
+						data : (typeof item.Data !== 'undefined') ? item.Data.toString('base64') : item.data.toString('base64')
+					};
 					perRecordCallback(
 							null,
-							{
-								partitionKey : protobufMessage["partition_key_table"][item["partition_key_index"]],
-								explicitPartitionKey : protobufMessage["explicit_hash_key_table"][item["explicit_hash_key_index"]],
-								sequenceNumber : kinesisRecord.sequenceNumber,
-								subSequenceNumber : i,
-								data : item.data.toString('base64')
-							});
+							isV3DataFormat ? common.v2FormatToV3Format(newRecord) : newRecord
+					);
 				} catch (e) {
 					// call the after record callback, indicating the enclosing
 					// kinesis record information and the subsequence number of
 					// the erroring user record
+					const newRecord = {
+						partitionKey : kinesisRecord.partitionKey,
+						explicitPartitionKey : kinesisRecord.explicitPartitionKey,
+						sequenceNumber : kinesisRecord.sequenceNumber,
+						subSequenceNumber : i,
+						data : kinesisRecord.data
+					};
 					afterRecordCallback(
 							e,
-							{
-								partitionKey : kinesisRecord.partitionKey,
-								explicitPartitionKey : kinesisRecord.explicitPartitionKey,
-								sequenceNumber : kinesisRecord.sequenceNumber,
-								subSequenceNumber : i,
-								data : kinesisRecord.data
-							});
+							isV3DataFormat ? common.v2FormatToV3Format(newRecord) : newRecord
+					);
 				}
 			}
 
@@ -129,12 +136,13 @@ module.exports.deaggregate = function(kinesisRecord, computeChecksums,
 							+ "-"
 							+ kinesisRecord.sequenceNumber);
 		}
-		perRecordCallback(null, {
+		const newRecord = {
 			partitionKey : kinesisRecord.partitionKey,
 			explicitPartitionKey : kinesisRecord.explicitPartitionKey,
 			sequenceNumber : kinesisRecord.sequenceNumber,
 			data : kinesisRecord.data
-		});
+		};
+		perRecordCallback(null, isV3DataFormat ? common.v2FormatToV3Format(newRecord) : newRecord);
 		afterRecordCallback();
 	}
 };

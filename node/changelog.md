@@ -1,6 +1,10 @@
 # Change Log
 
-# (current) 4.0.2
+# (current) 4.2.0
+
+- Add possibility to use "deagregation" with records where property starts with uppercase (aws js sdk v3 Kinesis record format)
+
+# 4.0.2
 
 - integrate [don't spuriously add ExplicitHashKey values to user records](https://github.com/awslabs/kinesis-aggregation/pull/49)
 

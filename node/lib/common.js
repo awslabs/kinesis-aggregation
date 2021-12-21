@@ -44,6 +44,24 @@ const loadBuilder = () => {
 };
 module.exports.loadBuilder = loadBuilder;
 
+module.exports.v3FormatToV2Format = (record) => {
+	const recordProps = Object.keys(record);
+	const converted = {};
+	for (let n = 0; n < recordProps.length; n++) {
+		converted[recordProps[n].charAt(0).toLowerCase() + recordProps[n].slice(1)] = record[recordProps[n]];
+	}
+	return converted;
+}
+
+module.exports.v2FormatToV3Format = (record) => {
+	const recordProps = Object.keys(record);
+	const converted = {};
+	for (let n = 0; n < recordProps.length; n++) {
+		converted[recordProps[n].charAt(0).toUpperCase() + recordProps[n].slice(1)] = record[recordProps[n]];
+	}
+	return converted;
+}
+
 /**
  * AggregatedRecord encoder/decoder.
  * Global object which will hold the protocol buffer model
