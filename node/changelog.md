@@ -1,6 +1,10 @@
 # Change Log
 
-# (current) 4.2.0
+# (current) 4.2.2
+
+- Version bump due to malformed build on npm
+
+# 4.2.0
 
 - Add possibility to use "deagregation" with records where property starts with uppercase (aws js sdk v3 Kinesis record format)
 
