@@ -1,9 +1,12 @@
 # Change Log
 
-# Unreleased
+# (current) 4.2.4
+- Lower required version of `npm`
+
+# 4.2.3
 - Remove `npm` from project dependencies
 
-# (current) 4.2.2
+# 4.2.2
 
 - Version bump due to malformed build on npm
 
