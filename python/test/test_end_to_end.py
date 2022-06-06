@@ -15,6 +15,16 @@
 # limitations under the License.
 
 from __future__ import print_function
+
+import sys
+import os
+import inspect
+
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, current_dir)
+sys.path.insert(1, parent_dir)
+
 import aws_kinesis_agg.aggregator as agg
 import aws_kinesis_agg.deaggregator as deagg
 import base64

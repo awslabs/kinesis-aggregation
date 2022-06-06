@@ -30,7 +30,7 @@ IGNORE_DIRS = [BUILD_DIR_NAME, TEST_DIR_NAME]
 cur_dir = None
 proj_dir = None
 build_dir = None
-version = "1.1.5"
+version = "1.2.0"
 
 
 def is_python_file(filename):

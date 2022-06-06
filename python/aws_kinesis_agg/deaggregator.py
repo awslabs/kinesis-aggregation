@@ -16,7 +16,16 @@
 
 from __future__ import print_function
 
-import aws_kinesis_agg.kpl_pb2
+import sys
+import os
+import inspect
+
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, current_dir)
+sys.path.insert(1, parent_dir)
+
+import aws_kinesis_agg.messages_pb2
 import base64
 import collections
 import google.protobuf.message
@@ -248,7 +257,7 @@ def iter_deaggregate_records(records, data_format=None):
             else:                            
                 # Extract the protobuf message
                 try:    
-                    ar = aws_kinesis_agg.kpl_pb2.AggregatedRecord()
+                    ar = aws_kinesis_agg.messages_pb2.AggregatedRecord()
                     ar.ParseFromString(message_data)
                     
                     pks = ar.partition_key_table
