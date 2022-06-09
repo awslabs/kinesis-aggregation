@@ -20,13 +20,14 @@ from __future__ import division
 import sys
 import os
 import inspect
+import aws_kinesis_agg
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, current_dir)
 sys.path.insert(1, parent_dir)
 
-import aws_kinesis_agg.messages_pb2
+import messages_pb2
 import hashlib
 import six
 import threading
@@ -254,7 +255,7 @@ class AggRecord(object):
     def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
         """Create a new empty aggregated record."""
         
-        self.agg_record = aws_kinesis_agg.messages_pb2.AggregatedRecord()
+        self.agg_record = messages_pb2.AggregatedRecord()
         self._agg_partition_key = ''
         self._agg_explicit_hash_key = ''
         self._agg_size_bytes = 0

@@ -5,10 +5,7 @@ setup.cfg
 setup.py
 aws_kinesis_agg/__init__.py
 aws_kinesis_agg/aggregator.py
-aws_kinesis_agg/config_pb2.py
 aws_kinesis_agg/deaggregator.py
-aws_kinesis_agg/kpl_pb2.py
-aws_kinesis_agg/messages_pb2.py
 aws_kinesis_agg.egg-info/PKG-INFO
 aws_kinesis_agg.egg-info/SOURCES.txt
 aws_kinesis_agg.egg-info/dependency_links.txt
