@@ -20,7 +20,6 @@ from __future__ import division
 import sys
 import os
 import inspect
-import aws_kinesis_agg
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
