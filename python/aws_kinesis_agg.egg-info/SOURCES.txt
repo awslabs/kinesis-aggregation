@@ -1,8 +1,12 @@
 LICENSE.txt
 MANIFEST.in
 README.md
+config_pb2.py
+messages_pb2.py
 setup.cfg
 setup.py
+./config_pb2.py
+./messages_pb2.py
 aws_kinesis_agg/__init__.py
 aws_kinesis_agg/aggregator.py
 aws_kinesis_agg/deaggregator.py
@@ -11,6 +15,3 @@ aws_kinesis_agg.egg-info/SOURCES.txt
 aws_kinesis_agg.egg-info/dependency_links.txt
 aws_kinesis_agg.egg-info/requires.txt
 aws_kinesis_agg.egg-info/top_level.txt
-test/test_agg.py
-test/test_deagg.py
-test/test_end_to_end.py
