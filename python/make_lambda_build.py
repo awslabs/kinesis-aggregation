@@ -20,23 +20,34 @@ import shutil
 import subprocess
 import sys
 import zipfile
+import argparse
+from pathlib import Path
+import glob
 
 BUILD_DIR_NAME = 'build'
 TEST_DIR_NAME = 'test'
 REQUIREMENTS_FILE_NAME = 'requirements.txt'
 
-IGNORE_DIRS = [BUILD_DIR_NAME, TEST_DIR_NAME]
+IGNORE_ITEMS = [
+    BUILD_DIR_NAME,
+    TEST_DIR_NAME,
+    "dist",
+    ".idea",
+    "__pycache__",
+    __file__,
+    "aws_kinesis_agg.egg-info"
+]
 
 cur_dir = None
 proj_dir = None
 build_dir = None
-version = "1.2.0"
+version = "1.2.3"
 
 
 def is_python_file(filename):
     """Returns True if the input file path has a .py extension. False otherwise."""
-
-    return os.path.isfile(filename) and os.path.splitext(filename)[-1] == '.py'
+    path = Path(filename)
+    return path.is_file() and os.path.splitext(filename)[-1] == '.py'
 
 
 def initialize_current_working_dir():
@@ -83,7 +94,7 @@ def copy_source_to_build_dir():
         if is_python_file(source) and source != __file__:
             print(f'Copy file {source} to build directory...')
             shutil.copy(source, build_dir)
-        elif os.path.isdir(source) and source not in IGNORE_DIRS:
+        elif os.path.isdir(source) and source not in IGNORE_ITEMS:
             print(f'Copy folder {source} to build directory...')
             shutil.copytree(source, os.path.join(build_dir, source))
 
@@ -115,7 +126,7 @@ def install_dependencies():
         open(protobuf_init_file, 'a').close()
 
 
-def create_zip():
+def create_zip(to_dest: str = None):
     """Zip up the contents of the build directory into a zip file that can be deployed
     to AWS Lambda."""
 
@@ -123,18 +134,22 @@ def create_zip():
 
     print('')
     print('Building zip file for AWS Lambda...')
-    zip_path = os.path.join(os.getcwd(), f'python_lambda_build-{version}.zip')
-    os.chdir(build_dir)
-    with zipfile.ZipFile(zip_path, 'w') as output_zip:
-        for item in os.listdir(build_dir):
-            if os.path.isdir(item) or is_python_file(item):
-                print(f'Adding {item} to zip...')
-                output_zip.write(item)
 
-    return zip_path
+    zip_dest = os.getcwd() if to_dest is None else to_dest
+    zip_path = os.path.join(zip_dest, f'python_lambda_build-{version}')
+
+    shutil.make_archive(zip_path, 'zip', build_dir)
+
+    print('')
+    print(f'Successfully created Lambda build zip file: {zip_path}.zip')
+    print('')
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output_dir', type=str, required=False)
+    args = parser.parse_args()
+
     print('')
     print('Creating build for AWS Lambda...')
     print('')
@@ -147,10 +162,6 @@ if __name__ == '__main__':
 
     install_dependencies()
 
-    zip_file_path = create_zip()
-
-    print('')
-    print('Successfully created Lambda build zip file: {}'.format(zip_file_path))
-    print('')
+    create_zip(args.output_dir)
 
     sys.exit(0)
