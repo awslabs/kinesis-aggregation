@@ -20,6 +20,7 @@ from __future__ import division
 import sys
 import os
 import inspect
+import aws_kinesis_agg
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
@@ -133,12 +134,12 @@ class RecordAggregator(object):
     
     NOTE: This object is not thread-safe."""
     
-    def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
+    def __init__(self, max_size=MAX_BYTES_PER_RECORD):
         """Create a new empty aggregator."""
 
-        if max_size > aws_kinesis_agg.MAX_BYTES_PER_RECORD:
+        if max_size > MAX_BYTES_PER_RECORD:
             raise ValueError('Invalid max_size %d exceeds maximum value %d' %
-                             (max_size, aws_kinesis_agg.MAX_BYTES_PER_RECORD))
+                             (max_size, MAX_BYTES_PER_RECORD))
 
         self.max_size = max_size
         self.current_record = AggRecord(self.max_size)
@@ -251,7 +252,7 @@ class AggRecord(object):
     For more details on the Kinesis aggregated record format, see:
     https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md"""
     
-    def __init__(self, max_size=aws_kinesis_agg.MAX_BYTES_PER_RECORD):
+    def __init__(self, max_size=MAX_BYTES_PER_RECORD):
         """Create a new empty aggregated record."""
         
         self.agg_record = messages_pb2.AggregatedRecord()
