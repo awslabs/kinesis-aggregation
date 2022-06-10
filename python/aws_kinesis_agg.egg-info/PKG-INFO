@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: aws-kinesis-agg
-Version: 1.2.1
+Version: 1.2.3
 Summary: Python module to assist in taking advantage of the Kinesis message aggregation format for both aggregation and deaggregation.
 Home-page: http://github.com/awslabs/kinesis-aggregation
 Author: Ian Meyers
@@ -47,49 +47,6 @@ The record aggregation module provides a simple interface for creating protocol 
 When using aggregation, you create a managing class which helps you to target the correct Kinesis Shard, and then provide a partition key, raw data and (optionally) an explicit hash key for each record.  You can choose to either provide a callback function that will be invoked when a fully-packed aggregated record is available or you can add records and check byte sizes or number of records until the aggregated record is suitably full.  You're guaranteed that any aggregated record returned from the RecordAggregator object will fit within a single PutRecord request to Kinesis. As you produce records in your producer application, you will aggregate them using a base `RecordAggregator` object, which provides methods to do both iterative aggregation and callback-based aggregation.
 
 There are two ways to create aggregated user records. The first is to use a raw `RecordAggregator`, which can aggregate messages *which are targeted for a single Shard*, or use the `AggregationManager` to aggregate messages which may span Shards. From version `1.2.0`, we __highly__ recommend the use of `AggregationManager` to limit any exposure to data loss.
-
-### Aggregation Manager
-
-Record Aggregation results in a single message that tightly packs `UserRecords`, and in v2 of the Kinesis Client Library all of the messages in a single aggregated payload must target the same Shard. Version 1.2.0 of Kinesis Aggregation for Python includes the `AggregationManager` class which ensures that aggregated messages will only target a single Kinesis Shard at a time. It does this by periodically refreshing the underlying Shard topology, and managing one `RecordAggregator` per destination Shard.
-
-To use `AggregationManager`, import it:
-
-```
-import aws_kinesis_agg as agg
-aggregation_manager = agg.AggregationManager(
-	stream_name: str,
-	region_name: str,
-	refresh_shard_frequency_count: int
-)
-```
-
-Where:
-
-* `stream_name` is the name of the destination Stream
-* `region_name` is the AWS Region in which the Stream is provisioned. Default is `us-east-1`
-* `refresh_shard_frequency_count` is the number of aggregated records that can be added before a Shard refresh occurs. Default is 1000.
-
-You can then perform aggregation by executing:
-
-```
-aggregation_manager.add_user_record(
-	partition_key: str,
-	explicit_hash_key: int = None,
-	data
-)
-```
-
-This will generate (including callbacks) or extract the `RecordAggregator` for the target Shard, and add the user record to it. You can also use the non-encapsulated format which access the underlying `RecordAggregator` directly:
-
-```
-aggregator = aggregation_manager.get_record_aggregator(
-	partition_key:str,
-	explicit_hash_key:int = None
-)
-aggregator.add_user_record(...)
-```
-
-Please __NOTE__ that every time the Shard cache is refreshed, all Callbacks will be executed and then `RecordAggregator` will be discarded. Therefore the use of Callbacks is mandatory.
 
 ### Raw Aggregation
 
@@ -293,10 +250,10 @@ OR
 In order to use the build script, make sure that the python `pip` tool is available on your command line.  If you have other `pip` dependencies, make sure to add them to the `PIP_DEPENDENCIES` list at the top of the [make_lambda_build.py](make_lambda_build.py).  Then run this command:
 
 ```
-python make_lambda_build.py
+python make_lambda_build.py --output_dir <mydir>
 ```
 
-The build script will create a new folder called `build`, copy all the Python source files, download any necessary dependencies via `pip` and create the file `python_lambda_build.zip` that you can deploy to AWS Lambda.
+The build script will create a new folder called `build`, copy all the Python source files, download any necessary dependencies via `pip` and create the file `<mydir>/python_lambda_build.zip` that you can deploy to AWS Lambda.
 
 #### Important Build Note for AWS Lambda Users
 
@@ -308,7 +265,7 @@ If you choose to make your own Python zip file to deploy to AWS Lambda, be aware
 
 You can go into the `google` module folder (the same folder containing the `protobuf` folder) and make an empty file called `__init__.py`.  Once you rezip everything and redeploy, this should fix the error above.
 
-**NOTE**: If you used the provided [make_lambda_build.py](make_lambda_build.py) script, this issue is already handled for you.
+**NOTE**: If you used the provided [`make_lambda_build.py`](make_lambda_build.py) script, this issue is already handled for you.
  
 ----
 

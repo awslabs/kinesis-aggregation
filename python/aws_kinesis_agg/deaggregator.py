@@ -26,7 +26,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, current_dir)
 sys.path.insert(1, parent_dir)
 
-import messages_pb2
+from aws_kinesis_agg import messages_pb2
 import base64
 import collections
 import google.protobuf.message
