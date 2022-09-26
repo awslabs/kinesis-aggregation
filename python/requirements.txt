@@ -1,2 +1,2 @@
-protobuf==4.21.1
+protobuf==4.21.6
 six==1.11.0
