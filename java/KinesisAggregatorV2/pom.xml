@@ -8,13 +8,13 @@
 
 	<groupId>com.amazonaws</groupId>
 	<artifactId>amazon-kinesis-aggregator</artifactId>
-	<version>2.0.5</version>
+	<version>2.0.6</version>
 
 	<packaging>jar</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<aws-sdk.version>1.11.430</aws-sdk.version>
+		<aws-sdk.version>1.12.342</aws-sdk.version>
 	</properties>
 
 	<url>https://aws.amazon.com/kinesis</url>
