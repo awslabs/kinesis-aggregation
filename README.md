@@ -5,7 +5,7 @@ The Amazon Kinesis Producer Library (KPL) gives you the ability to write data to
 ![KPL Message Format](kpl-message-format.png)
 _How the Kinesis Producer Library Publishes Data_
 
-The components in this project give you the ability to process and create KPL compatible serialised data within AWS Lambda, in Java, Node.js and Python. These components can also be used as part of the Kinesis Client Library a [multi-lang KCL application](https://github.com/awslabs/amazon-kinesis-client/blob/master/src/main/java/com/amazonaws/services/kinesis/multilang/package-info.java). However, this project has several limitations:
+The components in this project give you the ability to process and create KPL compatible serialised data within AWS Lambda, in Java, Node.js and Python. These components can also be used as part of the Kinesis Client Library a [multi-lang KCL application](https://github.com/awslabs/amazon-kinesis-client/tree/v1.x/src/main/java/com/amazonaws/services/kinesis/multilang). However, this project has several limitations:
 
 * It only generates data, and doesn't perform delivery to the stream like the KPL. You still have to call PutRecord(s) to push data to Kinesis Data Streams
 * It doesn't manage data across multiple streams like KPL - the interface assumes that all data is sent to a single Stream
