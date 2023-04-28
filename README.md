@@ -16,7 +16,7 @@ One of the main advantages of the KPL is its ability to use record aggregation t
 
 ![Processing Model](aggregation.png)
 
-### Caution - this module is only suitable for low-value messages which are processed in aggregate. Do not use Kinesis Aggregation for data which is sensitive or where every message must be delivered, and where the KCL (including with AWS Lambda) is used for processing. [DATA LOSS CAN OCCUR.](potential_data_loss.md)
+### Caution - you should only use Kinesis Aggregation outside of the Kinesis Producer Library for low-value messages where loss of a small number of messages is not critical. Aggregation results in messages being tagged to Shards, and in cases where the Stream is mutating during Aggregation, this can result in messages being rejected by the `PutRecords` API. [DATA LOSS CAN OCCUR.](potential_data_loss.md). Kinesis Deaggregation is compatible with all KPL published data and can be used safely. 
 
 ## Deaggregation
 
