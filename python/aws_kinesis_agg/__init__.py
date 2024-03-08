@@ -19,7 +19,7 @@ import hashlib
 # Message aggregation protocol-specific constants
 # (https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md)
 MAGIC = b'\xf3\x89\x9a\xc2'
-DIGEST_SIZE = hashlib.md5().digest_size
+DIGEST_SIZE = hashlib.md5(usedforsecurity=False).digest_size
 
 # Kinesis Limits
 # (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html)
