@@ -36,6 +36,8 @@ ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 kinesis_client = None
 stream_name = None
 
+def get_random_partition_key():
+    return str(uuid.uuid4())
 
 def get_random_record(seq_num=0, desired_len=50):
     """Generate a random record to send to Kinesis.
@@ -49,15 +51,12 @@ def get_random_record(seq_num=0, desired_len=50):
     
     global ALPHABET
     
-    partition_key = str(uuid.uuid4())
-    explicit_hash_key = str(uuid.uuid4().int)
-    
     raw_data = 'RECORD %d ' % seq_num
     while len(raw_data) < (desired_len-1):
         raw_data += ALPHABET[random.randrange(0, len(ALPHABET))]
         raw_data += '\n'
     
-    return partition_key, explicit_hash_key, raw_data
+    return raw_data
 
 
 def init_kinesis_client(region):
@@ -96,8 +95,7 @@ def send_record(agg_record):
     try:
         kinesis_client.put_record(StreamName=stream_name,
                                   Data=raw_data,
-                                  PartitionKey=partition_key,
-                                  ExplicitHashKey=explicit_hash_key)
+                                  PartitionKey=partition_key)
     except Exception as e:
         six.print_('Transmission Failed: %s' % e, file=sys.stderr)
     else:
@@ -125,9 +123,10 @@ if __name__ == '__main__':
     
     six.print_('Creating %d records...' % RECORDS_TO_TRANSMIT)
     for i in range(1, RECORDS_TO_TRANSMIT+1):
-        
-        pk, ehk, data = get_random_record(i, RECORD_SIZE_BYTES)
-        kinesis_agg.add_user_record(pk, data, ehk)
+        if kinesis_agg.get_num_user_records() == 0:
+            pk = get_random_partition_key()
+        data = get_random_record(i, RECORD_SIZE_BYTES)
+        kinesis_agg.add_user_record(pk, data)
     
     # Do one final flush & send to get any remaining records that haven't triggered a callback yet
     send_record(kinesis_agg.clear_and_get())
